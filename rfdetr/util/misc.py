@@ -193,12 +193,12 @@ class MetricLogger(object):
             type(self).__name__, attr))
 
     def __str__(self):
-        loss_str = []
-        for name, meter in self.meters.items():
-            loss_str.append(
-                "{}: {}".format(name, str(meter))
-            )
-        return self.delimiter.join(loss_str)
+        # Stable, readable ordering of metrics
+        parts = []
+        for name in sorted(self.meters.keys()):
+            meter = self.meters[name]
+            parts.append(f"{name}: {meter}")
+        return " | ".join(parts)
 
     def synchronize_between_processes(self):
         for meter in self.meters.values():
@@ -217,24 +217,19 @@ class MetricLogger(object):
         data_time = SmoothedValue(fmt='{avg:.4f}')
         space_fmt = ':' + str(len(str(len(iterable)))) + 'd'
         if torch.cuda.is_available():
-            log_msg = self.delimiter.join([
-                header,
-                '[{0' + space_fmt + '}/{1}]',
-                'eta: {eta}',
-                '{meters}',
-                'time: {time}',
-                'data: {data}',
-                'max mem: {memory:.0f}'
-            ])
+            log_msg = (
+                header
+                + ' [{0' + space_fmt + '}/{1}] '
+                + 'eta: {eta} | time: {time} | data: {data} | max mem: {memory:.0f}\n'
+                + '  metrics: {meters}'
+            )
         else:
-            log_msg = self.delimiter.join([
-                header,
-                '[{0' + space_fmt + '}/{1}]',
-                'eta: {eta}',
-                '{meters}',
-                'time: {time}',
-                'data: {data}'
-            ])
+            log_msg = (
+                header
+                + ' [{0' + space_fmt + '}/{1}] '
+                + 'eta: {eta} | time: {time} | data: {data}\n'
+                + '  metrics: {meters}'
+            )
         MB = 1024.0 * 1024.0
         for obj in iterable:
             data_time.update(time.time() - end)

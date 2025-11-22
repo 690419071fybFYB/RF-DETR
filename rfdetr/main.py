@@ -287,16 +287,45 @@ class Model:
         
         if args.resume:
             checkpoint = torch.load(args.resume, map_location='cpu', weights_only=False)
-            model_without_ddp.load_state_dict(checkpoint['model'], strict=True)
+            # Some checkpoints (e.g., older versions) may contain keys that are not
+            # present in the current model definition. Drop them so resume works.
+            state_dict = checkpoint['model']
+            target_keys = set(model_without_ddp.state_dict().keys())
+            unexpected_keys = [k for k in state_dict.keys() if k not in target_keys]
+            if unexpected_keys:
+                print(f"Dropping unexpected keys from checkpoint: {unexpected_keys}")
+                for k in unexpected_keys:
+                    state_dict.pop(k)
+
+            model_without_ddp.load_state_dict(state_dict, strict=True)
             if args.use_ema:
                 if 'ema_model' in checkpoint:
-                    self.ema_m.module.load_state_dict(clean_state_dict(checkpoint['ema_model']))
+                    ema_state = clean_state_dict(checkpoint['ema_model'])
+                    ema_target_keys = set(self.ema_m.module.state_dict().keys())
+                    ema_unexpected = [k for k in ema_state.keys() if k not in ema_target_keys]
+                    if ema_unexpected:
+                        print(f"Dropping unexpected keys from EMA checkpoint: {ema_unexpected}")
+                        for k in ema_unexpected:
+                            ema_state.pop(k)
+                    self.ema_m.module.load_state_dict(ema_state, strict=True)
                 else:
                     del self.ema_m
                     self.ema_m = ModelEma(model, decay=args.ema_decay, tau=args.ema_tau) 
-            if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:                
-                optimizer.load_state_dict(checkpoint['optimizer'])
-                lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+            if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
+                try:
+                    # Only load optimizer if param group counts match; otherwise skip to avoid ValueError.
+                    if len(checkpoint['optimizer']['param_groups']) == len(optimizer.param_groups):
+                        optimizer.load_state_dict(checkpoint['optimizer'])
+                    else:
+                        print("Skipping optimizer state: param group mismatch between checkpoint and current model.")
+                except Exception as e:
+                    print(f"Skipping optimizer state due to load error: {e}")
+
+                try:
+                    lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+                except Exception as e:
+                    print(f"Skipping lr_scheduler state due to load error: {e}")
+
                 args.start_epoch = checkpoint['epoch'] + 1
 
         if args.eval:
