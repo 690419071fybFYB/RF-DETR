@@ -37,7 +37,8 @@ class HungarianMatcher(nn.Module):
     """
 
     def __init__(self, cost_class: float = 1, cost_bbox: float = 1, cost_giou: float = 1, focal_alpha: float = 0.25, use_pos_only: bool = False,
-                 use_position_modulated_cost: bool = False, mask_point_sample_ratio: int = 16, cost_mask_ce: float = 1, cost_mask_dice: float = 1):
+                 use_position_modulated_cost: bool = False, mask_point_sample_ratio: int = 16, cost_mask_ce: float = 1, cost_mask_dice: float = 1,
+                 enable_small_obj_loss: bool = False, w_small: float = 2.0):
         """Creates the matcher
         Params:
             cost_class: This is the relative weight of the classification error in the matching cost
@@ -53,6 +54,8 @@ class HungarianMatcher(nn.Module):
         self.mask_point_sample_ratio = mask_point_sample_ratio
         self.cost_mask_ce = cost_mask_ce
         self.cost_mask_dice = cost_mask_dice
+        self.enable_small_obj_loss = enable_small_obj_loss
+        self.w_small = w_small
 
     @torch.no_grad()
     def forward(self, outputs, targets, group_detr=1):
@@ -84,6 +87,8 @@ class HungarianMatcher(nn.Module):
         # Also concat the target labels and boxes
         tgt_ids = torch.cat([v["labels"] for v in targets])
         tgt_bbox = torch.cat([v["boxes"] for v in targets])
+        tgt_area = (tgt_bbox[:, 2] * tgt_bbox[:, 3]).clamp(min=0)
+        area_weight = torch.exp(-tgt_area) * self.w_small if self.enable_small_obj_loss else None
 
         masks_present = "masks" in targets[0]
 
@@ -133,6 +138,11 @@ class HungarianMatcher(nn.Module):
             # Dice loss cost (1 - dice coefficient)
             cost_mask_dice = batch_dice_loss(pred_masks_logits, tgt_masks_flat)
 
+        if area_weight is not None:
+            cost_class = cost_class * area_weight
+            cost_bbox = cost_bbox * area_weight
+            cost_giou = cost_giou * area_weight
+
         # Final cost matrix
         C = self.cost_bbox * cost_bbox + self.cost_class * cost_class + self.cost_giou * cost_giou
         if masks_present:
@@ -169,11 +179,15 @@ def build_matcher(args):
             focal_alpha=args.focal_alpha,
             cost_mask_ce=args.mask_ce_loss_coef,
             cost_mask_dice=args.mask_dice_loss_coef,
-            mask_point_sample_ratio=args.mask_point_sample_ratio,)
+            mask_point_sample_ratio=args.mask_point_sample_ratio,
+            enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
+            w_small=getattr(args, "w_small", 2.0),)
     else:
         return HungarianMatcher(
             cost_class=args.set_cost_class,
             cost_bbox=args.set_cost_bbox,
             cost_giou=args.set_cost_giou,
             focal_alpha=args.focal_alpha,
+            enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
+            w_small=getattr(args, "w_small", 2.0),
         )

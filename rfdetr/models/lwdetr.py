@@ -295,7 +295,9 @@ class SetCriterion(nn.Module):
                 use_varifocal_loss=False,
                 use_position_supervised_loss=False,
                 ia_bce_loss=False,
-                mask_point_sample_ratio: int = 16,):
+                mask_point_sample_ratio: int = 16,
+                enable_small_obj_loss: bool = False,
+                w_small: float = 2.0,):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -317,6 +319,8 @@ class SetCriterion(nn.Module):
         self.use_position_supervised_loss = use_position_supervised_loss
         self.ia_bce_loss = ia_bce_loss
         self.mask_point_sample_ratio = mask_point_sample_ratio
+        self.enable_small_obj_loss = enable_small_obj_loss
+        self.w_small = w_small
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (Binary focal loss)
@@ -327,12 +331,21 @@ class SetCriterion(nn.Module):
 
         idx = self._get_src_permutation_idx(indices)
         target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
+        target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
+
+        area_weight = None
+        cls_weights = None
+        if self.enable_small_obj_loss and target_boxes.numel() > 0:
+            box_area = (target_boxes[:, 2] * target_boxes[:, 3]).clamp(min=0)
+            area_weight = torch.exp(-box_area) * self.w_small
+            cls_weights = torch.ones(src_logits.shape[:2], device=src_logits.device, dtype=src_logits.dtype)
+            cls_weights[idx] = area_weight
+            cls_weights = cls_weights.flatten()
 
         if self.ia_bce_loss:
             alpha = self.focal_alpha
             gamma = 2 
             src_boxes = outputs['pred_boxes'][idx]
-            target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
 
             iou_targets=torch.diag(box_ops.box_iou(
                 box_ops.box_cxcywh_to_xyxy(src_boxes.detach()),
@@ -355,10 +368,11 @@ class SetCriterion(nn.Module):
             # with a focus on statistical stability by using fused logsigmoid
             loss_ce = neg_weights * src_logits - F.logsigmoid(src_logits) * (pos_weights + neg_weights)
             loss_ce = loss_ce.sum() / num_boxes
+            if area_weight is not None and area_weight.numel() > 0:
+                loss_ce = loss_ce * area_weight.mean()
 
         elif self.use_position_supervised_loss:
             src_boxes = outputs['pred_boxes'][idx]
-            target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
 
             iou_targets=torch.diag(box_ops.box_iou(
                 box_ops.box_cxcywh_to_xyxy(src_boxes.detach()),
@@ -375,11 +389,10 @@ class SetCriterion(nn.Module):
             cls_iou_func_targets[pos_ind] = pos_ious_func
             norm_cls_iou_func_targets = cls_iou_func_targets \
                 / (cls_iou_func_targets.view(cls_iou_func_targets.shape[0], -1, 1).amax(1, True) + 1e-8)
-            loss_ce = position_supervised_loss(src_logits, norm_cls_iou_func_targets, num_boxes, alpha=self.focal_alpha, gamma=2) * src_logits.shape[1]
+            loss_ce = position_supervised_loss(src_logits, norm_cls_iou_func_targets, num_boxes, alpha=self.focal_alpha, gamma=2, weight=cls_weights) * src_logits.shape[1]
 
         elif self.use_varifocal_loss:
             src_boxes = outputs['pred_boxes'][idx]
-            target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
 
             iou_targets=torch.diag(box_ops.box_iou(
                 box_ops.box_cxcywh_to_xyxy(src_boxes.detach()),
@@ -392,7 +405,7 @@ class SetCriterion(nn.Module):
             pos_ind=[id for id in idx]
             pos_ind.append(target_classes_o)
             cls_iou_targets[pos_ind] = pos_ious
-            loss_ce = sigmoid_varifocal_loss(src_logits, cls_iou_targets, num_boxes, alpha=self.focal_alpha, gamma=2) * src_logits.shape[1]
+            loss_ce = sigmoid_varifocal_loss(src_logits, cls_iou_targets, num_boxes, alpha=self.focal_alpha, gamma=2, weight=cls_weights) * src_logits.shape[1]
         else:
             target_classes = torch.full(src_logits.shape[:2], self.num_classes,
                                         dtype=torch.int64, device=src_logits.device)
@@ -403,7 +416,7 @@ class SetCriterion(nn.Module):
             target_classes_onehot.scatter_(2, target_classes.unsqueeze(-1), 1)
 
             target_classes_onehot = target_classes_onehot[:,:,:-1]
-            loss_ce = sigmoid_focal_loss(src_logits, target_classes_onehot, num_boxes, alpha=self.focal_alpha, gamma=2) * src_logits.shape[1]
+            loss_ce = sigmoid_focal_loss(src_logits, target_classes_onehot, num_boxes, alpha=self.focal_alpha, gamma=2, weight=cls_weights) * src_logits.shape[1]
         losses = {'loss_ce': loss_ce}
 
         if log:
@@ -435,14 +448,23 @@ class SetCriterion(nn.Module):
         src_boxes = outputs['pred_boxes'][idx]
         target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
 
+        area_weight = None
+        if self.enable_small_obj_loss and target_boxes.numel() > 0:
+            box_area = (target_boxes[:, 2] * target_boxes[:, 3]).clamp(min=0)
+            area_weight = torch.exp(-box_area) * self.w_small
+
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none')
 
         losses = {}
+        if area_weight is not None:
+            loss_bbox = loss_bbox * area_weight.unsqueeze(1)
         losses['loss_bbox'] = loss_bbox.sum() / num_boxes
 
         loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
             box_ops.box_cxcywh_to_xyxy(src_boxes),
             box_ops.box_cxcywh_to_xyxy(target_boxes)))
+        if area_weight is not None:
+            loss_giou = loss_giou * area_weight
         losses['loss_giou'] = loss_giou.sum() / num_boxes
         return losses
     
@@ -581,7 +603,7 @@ class SetCriterion(nn.Module):
         return losses
 
 
-def sigmoid_focal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: float = 2):
+def sigmoid_focal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: float = 2, weight=None):
     """
     Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
     Args:
@@ -606,10 +628,13 @@ def sigmoid_focal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: f
         alpha_t = alpha * targets + (1 - alpha) * (1 - targets)
         loss = alpha_t * loss
 
-    return loss.mean(1).sum() / num_boxes
+    loss = loss.mean(1)
+    if weight is not None:
+        loss = loss * weight
+    return loss.sum() / num_boxes
 
 
-def sigmoid_varifocal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: float = 2):
+def sigmoid_varifocal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: float = 2, weight=None):
     prob = inputs.sigmoid()
     focal_weight = targets * (targets > 0.0).float() + \
             (1 - alpha) * (prob - targets).abs().pow(gamma) * \
@@ -617,10 +642,13 @@ def sigmoid_varifocal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamm
     ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
     loss = ce_loss * focal_weight
 
-    return loss.mean(1).sum() / num_boxes
+    loss = loss.mean(1)
+    if weight is not None:
+        loss = loss * weight
+    return loss.sum() / num_boxes
 
 
-def position_supervised_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: float = 2):
+def position_supervised_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: float = 2, weight=None):
     prob = inputs.sigmoid()
     ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
     loss = ce_loss * (torch.abs(targets - prob) ** gamma)
@@ -629,7 +657,10 @@ def position_supervised_loss(inputs, targets, num_boxes, alpha: float = 0.25, ga
         alpha_t = alpha * (targets > 0.0).float() + (1 - alpha) * (targets <= 0.0).float()
         loss = alpha_t * loss
 
-    return loss.mean(1).sum() / num_boxes
+    loss = loss.mean(1)
+    if weight is not None:
+        loss = loss * weight
+    return loss.sum() / num_boxes
 
 
 def dice_loss(
@@ -860,14 +891,18 @@ def build_criterion_and_postprocessors(args):
                                 use_varifocal_loss = args.use_varifocal_loss,
                                 use_position_supervised_loss=args.use_position_supervised_loss,
                                 ia_bce_loss=args.ia_bce_loss,
-                                mask_point_sample_ratio=args.mask_point_sample_ratio)
+                                mask_point_sample_ratio=args.mask_point_sample_ratio,
+                                enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
+                                w_small=getattr(args, "w_small", 2.0))
     else:
         criterion = SetCriterion(args.num_classes + 1, matcher=matcher, weight_dict=weight_dict,
                                 focal_alpha=args.focal_alpha, losses=losses, 
                                 group_detr=args.group_detr, sum_group_losses=sum_group_losses,
                                 use_varifocal_loss = args.use_varifocal_loss,
                                 use_position_supervised_loss=args.use_position_supervised_loss,
-                                ia_bce_loss=args.ia_bce_loss)
+                                ia_bce_loss=args.ia_bce_loss,
+                                enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
+                                w_small=getattr(args, "w_small", 2.0))
     criterion.to(device)
     postprocess = PostProcess(num_select=args.num_select)
 
