@@ -136,7 +136,9 @@ class Transformer(nn.Module):
                  num_feature_levels=4, dec_n_points=4,
                  lite_refpoint_refine=False,
                  decoder_norm_type='LN',
-                 bbox_reparam=False):
+                 bbox_reparam=False,
+                 enable_soqb=True,
+                 soqb_boost_factor: float = 2.0):
         super().__init__()
         self.encoder = None
 
@@ -145,7 +147,9 @@ class Transformer(nn.Module):
                                                 group_detr=group_detr,
                                                 num_feature_levels=num_feature_levels,
                                                 dec_n_points=dec_n_points,
-                                                skip_self_attn=False,)
+                                                skip_self_attn=False,
+                                                enable_soqb=enable_soqb,
+                                                soqb_boost_factor=soqb_boost_factor,)
         assert decoder_norm_type in ['LN', 'Identity']
         norm = { 
             "LN": lambda channels: nn.LayerNorm(channels),
@@ -157,7 +161,8 @@ class Transformer(nn.Module):
                                           return_intermediate=return_intermediate_dec,
                                           d_model=d_model,
                                           lite_refpoint_refine=lite_refpoint_refine,
-                                          bbox_reparam=bbox_reparam)
+                                          bbox_reparam=bbox_reparam,
+                                          enable_soqb=enable_soqb)
         
         
         self.two_stage = two_stage
@@ -312,7 +317,8 @@ class TransformerDecoder(nn.Module):
                  return_intermediate=False,
                  d_model=256,
                  lite_refpoint_refine=False,
-                 bbox_reparam=False):
+                 bbox_reparam=False,
+                 enable_soqb=True):
         super().__init__()
         self.layers = _get_clones(decoder_layer, num_layers)
         self.num_layers = num_layers
@@ -321,6 +327,12 @@ class TransformerDecoder(nn.Module):
         self.return_intermediate = return_intermediate
         self.lite_refpoint_refine = lite_refpoint_refine
         self.bbox_reparam = bbox_reparam
+        self.enable_soqb = enable_soqb
+
+        # Ensure cloned layers follow decoder flag
+        for layer in self.layers:
+            if hasattr(layer, "enable_soqb"):
+                layer.enable_soqb = enable_soqb
 
         self.ref_point_head = MLP(2 * d_model, d_model, d_model, 2)
 
@@ -442,12 +454,47 @@ class TransformerDecoder(nn.Module):
         return output.unsqueeze(0)
 
 
+class SmallObjectQueryBoost(nn.Module):
+    """
+    Boost queries corresponding to small predicted boxes.
+    Applies a lightweight FFN scaled by an area-based boost.
+    """
+
+    def __init__(self, d_model: int, boost_factor: float = 2.0):
+        super().__init__()
+        self.boost_factor = boost_factor
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.GELU(),
+            nn.Linear(d_model, d_model),
+        )
+
+    def forward(self, tgt: Tensor, reference_points: Tensor) -> Tensor:
+        if reference_points is None:
+            return tgt
+
+        # reference_points: [B, num_queries, num_levels, 4] or [B, num_queries, 4]
+        if reference_points.dim() == 4:
+            box_wh = reference_points[..., 2:4].mean(dim=2)
+        else:
+            box_wh = reference_points[..., 2:4]
+
+        box_area = (box_wh[..., 0] * box_wh[..., 1]).clamp(min=0)
+        boost = self.boost_factor * torch.exp(-box_area)
+        boost = boost.unsqueeze(-1).to(tgt.dtype)
+
+        delta = self.ffn(tgt)
+        return tgt + boost * delta
+
+
 class TransformerDecoderLayer(nn.Module):
 
     def __init__(self, d_model, sa_nhead, ca_nhead, dim_feedforward=2048, dropout=0.1,
                  activation="relu", normalize_before=False, group_detr=1, 
                  num_feature_levels=4, dec_n_points=4, 
-                 skip_self_attn=False):
+                 skip_self_attn=False,
+                 enable_soqb=True,
+                 soqb_boost_factor: float = 2.0):
         super().__init__()
         # Decoder Self-Attention
         self.self_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=sa_nhead, dropout=dropout, batch_first=True)
@@ -474,6 +521,12 @@ class TransformerDecoderLayer(nn.Module):
         self.activation = _get_activation_fn(activation)
         self.normalize_before = normalize_before
         self.group_detr = group_detr
+        self.enable_soqb = enable_soqb
+
+        self.soqb = SmallObjectQueryBoost(
+            d_model=d_model,
+            boost_factor=soqb_boost_factor,
+        )
 
     def with_pos_embed(self, tensor, pos: Optional[Tensor]):
         return tensor if pos is None else tensor + pos
@@ -513,6 +566,10 @@ class TransformerDecoderLayer(nn.Module):
 
         tgt = tgt + self.dropout1(tgt2)
         tgt = self.norm1(tgt)
+
+        # Small Object Query Boost before cross-attention
+        if self.enable_soqb and reference_points is not None:
+            tgt = self.soqb(tgt, reference_points)
 
         # ========== Begin of Cross-Attention =============
         tgt2 = self.cross_attn(
@@ -577,6 +634,8 @@ def build_transformer(args):
         lite_refpoint_refine=args.lite_refpoint_refine,
         decoder_norm_type=args.decoder_norm,
         bbox_reparam=args.bbox_reparam,
+        enable_soqb=True,
+        soqb_boost_factor=2.0,
     )
 
 
