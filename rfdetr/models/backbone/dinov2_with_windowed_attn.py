@@ -209,6 +209,8 @@ class Dinov2WithRegistersPatchEmbeddings(nn.Module):
                 "Make sure that the channel dimension of the pixel values match with the one set in the configuration."
                 f" Expected {self.num_channels} but got {num_channels}."
             )
+        # Clone to drop inference tensor metadata before projection (HF DINOv2 guidance)
+        pixel_values = pixel_values.clone()
         embeddings = self.projection(pixel_values).flatten(2).transpose(1, 2)
         return embeddings
 
@@ -308,6 +310,8 @@ class WindowedDinov2WithRegistersEmbeddings(nn.Module):
             num_w_patches = width // self.config.patch_size
             cls_token_with_pos_embed = embeddings[:, :1]
             pixel_tokens_with_pos_embed = embeddings[:, 1:]
+            # Clone to ensure non-inference tensors before windowed unfolding
+            pixel_tokens_with_pos_embed = pixel_tokens_with_pos_embed.clone()
             pixel_tokens_with_pos_embed = pixel_tokens_with_pos_embed.view(batch_size, num_h_patches, num_w_patches, -1)
             num_w_patches_per_window = num_w_patches // self.config.num_windows
             num_h_patches_per_window = num_h_patches // self.config.num_windows
@@ -319,6 +323,8 @@ class WindowedDinov2WithRegistersEmbeddings(nn.Module):
             embeddings = torch.cat((windowed_cls_token_with_pos_embed, windowed_pixel_tokens), dim=1)
 
         # add register tokens
+        # Clone to avoid inference tensor metadata before register concatenation
+        embeddings = embeddings.clone()
         embeddings = torch.cat(
             (embeddings[:, :1], self.register_tokens.expand(embeddings.shape[0], -1, -1), embeddings[:, 1:]), dim=1
         ) if self.config.num_register_tokens > 0 else embeddings
@@ -326,6 +332,11 @@ class WindowedDinov2WithRegistersEmbeddings(nn.Module):
         embeddings = self.dropout(embeddings)
 
         return embeddings
+
+
+# Info: clones inserted before projection, windowed unfolding, and register concatenation to drop
+# inference-tensor metadata. This fixes the autograd error "Inference tensors cannot be saved for backward"
+# per HF DINOv2 guidance; cloning before projection is the recommended workaround.
 
 
 class Dinov2WithRegistersSelfAttention(nn.Module):

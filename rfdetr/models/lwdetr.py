@@ -340,7 +340,6 @@ class SetCriterion(nn.Module):
             area_weight = torch.exp(-box_area) * self.w_small
             cls_weights = torch.ones(src_logits.shape[:2], device=src_logits.device, dtype=src_logits.dtype)
             cls_weights[idx] = area_weight
-            cls_weights = cls_weights.flatten()
 
         if self.ia_bce_loss:
             alpha = self.focal_alpha
@@ -628,9 +627,9 @@ def sigmoid_focal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamma: f
         alpha_t = alpha * targets + (1 - alpha) * (1 - targets)
         loss = alpha_t * loss
 
-    loss = loss.mean(1)
     if weight is not None:
-        loss = loss * weight
+        loss = loss * weight.unsqueeze(-1)
+    loss = loss.mean(1)
     return loss.sum() / num_boxes
 
 
@@ -642,9 +641,9 @@ def sigmoid_varifocal_loss(inputs, targets, num_boxes, alpha: float = 0.25, gamm
     ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
     loss = ce_loss * focal_weight
 
-    loss = loss.mean(1)
     if weight is not None:
-        loss = loss * weight
+        loss = loss * weight.unsqueeze(-1)
+    loss = loss.mean(1)
     return loss.sum() / num_boxes
 
 
@@ -657,9 +656,9 @@ def position_supervised_loss(inputs, targets, num_boxes, alpha: float = 0.25, ga
         alpha_t = alpha * (targets > 0.0).float() + (1 - alpha) * (targets <= 0.0).float()
         loss = alpha_t * loss
 
-    loss = loss.mean(1)
     if weight is not None:
-        loss = loss * weight
+        loss = loss * weight.unsqueeze(-1)
+    loss = loss.mean(1)
     return loss.sum() / num_boxes
 
 

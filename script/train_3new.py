@@ -3,7 +3,7 @@ from rfdetr import RFDETRBase
 model = RFDETRBase()
 
 dataset="/home/fyb/datasets/DIOR_cocoFormat"
-output_dir="/home/fyb/mydir/rf-detr/script/DIOR_RF_CSDMAM"
+output_dir="/home/fyb/mydir/rf-detr/script/DIOR_RF_CSD_SOQB_FPN"
 model.train(
     dataset_dir=dataset,
     dataset_file="coco",
@@ -13,5 +13,4 @@ model.train(
     grad_accum_steps=4,
     lr=1e-4,
     output_dir=output_dir,
-    resume="/home/fyb/mydir/rf-detr/script/DIOR_RF_CSDMAM/checkpoint_clean.pth"
 )

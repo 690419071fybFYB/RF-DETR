@@ -19,6 +19,7 @@ Train and eval functions used in main.py
 """
 import math
 import sys
+import time
 from typing import Iterable
 import random
 
@@ -28,6 +29,15 @@ import torch.nn.functional as F
 import rfdetr.util.misc as utils
 from rfdetr.datasets.coco_eval import CocoEvaluator
 from rfdetr.datasets.coco import compute_multi_scale_scales
+try:
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+except Exception:
+    Console = None
+    Panel = None
+    console = None
 
 try:
     from torch.amp import autocast, GradScaler
@@ -39,11 +49,78 @@ from typing import DefaultDict, List, Callable
 from rfdetr.util.misc import NestedTensor
 import numpy as np
 
+# Disable rich by default for maximum compatibility; fallback to text always works
+USE_RICH = False
+try:
+    from rich.console import Console
+    console = Console() if USE_RICH else None
+except Exception:
+    console = None
+
 def get_autocast_args(args):
     if DEPRECATED_AMP:
         return {'enabled': args.amp, 'dtype': torch.bfloat16}
     else:
         return {'device_type': 'cuda', 'enabled': args.amp, 'dtype': torch.bfloat16}
+
+
+def format_eta(seconds: float) -> str:
+    m, s = divmod(int(seconds), 60)
+    h, m = divmod(m, 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+
+def format_metrics_with_eta_and_speed(
+    epoch: int,
+    total_epochs: int,
+    step: int,
+    total_steps: int,
+    eta_str: str,
+    steps_per_sec: float,
+    avg_batch_time: float,
+    metrics: dict,
+) -> str:
+    """
+    Pure-text single-column summary, vertically aligned for readability.
+    """
+    sep = "─" * 50
+    header = (
+        f"{sep}\n"
+        f"[Epoch {epoch}/{total_epochs}] [Step {step}/{total_steps}]\n"
+        f"ETA: {eta_str} | Speed: {steps_per_sec:5.2f} steps/s | Avg: {avg_batch_time:.3f}s | LR: {metrics.get('lr', 0):.6f}\n"
+        f"{sep}"
+    )
+
+    cls_keys = [k for k in metrics if "loss_ce" in k or k == "class_error"]
+    bbox_keys = [k for k in metrics if "bbox" in k and "loss" in k and "_enc" not in k]
+    giou_keys = [k for k in metrics if "giou" in k and "_enc" not in k]
+    enc_keys = [k for k in metrics if k.endswith("_enc")]
+    other_keys = [k for k in metrics if k not in cls_keys + bbox_keys + giou_keys + enc_keys]
+
+    def fmt_lines(title, keys):
+        if not keys:
+            return ""
+        lines = [f"[{title}]"]
+        lines = []
+        for k in keys:
+            if k in metrics:
+                v = metrics[k]
+                if "error" in k:
+                    lines.append(f"  {k:<20}: {v:8.2f}%")
+                else:
+                    lines.append(f"  {k:<20}: {v:8.3f}")
+        return "\n".join(lines)
+
+    sections = [
+        fmt_lines("Classification", cls_keys),
+        fmt_lines("BBox", bbox_keys + giou_keys),
+        fmt_lines("Encoder", enc_keys),
+        fmt_lines("Other", other_keys),
+    ]
+    sections = [s for s in sections if s]
+
+    body = "\n\n".join(sections)
+    return f"{header}\n{body}\n{sep}"
 
 
 def train_one_epoch(
@@ -70,7 +147,7 @@ def train_one_epoch(
     )
     header = "Epoch: [{}]".format(epoch)
     # Print logs every N batches
-    print_freq = 50
+    print_freq = 20
     start_steps = epoch * num_training_steps_per_epoch
 
     print("Grad accum steps: ", args.grad_accum_steps)
@@ -86,9 +163,18 @@ def train_one_epoch(
     assert batch_size % args.grad_accum_steps == 0
     sub_batch_size = batch_size // args.grad_accum_steps
     print("LENGTH OF DATA LOADER:", len(data_loader))
+    iter_start = time.time()
+    iter_time_mavg = None
     for data_iter_step, (samples, targets) in enumerate(
-        metric_logger.log_every(data_loader, print_freq, header)
+        metric_logger.log_every(data_loader, print_freq, header, quiet=True)
     ):
+        # iteration timing
+        iter_time = time.time() - iter_start
+        iter_start = time.time()
+        if iter_time_mavg is None:
+            iter_time_mavg = iter_time
+        else:
+            iter_time_mavg = 0.9 * iter_time_mavg + 0.1 * iter_time
         it = start_steps + data_iter_step
         callback_dict = {
             "step": it,
@@ -165,14 +251,35 @@ def train_one_epoch(
         scaler.update()
         lr_scheduler.step()
         optimizer.zero_grad()
-        if ema_m is not None:
-            if epoch >= 0:
-                ema_m.update(model)
+        if ema_m is not None and epoch >= 0:
+            ema_m.update(model)
         metric_logger.update(
             loss=loss_value, **loss_dict_reduced_scaled, **loss_dict_reduced_unscaled
         )
         metric_logger.update(class_error=loss_dict_reduced["class_error"])
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
+        # Pretty logging every 10 steps (text-only)
+        max_steps = len(data_loader)
+        display_epoch = epoch + 1
+        max_epoch = args.epochs if hasattr(args, "epochs") else epoch + 1
+        if data_iter_step % 10 == 0:
+            metrics_flat = {k: v.global_avg for k, v in metric_logger.meters.items()}
+            steps_per_sec = 1.0 / iter_time_mavg if iter_time_mavg and iter_time_mavg > 0 else 0.0
+            remaining_steps = max_steps - (data_iter_step + 1)
+            eta_seconds = remaining_steps * iter_time_mavg if iter_time_mavg else 0
+            eta_str = format_eta(eta_seconds)
+            formatted = format_metrics_with_eta_and_speed(
+                epoch=display_epoch,
+                total_epochs=max_epoch,
+                step=data_iter_step + 1,
+                total_steps=max_steps,
+                eta_str=eta_str,
+                steps_per_sec=steps_per_sec,
+                avg_batch_time=iter_time_mavg or 0.0,
+                metrics=metrics_flat,
+            )
+            print(f"[Epoch {display_epoch}/{max_epoch} Step {data_iter_step + 1}/{max_steps}]", flush=True)
+            print(formatted, flush=True)
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)

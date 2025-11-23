@@ -78,14 +78,20 @@ class SmoothedValue(object):
 
     @property
     def global_avg(self):
+        if self.count == 0:
+            return 0.0
         return self.total / self.count
 
     @property
     def max(self):
+        if len(self.deque) == 0:
+            return 0.0
         return max(self.deque)
 
     @property
     def value(self):
+        if len(self.deque) == 0:
+            return 0.0
         return self.deque[-1]
 
     def __str__(self):
@@ -207,7 +213,7 @@ class MetricLogger(object):
     def add_meter(self, name, meter):
         self.meters[name] = meter
 
-    def log_every(self, iterable, print_freq, header=None):
+    def log_every(self, iterable, print_freq, header=None, quiet=False):
         i = 0
         if not header:
             header = ''
@@ -242,17 +248,18 @@ class MetricLogger(object):
                     if is_main_process():
                         log_dict = {k: v.value for k, v in self.meters.items()}
                         self.wandb.log(log_dict)
-                if torch.cuda.is_available():
-                    print(log_msg.format(
-                        i, len(iterable), eta=eta_string,
-                        meters=str(self),
-                        time=str(iter_time), data=str(data_time),
-                        memory=torch.cuda.max_memory_allocated() / MB))
-                else:
-                    print(log_msg.format(
-                        i, len(iterable), eta=eta_string,
-                        meters=str(self),
-                        time=str(iter_time), data=str(data_time)))
+                if not quiet:
+                    if torch.cuda.is_available():
+                        print(log_msg.format(
+                            i, len(iterable), eta=eta_string,
+                            meters=str(self),
+                            time=str(iter_time), data=str(data_time),
+                            memory=torch.cuda.max_memory_allocated() / MB))
+                    else:
+                        print(log_msg.format(
+                            i, len(iterable), eta=eta_string,
+                            meters=str(self),
+                            time=str(iter_time), data=str(data_time)))
             i += 1
             end = time.time()
         total_time = time.time() - start_time
