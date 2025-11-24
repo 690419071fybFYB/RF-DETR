@@ -8,9 +8,10 @@ model.train(
     dataset_dir=dataset,
     dataset_file="coco",
     coco_path=dataset,
-    epochs=30,
+    epochs=50,
     batch_size=6,
     grad_accum_steps=4,
     lr=1e-4,
     output_dir=output_dir,
+    resume="script/DIOR_RF_CSD_SOQB_FPN/checkpoint.pth"
 )
