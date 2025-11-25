@@ -64,6 +64,15 @@ HOSTED_MODELS = {
     "rf-detr-seg-preview.pt": "https://storage.googleapis.com/rfdetr/rf-detr-seg-preview.pt",
 }
 
+
+def adjust_loss_weights(epoch: int, initial_weight: float = 0.5, max_weight: float = 2.0, schedule_epochs: int = 100) -> float:
+    """
+    Dynamically adjust small-object loss weight over epochs.
+    Linear warm-up from initial_weight to max_weight within schedule_epochs.
+    """
+    weight = initial_weight + (max_weight - initial_weight) * (epoch / max(1, schedule_epochs))
+    return min(weight, max_weight)
+
 def download_pretrain_weights(pretrain_weights: str, redownload=False):
     if pretrain_weights in HOSTED_MODELS:
         if redownload or not os.path.exists(pretrain_weights):
@@ -364,6 +373,18 @@ class Model:
             epoch_start_time = time.time()
             if args.distributed:
                 sampler_train.set_epoch(epoch)
+
+            # Dynamically tune small-object loss weight
+            current_w_small = adjust_loss_weights(
+                epoch,
+                initial_weight=getattr(args, "w_small", 2.0),
+                max_weight=getattr(args, "w_small_max", getattr(args, "w_small", 2.0)),
+                schedule_epochs=getattr(args, "w_small_schedule_epochs", 100),
+            )
+            if hasattr(criterion, "w_small"):
+                criterion.w_small = current_w_small
+            if hasattr(criterion, "matcher") and hasattr(criterion.matcher, "w_small"):
+                criterion.matcher.w_small = current_w_small
 
             model.train()
             criterion.train()

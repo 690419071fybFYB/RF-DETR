@@ -47,13 +47,13 @@ def parse_cli_args() -> argparse.Namespace:
     parser.add_argument(
         "--checkpoint",
         type=Path,
-        default=Path("/home/fyb/mydir/rf-detr/script/DIOR_results/checkpoint_best_total.pth"),
+        default=Path("/home/fyb/mydir/rf-detr/script/DIOR_RF_CSD_SOQB_FPN/checkpoint_best_total.pth"),
         help="用于评估的模型权重。",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=2,
+        default=4,
         help="评估 batch size，按显存需求调整。",
     )
     parser.add_argument(

@@ -26,7 +26,7 @@ def plot_series(ax, epochs, values, label):
 
 
 def main():
-    log_path = "/home/fyb/mydir/rf-detr/script/DIOR_results/log.txt"
+    log_path = "/home/fyb/mydir/rf-detr/script/DIOR_RF_CSD_SOQB_FPN/log.txt"
     out_dir = os.path.dirname(log_path)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -37,96 +37,82 @@ def main():
 
     epochs = [r.get("epoch", idx) for idx, r in enumerate(logs)]
 
-    # Scalar metrics to plot if present
-    scalar_keys = [
-        "train_loss",
-        "test_loss",
-        "train_loss_ce",
-        "train_loss_bbox",
-        "train_loss_giou",
-        "test_loss_ce",
-        "test_loss_bbox",
-        "test_loss_giou",
-    ]
+    def extract_list(key, idx=None):
+        vals = []
+        for r in logs:
+            arr = r.get(key)
+            if isinstance(arr, list) and len(arr) > (idx if idx is not None else -1):
+                vals.append(arr[idx] if idx is not None else arr)
+            elif idx is None and key in r:
+                vals.append(r[key])
+        return vals
 
-    plt.figure(figsize=(12, 8))
-    for key in scalar_keys:
-        vals = [r.get(key) for r in logs if key in r]
-        if len(vals) == len(epochs):
-            plt.plot(epochs, vals, label=key)
-    plt.xlabel("Epoch")
-    plt.ylabel("Value")
-    plt.title("Training/Test Loss Metrics")
-    plt.legend()
-    plt.grid(True, linestyle="--", alpha=0.4)
-    loss_plot_path = os.path.join(out_dir, "loss_metrics.png")
-    plt.tight_layout()
-    plt.savefig(loss_plot_path, dpi=200)
+    # Prepare data
+    train_loss = [r.get("train_loss") for r in logs if "train_loss" in r]
+    val_loss = [r.get("test_loss") for r in logs if "test_loss" in r]
+    ap50_base = extract_list("test_coco_eval_bbox", 1)
+    ap50_95_base = extract_list("test_coco_eval_bbox", 0)
+    ar50_95_base = extract_list("test_coco_eval_bbox", 8)
+    ap50_ema = extract_list("ema_test_coco_eval_bbox", 1)
+    ap50_95_ema = extract_list("ema_test_coco_eval_bbox", 0)
+    ar50_95_ema = extract_list("ema_test_coco_eval_bbox", 8)
+
+    # Plot 2x2 grid
+    fig, axs = plt.subplots(2, 2, figsize=(16, 9))
+    fig.suptitle("RF-DETR Training Metrics", fontsize=16, fontweight="bold")
+
+    # Loss
+    ax = axs[0, 0]
+    ax.plot(epochs[: len(train_loss)], train_loss, "-o", label="Training Loss", markersize=3)
+    if val_loss:
+        ax.plot(epochs[: len(val_loss)], val_loss, "-o", label="Validation Loss", markersize=3)
+    ax.set_title("Training and Validation Loss")
+    ax.set_xlabel("Epoch Number")
+    ax.set_ylabel("Loss Value")
+    ax.grid(True, linestyle="--", alpha=0.4)
+    ax.legend()
+
+    # AP@0.50
+    ax = axs[0, 1]
+    if ap50_base:
+        ax.plot(epochs[: len(ap50_base)], ap50_base, "-o", label="Base Model", markersize=3)
+    if ap50_ema:
+        ax.plot(epochs[: len(ap50_ema)], ap50_ema, "-o", label="EMA Model", markersize=3)
+    ax.set_title("Average Precision @0.50")
+    ax.set_xlabel("Epoch Number")
+    ax.set_ylabel("AP@50")
+    ax.grid(True, linestyle="--", alpha=0.4)
+    ax.legend()
+
+    # AP@0.50:0.95
+    ax = axs[1, 0]
+    if ap50_95_base:
+        ax.plot(epochs[: len(ap50_95_base)], ap50_95_base, "-o", label="Base Model", markersize=3)
+    if ap50_95_ema:
+        ax.plot(epochs[: len(ap50_95_ema)], ap50_95_ema, "-o", label="EMA Model", markersize=3)
+    ax.set_title("Average Precision @0.50:0.95")
+    ax.set_xlabel("Epoch Number")
+    ax.set_ylabel("AP")
+    ax.grid(True, linestyle="--", alpha=0.4)
+    ax.legend()
+
+    # AR@0.50:0.95
+    ax = axs[1, 1]
+    if ar50_95_base:
+        ax.plot(epochs[: len(ar50_95_base)], ar50_95_base, "-o", label="Base Model", markersize=3)
+    if ar50_95_ema:
+        ax.plot(epochs[: len(ar50_95_ema)], ar50_95_ema, "-o", label="EMA Model", markersize=3)
+    ax.set_title("Average Recall @0.50:0.95")
+    ax.set_xlabel("Epoch Number")
+    ax.set_ylabel("AR")
+    ax.grid(True, linestyle="--", alpha=0.4)
+    ax.legend()
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    grid_plot_path = os.path.join(out_dir, "training_metrics_grid.png")
+    plt.savefig(grid_plot_path, dpi=200)
     plt.close()
-    print(f"Saved loss metrics plot to {loss_plot_path}")
-
-    # AP metrics from coco_eval
-    def extract_coco(key):
-        vals = []
-        for r in logs:
-            arr = r.get(key)
-            if isinstance(arr, list) and len(arr) > 0:
-                vals.append(arr[0])  # AP50-95 at index 0
-        return vals
-    def extract_coco_index(key, idx):
-        vals = []
-        for r in logs:
-            arr = r.get(key)
-            if isinstance(arr, list) and len(arr) > idx:
-                vals.append(arr[idx])
-        return vals
-
-    coco_vals = extract_coco("test_coco_eval_bbox")
-    ema_coco_vals = extract_coco("ema_test_coco_eval_bbox")
-
-    if coco_vals or ema_coco_vals:
-        plt.figure(figsize=(10, 6))
-        if coco_vals:
-            plt.plot(epochs[: len(coco_vals)], coco_vals, label="test_coco_eval_bbox[0]")
-        if ema_coco_vals:
-            plt.plot(epochs[: len(ema_coco_vals)], ema_coco_vals, label="ema_test_coco_eval_bbox[0]")
-        plt.xlabel("Epoch")
-        plt.ylabel("mAP@50:95")
-        plt.title("COCO Eval (bbox) mAP")
-        plt.legend()
-        plt.grid(True, linestyle="--", alpha=0.4)
-        coco_plot_path = os.path.join(out_dir, "coco_map.png")
-        plt.tight_layout()
-        plt.savefig(coco_plot_path, dpi=200)
-        plt.close()
-        print(f"Saved coco mAP plot to {coco_plot_path}")
-
-    # mAP50, mAP small/medium/large
-    coco_ap50 = extract_coco_index("test_coco_eval_bbox", 1)
-    coco_ap_small = extract_coco_index("test_coco_eval_bbox", 3)
-    coco_ap_medium = extract_coco_index("test_coco_eval_bbox", 4)
-    coco_ap_large = extract_coco_index("test_coco_eval_bbox", 5)
-
-    if coco_ap50 or coco_ap_small or coco_ap_medium or coco_ap_large:
-        plt.figure(figsize=(10, 6))
-        if coco_ap50:
-            plt.plot(epochs[: len(coco_ap50)], coco_ap50, label="mAP50")
-        if coco_ap_small:
-            plt.plot(epochs[: len(coco_ap_small)], coco_ap_small, label="mAP_S")
-        if coco_ap_medium:
-            plt.plot(epochs[: len(coco_ap_medium)], coco_ap_medium, label="mAP_M")
-        if coco_ap_large:
-            plt.plot(epochs[: len(coco_ap_large)], coco_ap_large, label="mAP_L")
-        plt.xlabel("Epoch")
-        plt.ylabel("mAP")
-        plt.title("COCO mAP by scale")
-        plt.legend()
-        plt.grid(True, linestyle="--", alpha=0.4)
-        coco_scale_plot_path = os.path.join(out_dir, "coco_map_scales.png")
-        plt.tight_layout()
-        plt.savefig(coco_scale_plot_path, dpi=200)
-        plt.close()
-        print(f"Saved coco mAP scale plot to {coco_scale_plot_path}")
+    print(f"Saved training metrics grid to {grid_plot_path}")
 
 
 if __name__ == "__main__":
