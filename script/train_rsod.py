@@ -12,9 +12,11 @@ model.train(
     dataset_dir=dataset,
     dataset_file="coco",
     coco_path=dataset,
-    epochs=15,
+    epochs=200,
     batch_size=6,
     grad_accum_steps=4,
     lr=1e-4,
     output_dir=output_dir,
+    early_stopping=True,
+    early_stopping_patience=10
 )

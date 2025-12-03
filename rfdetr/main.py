@@ -75,6 +75,49 @@ def download_pretrain_weights(pretrain_weights: str, redownload=False):
                 pretrain_weights,
             )
 
+def print_metrics_table(stats, title="Metrics"):
+    if "results_json" not in stats or "class_map" not in stats["results_json"]:
+        print(f"{title}: {stats}")
+        return
+
+    class_map = stats["results_json"]["class_map"]
+    if not class_map:
+        return
+
+    # Define headers
+    headers = ["Class", "mAP@50:95", "mAP@50", "Precision", "Recall"]
+    
+    # Calculate column widths
+    widths = [len(h) for h in headers]
+    for row in class_map:
+        widths[0] = max(widths[0], len(str(row.get("class", ""))))
+        widths[1] = max(widths[1], len(f"{row.get('map@50:95', 0):.4f}"))
+        widths[2] = max(widths[2], len(f"{row.get('map@50', 0):.4f}"))
+        widths[3] = max(widths[3], len(f"{row.get('precision', 0):.4f}"))
+        widths[4] = max(widths[4], len(f"{row.get('recall', 0):.4f}"))
+    
+    # Add padding
+    widths = [w + 2 for w in widths]
+    
+    # Create format string
+    fmt = "".join([f"{{:<{w}}}" for w in widths])
+    
+    print(f"\n{title}")
+    print("-" * sum(widths))
+    print(fmt.format(*headers))
+    print("-" * sum(widths))
+    
+    for row in class_map:
+        print(fmt.format(
+            str(row.get("class", "")),
+            f"{row.get('map@50:95', 0):.4f}",
+            f"{row.get('map@50', 0):.4f}",
+            f"{row.get('precision', 0):.4f}",
+            f"{row.get('recall', 0):.4f}"
+        ))
+    print("-" * sum(widths) + "\n")
+
+
 class Model:
     def __init__(self, **kwargs):
         args = populate_args(**kwargs)
@@ -401,6 +444,7 @@ class Model:
                 test_stats, coco_evaluator = evaluate(
                     model, criterion, postprocess, data_loader_val, base_ds, device, args=args
                 )
+                print_metrics_table(test_stats, title=f"Epoch {epoch} Validation Metrics")
             if not args.segmentation_head:
                 map_regular = test_stats["coco_eval_bbox"][0]
             else:
@@ -534,7 +578,7 @@ class Model:
             test_stats, _ = evaluate(
                 model, criterion, postprocess, data_loader_test, base_ds_test, device, args=args
             )
-            print(f"Test results: {test_stats}")
+            print_metrics_table(test_stats, title="Final Test Metrics")
             with open(output_dir / "results.json", "r") as f:
                 results = json.load(f)
             test_metrics = test_stats["results_json"]["class_map"]

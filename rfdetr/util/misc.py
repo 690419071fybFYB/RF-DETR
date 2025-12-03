@@ -23,6 +23,7 @@ import subprocess
 import time
 from collections import defaultdict, deque
 from typing import Optional, List
+from tqdm import tqdm
 
 import torch
 import torch.distributed as dist
@@ -208,53 +209,47 @@ class MetricLogger(object):
         self.meters[name] = meter
 
     def log_every(self, iterable, print_freq, header=None):
-        i = 0
         if not header:
             header = ''
         start_time = time.time()
         end = time.time()
         iter_time = SmoothedValue(fmt='{avg:.4f}')
         data_time = SmoothedValue(fmt='{avg:.4f}')
-        space_fmt = ':' + str(len(str(len(iterable)))) + 'd'
-        if torch.cuda.is_available():
-            log_msg = (
-                header
-                + ' [{0' + space_fmt + '}/{1}] '
-                + 'eta: {eta} | time: {time} | data: {data} | max mem: {memory:.0f}\n'
-                + '  metrics: {meters}'
-            )
-        else:
-            log_msg = (
-                header
-                + ' [{0' + space_fmt + '}/{1}] '
-                + 'eta: {eta} | time: {time} | data: {data}\n'
-                + '  metrics: {meters}'
-            )
+        
         MB = 1024.0 * 1024.0
-        for obj in iterable:
+        
+        # Use tqdm for progress bar
+        pbar = tqdm(iterable, desc=header, leave=False)
+        
+        for obj in pbar:
             data_time.update(time.time() - end)
             yield obj
             iter_time.update(time.time() - end)
-            if i % print_freq == 0 or i == len(iterable) - 1:
-                eta_seconds = iter_time.global_avg * (len(iterable) - i)
-                eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
-                if self.wandb:
-                    if is_main_process():
-                        log_dict = {k: v.value for k, v in self.meters.items()}
-                        self.wandb.log(log_dict)
-                if torch.cuda.is_available():
-                    print(log_msg.format(
-                        i, len(iterable), eta=eta_string,
-                        meters=str(self),
-                        time=str(iter_time), data=str(data_time),
-                        memory=torch.cuda.max_memory_allocated() / MB))
-                else:
-                    print(log_msg.format(
-                        i, len(iterable), eta=eta_string,
-                        meters=str(self),
-                        time=str(iter_time), data=str(data_time)))
-            i += 1
+            
+            # Update metrics in tqdm postfix
+            if self.wandb and is_main_process():
+                log_dict = {k: v.value for k, v in self.meters.items()}
+                self.wandb.log(log_dict)
+            
+            postfix = {
+                "time": str(iter_time),
+                "data": str(data_time)
+            }
+            
+            if torch.cuda.is_available():
+                postfix["mem"] = f"{torch.cuda.max_memory_allocated() / MB:.0f}MB"
+            
+            # Add other meters to postfix, but keep it concise
+            # Only show key metrics to prevent truncation
+            key_metrics = ['loss', 'class_error', 'lr']
+            for name, meter in self.meters.items():
+                if name in key_metrics:
+                    postfix[name] = f"{meter.median:.4f}"
+                
+            pbar.set_postfix(postfix)
+            
             end = time.time()
+            
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
         print('{} Total time: {} ({:.4f} s / it)'.format(
