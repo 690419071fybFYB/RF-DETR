@@ -125,7 +125,7 @@ class MetricsTensorBoardSink:
     def __init__(self, output_dir: str):
         if SummaryWriter:
             self.writer = SummaryWriter(log_dir=output_dir)
-            print(f"TensorBoard logging initialized. To monitor logs, use 'tensorboard --logdir {output_dir}' and open http://localhost:6006/ in browser.")
+            print(f"TensorBoard logging initialized. To monitor logs, use 'tensorboard --logdir {output_dir} --port 6007' and open http://localhost:6007/ in browser.")
         else:
             self.writer = None
             print("Unable to initialize TensorBoard. Logging is turned off for this session.  Run 'pip install tensorboard' to enable logging.")

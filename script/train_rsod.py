@@ -1,9 +1,9 @@
 from rfdetr import RFDETRBase
 
-model = RFDETRBase()
+model = RFDETRBase(use_dynamic_query=True)
 
 dataset = "/home/fyb/datasets/RSOD_cocoFormat"
-output_dir = "/home/fyb/mydir/rf-detr/script/RSOD_results2"
+output_dir = "/home/fyb/mydir/rf-detr/script/RSOD_results3"
 
 print(f"Starting training with dataset: {dataset}")
 print(f"Output directory: {output_dir}")
@@ -18,5 +18,5 @@ model.train(
     lr=1e-4,
     output_dir=output_dir,
     early_stopping=True,
-    early_stopping_patience=10
+    early_stopping_patience=5,
 )

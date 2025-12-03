@@ -211,7 +211,8 @@ class Model:
 
         utils.init_distributed_mode(args)
         print("git:\n  {}\n".format(utils.get_sha()))
-        print(args)
+        print("Arguments:")
+        print(json.dumps(vars(args), indent=2, default=str))
         device = torch.device(args.device)
         
         # fix the seed for reproducibility
