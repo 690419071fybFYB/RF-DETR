@@ -161,7 +161,9 @@ class LWDETR(nn.Module):
         # LFE (Lightweight Feature Enhancement) stages
         self.use_lfe = use_lfe
         if self.use_lfe:
-            num_scales = len(backbone.projector_scale)
+            # backbone is a Joiner object: [Backbone, PositionEmbedding]
+            # Access the actual Backbone via backbone[0]
+            num_scales = len(backbone[0].projector_scale)
             self.lfe_stages = nn.ModuleList([
                 BasicStage(
                     dim=hidden_dim,
