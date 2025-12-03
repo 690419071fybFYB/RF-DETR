@@ -1,0 +1,327 @@
+Loading pretrain weights
+LWDETR(
+  (transformer): Transformer(
+    (decoder): TransformerDecoder(
+      (layers): ModuleList(
+        (0-2): 3 x TransformerDecoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=256, out_features=256, bias=True)
+          )
+          (dropout1): Dropout(p=0, inplace=False)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (cross_attn): MSDeformAttn(
+            (sampling_offsets): Linear(in_features=256, out_features=64, bias=True)
+            (attention_weights): Linear(in_features=256, out_features=32, bias=True)
+            (value_proj): Linear(in_features=256, out_features=256, bias=True)
+            (output_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=2048, bias=True)
+          (dropout): Dropout(p=0, inplace=False)
+          (linear2): Linear(in_features=2048, out_features=256, bias=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm3): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout2): Dropout(p=0, inplace=False)
+          (dropout3): Dropout(p=0, inplace=False)
+        )
+      )
+      (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+      (ref_point_head): MLP(
+        (layers): ModuleList(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Linear(in_features=256, out_features=256, bias=True)
+        )
+      )
+    )
+    (enc_output): ModuleList(
+      (0-12): 13 x Linear(in_features=256, out_features=256, bias=True)
+    )
+    (enc_output_norm): ModuleList(
+      (0-12): 13 x LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+    )
+    (enc_out_bbox_embed): ModuleList(
+      (0-12): 13 x MLP(
+        (layers): ModuleList(
+          (0-1): 2 x Linear(in_features=256, out_features=256, bias=True)
+          (2): Linear(in_features=256, out_features=4, bias=True)
+        )
+      )
+    )
+    (enc_out_class_embed): ModuleList(
+      (0-12): 13 x Linear(in_features=256, out_features=91, bias=True)
+    )
+  )
+  (class_embed): Linear(in_features=256, out_features=91, bias=True)
+  (bbox_embed): MLP(
+    (layers): ModuleList(
+      (0-1): 2 x Linear(in_features=256, out_features=256, bias=True)
+      (2): Linear(in_features=256, out_features=4, bias=True)
+    )
+  )
+  (refpoint_embed): Embedding(3900, 4)
+  (query_feat): Embedding(3900, 256)
+  (backbone): Joiner(
+    (0): Backbone(
+      (encoder): DinoV2(
+        (encoder): WindowedDinov2WithRegistersBackbone(
+          (embeddings): WindowedDinov2WithRegistersEmbeddings(
+            (patch_embeddings): Dinov2WithRegistersPatchEmbeddings(
+              (projection): Conv2d(3, 384, kernel_size=(14, 14), stride=(14, 14))
+            )
+            (dropout): Dropout(p=0.0, inplace=False)
+          )
+          (encoder): WindowedDinov2WithRegistersEncoder(
+            (layer): ModuleList(
+              (0-11): 12 x WindowedDinov2WithRegistersLayer(
+                (norm1): LayerNorm((384,), eps=1e-06, elementwise_affine=True)
+                (attention): Dinov2WithRegistersSdpaAttention(
+                  (attention): Dinov2WithRegistersSdpaSelfAttention(
+                    (query): Linear(in_features=384, out_features=384, bias=True)
+                    (key): Linear(in_features=384, out_features=384, bias=True)
+                    (value): Linear(in_features=384, out_features=384, bias=True)
+                    (dropout): Dropout(p=0.0, inplace=False)
+                  )
+                  (output): Dinov2WithRegistersSelfOutput(
+                    (dense): Linear(in_features=384, out_features=384, bias=True)
+                    (dropout): Dropout(p=0.0, inplace=False)
+                  )
+                )
+                (layer_scale1): Dinov2WithRegistersLayerScale()
+                (drop_path): Identity()
+                (norm2): LayerNorm((384,), eps=1e-06, elementwise_affine=True)
+                (mlp): Dinov2WithRegistersMLP(
+                  (fc1): Linear(in_features=384, out_features=1536, bias=True)
+                  (activation): GELUActivation()
+                  (fc2): Linear(in_features=1536, out_features=384, bias=True)
+                )
+                (layer_scale2): Dinov2WithRegistersLayerScale()
+              )
+            )
+          )
+          (layernorm): LayerNorm((384,), eps=1e-06, elementwise_affine=True)
+        )
+      )
+      (projector): MultiScaleProjector(
+        (csdmam): CSDMAM(
+          (pre_conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (dmam): DMAM(
+            (conv_in): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (local): DepthwiseConv(
+              (dw): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), groups=256, bias=False)
+            )
+            (dconv_31x1): DepthwiseConv(
+              (dw): Conv2d(256, 256, kernel_size=(31, 1), stride=(1, 1), padding=(15, 0), groups=256, bias=False)
+            )
+            (dconv_1x31): DepthwiseConv(
+              (dw): Conv2d(256, 256, kernel_size=(1, 31), stride=(1, 1), padding=(0, 15), groups=256, bias=False)
+            )
+            (dconv_31x31): DepthwiseConv(
+              (dw): Conv2d(256, 256, kernel_size=(31, 31), stride=(1, 1), padding=(15, 15), groups=256, bias=False)
+            )
+            (fcsa): FCSA(
+              (freq_ca): Sequential(
+                (0): Conv2d(256, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (1): ReLU(inplace=True)
+                (2): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (3): Sigmoid()
+              )
+              (channel_ca): Sequential(
+                (0): Conv2d(256, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (1): ReLU(inplace=True)
+                (2): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (3): Sigmoid()
+              )
+              (spatial_sa): Sequential(
+                (0): Conv2d(1, 1, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (1): Sigmoid()
+              )
+              (gap): AdaptiveAvgPool2d(output_size=1)
+            )
+            (conv_out): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (act): SiLU(inplace=True)
+          )
+          (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (stages_sampling): ModuleList(
+          (0): ModuleList(
+            (0-3): 4 x Sequential()
+          )
+        )
+        (stages): ModuleList(
+          (0): Sequential(
+            (0): C2f(
+              (cv1): ConvX(
+                (conv): Conv2d(1536, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): LayerNorm()
+                (act): SiLU(inplace=True)
+              )
+              (cv2): ConvX(
+                (conv): Conv2d(640, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                (bn): LayerNorm()
+                (act): SiLU(inplace=True)
+              )
+              (m): ModuleList(
+                (0-2): 3 x Bottleneck(
+                  (cv1): ConvX(
+                    (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                    (bn): LayerNorm()
+                    (act): SiLU(inplace=True)
+                  )
+                  (cv2): ConvX(
+                    (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                    (bn): LayerNorm()
+                    (act): SiLU(inplace=True)
+                  )
+                )
+              )
+            )
+            (1): LayerNorm()
+          )
+        )
+      )
+    )
+    (1): PositionEmbeddingSine()
+  )
+  (query_importance_head): QueryImportanceHead(
+    (mlp): Sequential(
+      (0): Linear(in_features=256, out_features=256, bias=True)
+      (1): GELU(approximate='none')
+      (2): Linear(in_features=256, out_features=1, bias=True)
+    )
+  )
+  (query_budget_predictor): QueryBudgetPredictor(
+    (mlp): Sequential(
+      (0): Linear(in_features=256, out_features=256, bias=True)
+      (1): GELU(approximate='none')
+      (2): Linear(in_features=256, out_features=1, bias=True)
+    )
+  )
+)
+
+Key Parameters:
+Num Queries: 300
+Group DETR: 13
+Two Stage: True
+Backbone: Joiner(
+  (0): Backbone(
+    (encoder): DinoV2(
+      (encoder): WindowedDinov2WithRegistersBackbone(
+        (embeddings): WindowedDinov2WithRegistersEmbeddings(
+          (patch_embeddings): Dinov2WithRegistersPatchEmbeddings(
+            (projection): Conv2d(3, 384, kernel_size=(14, 14), stride=(14, 14))
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+        )
+        (encoder): WindowedDinov2WithRegistersEncoder(
+          (layer): ModuleList(
+            (0-11): 12 x WindowedDinov2WithRegistersLayer(
+              (norm1): LayerNorm((384,), eps=1e-06, elementwise_affine=True)
+              (attention): Dinov2WithRegistersSdpaAttention(
+                (attention): Dinov2WithRegistersSdpaSelfAttention(
+                  (query): Linear(in_features=384, out_features=384, bias=True)
+                  (key): Linear(in_features=384, out_features=384, bias=True)
+                  (value): Linear(in_features=384, out_features=384, bias=True)
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+                (output): Dinov2WithRegistersSelfOutput(
+                  (dense): Linear(in_features=384, out_features=384, bias=True)
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (layer_scale1): Dinov2WithRegistersLayerScale()
+              (drop_path): Identity()
+              (norm2): LayerNorm((384,), eps=1e-06, elementwise_affine=True)
+              (mlp): Dinov2WithRegistersMLP(
+                (fc1): Linear(in_features=384, out_features=1536, bias=True)
+                (activation): GELUActivation()
+                (fc2): Linear(in_features=1536, out_features=384, bias=True)
+              )
+              (layer_scale2): Dinov2WithRegistersLayerScale()
+            )
+          )
+        )
+        (layernorm): LayerNorm((384,), eps=1e-06, elementwise_affine=True)
+      )
+    )
+    (projector): MultiScaleProjector(
+      (csdmam): CSDMAM(
+        (pre_conv): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (dmam): DMAM(
+          (conv_in): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (local): DepthwiseConv(
+            (dw): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), groups=256, bias=False)
+          )
+          (dconv_31x1): DepthwiseConv(
+            (dw): Conv2d(256, 256, kernel_size=(31, 1), stride=(1, 1), padding=(15, 0), groups=256, bias=False)
+          )
+          (dconv_1x31): DepthwiseConv(
+            (dw): Conv2d(256, 256, kernel_size=(1, 31), stride=(1, 1), padding=(0, 15), groups=256, bias=False)
+          )
+          (dconv_31x31): DepthwiseConv(
+            (dw): Conv2d(256, 256, kernel_size=(31, 31), stride=(1, 1), padding=(15, 15), groups=256, bias=False)
+          )
+          (fcsa): FCSA(
+            (freq_ca): Sequential(
+              (0): Conv2d(256, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): ReLU(inplace=True)
+              (2): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (3): Sigmoid()
+            )
+            (channel_ca): Sequential(
+              (0): Conv2d(256, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): ReLU(inplace=True)
+              (2): Conv2d(32, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (3): Sigmoid()
+            )
+            (spatial_sa): Sequential(
+              (0): Conv2d(1, 1, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): Sigmoid()
+            )
+            (gap): AdaptiveAvgPool2d(output_size=1)
+          )
+          (conv_out): Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): SiLU(inplace=True)
+        )
+        (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (stages_sampling): ModuleList(
+        (0): ModuleList(
+          (0-3): 4 x Sequential()
+        )
+      )
+      (stages): ModuleList(
+        (0): Sequential(
+          (0): C2f(
+            (cv1): ConvX(
+              (conv): Conv2d(1536, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (bn): LayerNorm()
+              (act): SiLU(inplace=True)
+            )
+            (cv2): ConvX(
+              (conv): Conv2d(640, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (bn): LayerNorm()
+              (act): SiLU(inplace=True)
+            )
+            (m): ModuleList(
+              (0-2): 3 x Bottleneck(
+                (cv1): ConvX(
+                  (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                  (bn): LayerNorm()
+                  (act): SiLU(inplace=True)
+                )
+                (cv2): ConvX(
+                  (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                  (bn): LayerNorm()
+                  (act): SiLU(inplace=True)
+                )
+              )
+            )
+          )
+          (1): LayerNorm()
+        )
+      )
+    )
+  )
+  (1): PositionEmbeddingSine()
+)

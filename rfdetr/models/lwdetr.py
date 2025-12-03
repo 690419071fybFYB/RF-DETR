@@ -36,6 +36,47 @@ from rfdetr.models.matcher import build_matcher
 from rfdetr.models.transformer import build_transformer
 from rfdetr.models.segmentation_head import SegmentationHead, get_uncertain_point_coords_with_randomness, point_sample
 
+
+class QueryImportanceHead(nn.Module):
+    """
+    Lightweight 2-layer MLP to score each query.
+    Input: (B, N, C) query embeddings
+    Output: (B, N) logits
+    """
+    def __init__(self, hidden_dim: int):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.GELU(),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    def forward(self, queries: torch.Tensor) -> torch.Tensor:
+        logits = self.mlp(queries)  # [B, N, 1]
+        return logits.squeeze(-1)
+
+
+class QueryBudgetPredictor(nn.Module):
+    """
+    Predict per-image query budget K in [min_k, max_queries].
+    Input: (B, C) global pooled feature
+    """
+    def __init__(self, hidden_dim: int, min_k: int, max_queries: int):
+        super().__init__()
+        self.min_k = max(1, min_k)
+        self.max_queries = max_queries
+        self.mlp = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.GELU(),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    def forward(self, pooled_feat: torch.Tensor) -> torch.Tensor:
+        prob = torch.sigmoid(self.mlp(pooled_feat).squeeze(-1))
+        k_float = prob * (self.max_queries - self.min_k) + self.min_k
+        k_int = torch.clamp(k_float.round().long(), self.min_k, self.max_queries)
+        return k_int
+
 class LWDETR(nn.Module):
     """ This is the Group DETR v3 module that performs object detection """
     def __init__(self,
@@ -76,6 +117,7 @@ class LWDETR(nn.Module):
         self.backbone = backbone
         self.aux_loss = aux_loss
         self.group_detr = group_detr
+        self.max_queries = num_queries * group_detr
 
         # iter update
         self.lite_refpoint_refine = lite_refpoint_refine
@@ -102,6 +144,12 @@ class LWDETR(nn.Module):
                 [copy.deepcopy(self.bbox_embed) for _ in range(group_detr)])
             self.transformer.enc_out_class_embed = nn.ModuleList(
                 [copy.deepcopy(self.class_embed) for _ in range(group_detr)])
+
+        # Query importance and budget heads
+        self.query_importance_head = QueryImportanceHead(hidden_dim)
+        self.query_budget_predictor = QueryBudgetPredictor(
+            hidden_dim, min_k=1, max_queries=self.max_queries
+        )
 
         self._export = False
 
@@ -155,13 +203,57 @@ class LWDETR(nn.Module):
             masks.append(mask)
             assert mask is not None
 
+        # ----- Compute query importance scores -----
+        refpoint_embed_weight = self.refpoint_embed.weight
+        query_feat_weight = self.query_feat.weight
+
+        device = query_feat_weight.device
+        bs = srcs[0].shape[0]
+        # importance over initial queries (shared per batch, expanded for scoring)
+        importance_logits_full = self.query_importance_head(
+            query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
+        )  # [B, Q]
+
+        # ----- Compute per-image budget K -----
+        # Use masked global average of the last feature map
+        last_feat, last_mask = srcs[-1], masks[-1]
+        valid = (~last_mask).float()
+        denom = valid.flatten(1).sum(dim=1, keepdim=True).clamp(min=1e-6)
+        pooled = (last_feat * valid.unsqueeze(1)).flatten(2).sum(dim=2) / denom  # [B, C]
+        k_pred = self.query_budget_predictor(pooled)  # [B]
+
+        max_k = int(k_pred.max().item())
+        max_k = max(1, min(max_k, self.max_queries))
+        if self.training and self.group_detr > 1:
+            remainder = max_k % self.group_detr
+            if remainder != 0:
+                max_k = max_k - remainder
+                if max_k == 0:
+                    max_k = self.group_detr
+        topk_indices = torch.topk(importance_logits_full, k=max_k, dim=1).indices  # [B, max_k]
+
+        # gather pruned queries per image
+        refpoint_batched = refpoint_embed_weight.unsqueeze(0).expand(bs, -1, -1)
+        query_batched = query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
+
+        gather_inds_ref = topk_indices.unsqueeze(-1).expand(-1, -1, refpoint_batched.shape[-1])
+        gather_inds_q = topk_indices.unsqueeze(-1).expand(-1, -1, query_batched.shape[-1])
+
+        refpoint_pruned = torch.gather(refpoint_batched, 1, gather_inds_ref)
+        query_pruned = torch.gather(query_batched, 1, gather_inds_q)
+
+        # mask out padded queries when K is smaller than max_k
+        valid_mask = (torch.arange(max_k, device=device).unsqueeze(0) < k_pred.unsqueeze(1))
+        refpoint_pruned = refpoint_pruned * valid_mask.unsqueeze(-1)
+        query_pruned = query_pruned * valid_mask.unsqueeze(-1)
+
         if self.training:
-            refpoint_embed_weight = self.refpoint_embed.weight
-            query_feat_weight = self.query_feat.weight
+            refpoint_embed_weight = refpoint_pruned
+            query_feat_weight = query_pruned
         else:
             # only use one group in inference
-            refpoint_embed_weight = self.refpoint_embed.weight[:self.num_queries]
-            query_feat_weight = self.query_feat.weight[:self.num_queries]
+            refpoint_embed_weight = refpoint_pruned[:, :self.num_queries]
+            query_feat_weight = query_pruned[:, :self.num_queries]
 
         hs, ref_unsigmoid, hs_enc, ref_enc = self.transformer(
             srcs, masks, poss, refpoint_embed_weight, query_feat_weight)
@@ -187,6 +279,11 @@ class LWDETR(nn.Module):
                 out['pred_masks'] = outputs_masks[-1]
             if self.aux_loss:
                 out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord, outputs_masks if self.segmentation_head is not None else None)
+            # attach importance metadata
+            out['importance_logits'] = torch.gather(
+                importance_logits_full, 1, topk_indices
+            )
+            out['importance_mask'] = valid_mask
 
         if self.two_stage:
             group_detr = self.group_detr if self.training else 1
@@ -502,6 +599,30 @@ class SetCriterion(nn.Module):
         del src_masks
         del target_masks
         return losses
+
+    def loss_importance(self, outputs, targets, indices, num_boxes, log: bool = False):
+        """
+        Binary supervision on query importance: matched queries -> 1, others -> 0.
+        Expects outputs to contain:
+          - importance_logits: [B, K]
+          - importance_mask: [B, K] bool indicating valid (unpadded) positions
+        """
+        if 'importance_logits' not in outputs:
+            return {}
+        logits = outputs['importance_logits']
+        mask = outputs.get('importance_mask', torch.ones_like(logits, dtype=torch.bool))
+
+        target = torch.zeros_like(logits)
+        idx = self._get_src_permutation_idx(indices)
+        target[idx] = 1.0
+
+        valid_logits = logits[mask]
+        valid_target = target[mask]
+        if valid_logits.numel() == 0:
+            loss = logits.sum() * 0
+        else:
+            loss = F.binary_cross_entropy_with_logits(valid_logits, valid_target)
+        return {'loss_importance': loss}
     
  
     def _get_src_permutation_idx(self, indices):
@@ -522,6 +643,7 @@ class SetCriterion(nn.Module):
             'cardinality': self.loss_cardinality,
             'boxes': self.loss_boxes,
             'masks': self.loss_masks,
+            'importance': self.loss_importance,
         }
         assert loss in loss_map, f'do you really want to compute {loss} loss?'
         return loss_map[loss](outputs, targets, indices, num_boxes, **kwargs)

@@ -221,6 +221,14 @@ class Transformer(nn.Module):
         lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1) # bs, \sum{hxw}, c 
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=memory.device)
         level_start_index = torch.cat((spatial_shapes.new_zeros((1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
+        bs = memory.shape[0]
+
+        batched_queries = refpoint_embed.dim() == 3  # [B, K, *]
+        if batched_queries and self.two_stage:
+            # fallback to shared queries when two_stage is enabled
+            refpoint_embed = refpoint_embed[0]
+            query_feat = query_feat[0]
+            batched_queries = False
         
         if self.two_stage:
             output_memory, output_proposals = gen_encoder_output_proposals(
@@ -265,10 +273,20 @@ class Transformer(nn.Module):
             boxes_ts = torch.cat(boxes_ts, dim=1)#.transpose(0, 1)
         
         if self.dec_layers > 0:
-            tgt = query_feat.unsqueeze(0).repeat(bs, 1, 1)
-            refpoint_embed = refpoint_embed.unsqueeze(0).repeat(bs, 1, 1)
+            if batched_queries:
+                tgt = query_feat
+                refpoint_embed = refpoint_embed
+            else:
+                tgt = query_feat.unsqueeze(0).repeat(bs, 1, 1)
+                refpoint_embed = refpoint_embed.unsqueeze(0).repeat(bs, 1, 1)
             if self.two_stage:
                 ts_len = refpoint_embed_ts.shape[-2]
+                if refpoint_embed.shape[-2] < ts_len:
+                    ts_len = refpoint_embed.shape[-2]
+                    refpoint_embed_ts = refpoint_embed_ts[..., :ts_len, :]
+                    memory_ts = memory_ts[..., :ts_len, :]
+                    boxes_ts = boxes_ts[..., :ts_len, :]
+
                 refpoint_embed_ts_subset = refpoint_embed[..., :ts_len, :]
                 refpoint_embed_subset = refpoint_embed[..., ts_len:, :]
 

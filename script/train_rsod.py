@@ -2,8 +2,12 @@ from rfdetr import RFDETRBase
 
 model = RFDETRBase()
 
-dataset="/home/fyb/datasets/RSOD_cocoFormat"
-output_dir="/home/fyb/mydir/rf-detr/script/RSOD_CSDMAM"
+dataset = "/home/fyb/datasets/RSOD_cocoFormat"
+output_dir = "/home/fyb/mydir/rf-detr/script/RSOD_results2"
+
+print(f"Starting training with dataset: {dataset}")
+print(f"Output directory: {output_dir}")
+
 model.train(
     dataset_dir=dataset,
     dataset_file="coco",
@@ -14,4 +18,3 @@ model.train(
     lr=1e-4,
     output_dir=output_dir,
 )
- 
