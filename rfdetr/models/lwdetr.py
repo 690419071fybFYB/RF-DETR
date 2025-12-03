@@ -35,6 +35,7 @@ from rfdetr.models.backbone import build_backbone
 from rfdetr.models.matcher import build_matcher
 from rfdetr.models.transformer import build_transformer
 from rfdetr.models.segmentation_head import SegmentationHead, get_uncertain_point_coords_with_randomness, point_sample
+from rfdetr.models.lfe_module import BasicStage
 
 
 class QueryImportanceHead(nn.Module):
@@ -90,7 +91,10 @@ class LWDETR(nn.Module):
                  two_stage=False,
                  lite_refpoint_refine=False,
                  bbox_reparam=False,
-                 use_dynamic_query=True):
+                 use_dynamic_query=True,
+                 use_lfe=False,
+                 lfe_depth=2,
+                 lfe_mlp_ratio=4.0):
         """ Initializes the model.
         Parameters:
             backbone: torch module of the backbone to be used. See backbone.py
@@ -154,6 +158,23 @@ class LWDETR(nn.Module):
                 hidden_dim, min_k=1, max_queries=self.max_queries
             )
 
+        # LFE (Lightweight Feature Enhancement) stages
+        self.use_lfe = use_lfe
+        if self.use_lfe:
+            num_scales = len(backbone.projector_scale)
+            self.lfe_stages = nn.ModuleList([
+                BasicStage(
+                    dim=hidden_dim,
+                    stage=min(i, 1),  # stage 0 uses Scharr, stage 1+ uses Gaussian
+                    depth=lfe_depth,
+                    mlp_ratio=lfe_mlp_ratio,
+                    drop_path=[0.1] * lfe_depth,
+                    norm_layer='BN',
+                    act_layer=nn.GELU
+                )
+                for i in range(num_scales)
+            ])
+
         self._export = False
 
     def reinitialize_detection_head(self, num_classes):
@@ -202,6 +223,11 @@ class LWDETR(nn.Module):
         masks = []
         for l, feat in enumerate(features):
             src, mask = feat.decompose()
+            
+            # Apply LFE feature refinement if enabled
+            if self.use_lfe:
+                src = self.lfe_stages[l](src)
+            
             srcs.append(src)
             masks.append(mask)
             assert mask is not None
@@ -964,6 +990,9 @@ def build_model(args):
         lite_refpoint_refine=args.lite_refpoint_refine,
         bbox_reparam=args.bbox_reparam,
         use_dynamic_query=args.use_dynamic_query,
+        use_lfe=args.use_lfe if hasattr(args, 'use_lfe') else False,
+        lfe_depth=args.lfe_depth if hasattr(args, 'lfe_depth') else 2,
+        lfe_mlp_ratio=args.lfe_mlp_ratio if hasattr(args, 'lfe_mlp_ratio') else 4.0,
     )
     return model
 

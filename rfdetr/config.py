@@ -38,6 +38,9 @@ class ModelConfig(BaseModel):
     segmentation_head: bool = False
     mask_downsample_ratio: int = 4
     use_dynamic_query: bool = True
+    use_lfe: bool = False
+    lfe_depth: int = 2
+    lfe_mlp_ratio: float = 4.0
 
 
 class RFDETRBaseConfig(ModelConfig):
