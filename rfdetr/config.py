@@ -37,6 +37,7 @@ class ModelConfig(BaseModel):
     cls_loss_coef: float = 1.0
     segmentation_head: bool = False
     mask_downsample_ratio: int = 4
+    use_dynamic_query: bool = True
 
 
 class RFDETRBaseConfig(ModelConfig):

@@ -89,7 +89,8 @@ class LWDETR(nn.Module):
                  group_detr=1,
                  two_stage=False,
                  lite_refpoint_refine=False,
-                 bbox_reparam=False):
+                 bbox_reparam=False,
+                 use_dynamic_query=True):
         """ Initializes the model.
         Parameters:
             backbone: torch module of the backbone to be used. See backbone.py
@@ -127,6 +128,7 @@ class LWDETR(nn.Module):
             self.transformer.decoder.bbox_embed = None
 
         self.bbox_reparam = bbox_reparam
+        self.use_dynamic_query = use_dynamic_query
 
         # init prior_prob setting for focal loss
         prior_prob = 0.01
@@ -146,10 +148,11 @@ class LWDETR(nn.Module):
                 [copy.deepcopy(self.class_embed) for _ in range(group_detr)])
 
         # Query importance and budget heads
-        self.query_importance_head = QueryImportanceHead(hidden_dim)
-        self.query_budget_predictor = QueryBudgetPredictor(
-            hidden_dim, min_k=1, max_queries=self.max_queries
-        )
+        if self.use_dynamic_query:
+            self.query_importance_head = QueryImportanceHead(hidden_dim)
+            self.query_budget_predictor = QueryBudgetPredictor(
+                hidden_dim, min_k=1, max_queries=self.max_queries
+            )
 
         self._export = False
 
@@ -209,51 +212,62 @@ class LWDETR(nn.Module):
 
         device = query_feat_weight.device
         bs = srcs[0].shape[0]
-        # importance over initial queries (shared per batch, expanded for scoring)
-        importance_logits_full = self.query_importance_head(
-            query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
-        )  # [B, Q]
 
-        # ----- Compute per-image budget K -----
-        # Use masked global average of the last feature map
-        last_feat, last_mask = srcs[-1], masks[-1]
-        valid = (~last_mask).float()
-        denom = valid.flatten(1).sum(dim=1, keepdim=True).clamp(min=1e-6)
-        pooled = (last_feat * valid.unsqueeze(1)).flatten(2).sum(dim=2) / denom  # [B, C]
-        k_pred = self.query_budget_predictor(pooled)  # [B]
+        if self.use_dynamic_query:
+            # importance over initial queries (shared per batch, expanded for scoring)
+            importance_logits_full = self.query_importance_head(
+                query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
+            )  # [B, Q]
 
-        max_k = int(k_pred.max().item())
-        max_k = max(1, min(max_k, self.max_queries))
-        if self.training and self.group_detr > 1:
-            remainder = max_k % self.group_detr
-            if remainder != 0:
-                max_k = max_k - remainder
-                if max_k == 0:
-                    max_k = self.group_detr
-        topk_indices = torch.topk(importance_logits_full, k=max_k, dim=1).indices  # [B, max_k]
+            # ----- Compute per-image budget K -----
+            # Use masked global average of the last feature map
+            last_feat, last_mask = srcs[-1], masks[-1]
+            valid = (~last_mask).float()
+            denom = valid.flatten(1).sum(dim=1, keepdim=True).clamp(min=1e-6)
+            pooled = (last_feat * valid.unsqueeze(1)).flatten(2).sum(dim=2) / denom  # [B, C]
+            k_pred = self.query_budget_predictor(pooled)  # [B]
 
-        # gather pruned queries per image
-        refpoint_batched = refpoint_embed_weight.unsqueeze(0).expand(bs, -1, -1)
-        query_batched = query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
+            max_k = int(k_pred.max().item())
+            max_k = max(1, min(max_k, self.max_queries))
+            if self.training and self.group_detr > 1:
+                remainder = max_k % self.group_detr
+                if remainder != 0:
+                    max_k = max_k - remainder
+                    if max_k == 0:
+                        max_k = self.group_detr
+            topk_indices = torch.topk(importance_logits_full, k=max_k, dim=1).indices  # [B, max_k]
 
-        gather_inds_ref = topk_indices.unsqueeze(-1).expand(-1, -1, refpoint_batched.shape[-1])
-        gather_inds_q = topk_indices.unsqueeze(-1).expand(-1, -1, query_batched.shape[-1])
+            # gather pruned queries per image
+            refpoint_batched = refpoint_embed_weight.unsqueeze(0).expand(bs, -1, -1)
+            query_batched = query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
 
-        refpoint_pruned = torch.gather(refpoint_batched, 1, gather_inds_ref)
-        query_pruned = torch.gather(query_batched, 1, gather_inds_q)
+            gather_inds_ref = topk_indices.unsqueeze(-1).expand(-1, -1, refpoint_batched.shape[-1])
+            gather_inds_q = topk_indices.unsqueeze(-1).expand(-1, -1, query_batched.shape[-1])
 
-        # mask out padded queries when K is smaller than max_k
-        valid_mask = (torch.arange(max_k, device=device).unsqueeze(0) < k_pred.unsqueeze(1))
-        refpoint_pruned = refpoint_pruned * valid_mask.unsqueeze(-1)
-        query_pruned = query_pruned * valid_mask.unsqueeze(-1)
+            refpoint_pruned = torch.gather(refpoint_batched, 1, gather_inds_ref)
+            query_pruned = torch.gather(query_batched, 1, gather_inds_q)
 
-        if self.training:
-            refpoint_embed_weight = refpoint_pruned
-            query_feat_weight = query_pruned
+            # mask out padded queries when K is smaller than max_k
+            valid_mask = (torch.arange(max_k, device=device).unsqueeze(0) < k_pred.unsqueeze(1))
+            refpoint_pruned = refpoint_pruned * valid_mask.unsqueeze(-1)
+            query_pruned = query_pruned * valid_mask.unsqueeze(-1)
+
+            if self.training:
+                refpoint_embed_weight = refpoint_pruned
+                query_feat_weight = query_pruned
+            else:
+                # only use one group in inference
+                refpoint_embed_weight = refpoint_pruned[:, :self.num_queries]
+                query_feat_weight = query_pruned[:, :self.num_queries]
         else:
-            # only use one group in inference
-            refpoint_embed_weight = refpoint_pruned[:, :self.num_queries]
-            query_feat_weight = query_pruned[:, :self.num_queries]
+            # Static queries
+            if self.training:
+                refpoint_embed_weight = refpoint_embed_weight.unsqueeze(0).expand(bs, -1, -1)
+                query_feat_weight = query_feat_weight.unsqueeze(0).expand(bs, -1, -1)
+            else:
+                refpoint_embed_weight = refpoint_embed_weight[:self.num_queries].unsqueeze(0).expand(bs, -1, -1)
+                query_feat_weight = query_feat_weight[:self.num_queries].unsqueeze(0).expand(bs, -1, -1)
+
 
         hs, ref_unsigmoid, hs_enc, ref_enc = self.transformer(
             srcs, masks, poss, refpoint_embed_weight, query_feat_weight)
@@ -279,11 +293,13 @@ class LWDETR(nn.Module):
                 out['pred_masks'] = outputs_masks[-1]
             if self.aux_loss:
                 out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord, outputs_masks if self.segmentation_head is not None else None)
-            # attach importance metadata
-            out['importance_logits'] = torch.gather(
-                importance_logits_full, 1, topk_indices
-            )
-            out['importance_mask'] = valid_mask
+            
+            if self.use_dynamic_query:
+                # attach importance metadata
+                out['importance_logits'] = torch.gather(
+                    importance_logits_full, 1, topk_indices
+                )
+                out['importance_mask'] = valid_mask
 
         if self.two_stage:
             group_detr = self.group_detr if self.training else 1
@@ -947,6 +963,7 @@ def build_model(args):
         two_stage=args.two_stage,
         lite_refpoint_refine=args.lite_refpoint_refine,
         bbox_reparam=args.bbox_reparam,
+        use_dynamic_query=args.use_dynamic_query,
     )
     return model
 

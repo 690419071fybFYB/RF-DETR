@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from rfdetr.models.csdmam import CSDMAM
+
 
 
 class LayerNorm(nn.Module):
@@ -171,7 +171,7 @@ class MultiScaleProjector(nn.Module):
         self.survival_prob = survival_prob
         self.force_drop_last_n_features = force_drop_last_n_features
         self.high_res_stage_idx = int(np.argmax(self.scale_factors))
-        self.csdmam = CSDMAM(out_channels)
+
 
         stages_sampling = []
         stages = []
@@ -271,8 +271,7 @@ class MultiScaleProjector(nn.Module):
                 feat_fuse = feat_fuse[0]
             stage_modules = list(stage.children())
             stage_out = stage_modules[0](feat_fuse)
-            if i == self.high_res_stage_idx:
-                stage_out = self.csdmam(stage_out)
+
             for module in stage_modules[1:]:
                 stage_out = module(stage_out)
             results.append(stage_out)
