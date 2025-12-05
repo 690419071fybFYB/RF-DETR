@@ -65,8 +65,9 @@ class QueryBudgetPredictor(nn.Module):
         super().__init__()
         self.min_k = max(1, min_k)
         self.max_queries = max_queries
+        # [INNOVATION] Input dim doubled because we concat spatial and frequency features
         self.mlp = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim),
+            nn.Linear(hidden_dim * 2, hidden_dim), 
             nn.GELU(),
             nn.Linear(hidden_dim, 1),
         )
@@ -225,7 +226,34 @@ class LWDETR(nn.Module):
             valid = (~last_mask).float()
             denom = valid.flatten(1).sum(dim=1, keepdim=True).clamp(min=1e-6)
             pooled = (last_feat * valid.unsqueeze(1)).flatten(2).sum(dim=2) / denom  # [B, C]
-            k_pred = self.query_budget_predictor(pooled)  # [B]
+
+            # [INNOVATION: F-DQS] Extract High-Frequency Magnitude
+            # FFT transform
+            x_fft = torch.fft.rfft2(last_feat.float())
+            # Shift low freq to corner (standard in torch is already at corner 0,0)
+            # We want to measure the energy of high frequencies.
+            # Simple approach: Zero out the low frequency corner and take prob
+            b, c, h, w = last_feat.shape
+            freq_h, freq_w = x_fft.shape[-2], x_fft.shape[-1]
+            
+            # Create a simple high-pass mask
+            # Keep only frequencies > 1/4 of the spectrum
+            f_mag = x_fft.abs()
+            # Mask out DC and low freqs (approx top-left 25%)
+            h_cu, w_cu = max(1, freq_h // 4), max(1, freq_w // 4)
+            mask_hf = torch.ones_like(f_mag)
+            mask_hf[:, :, :h_cu, :w_cu] = 0 
+            
+            # Global Average of High-Freq Energy
+            batch_hf_energy = (f_mag * mask_hf).mean(dim=(-1, -2)) # [B, C]
+            
+            # Normalize to match pooled range approx
+            batch_hf_energy = torch.log1p(batch_hf_energy)
+
+            # Fuse Spatial Pooled + Frequency Energy
+            pooled_fused = torch.cat([pooled, batch_hf_energy], dim=1) # [B, 2C]
+
+            k_pred = self.query_budget_predictor(pooled_fused)  # [B]
 
             max_k = int(k_pred.max().item())
             max_k = max(1, min(max_k, self.max_queries))
