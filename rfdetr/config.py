@@ -39,6 +39,8 @@ class ModelConfig(BaseModel):
     mask_downsample_ratio: int = 4
     use_dynamic_query: bool = True
     use_dynamic_fusion: bool = False
+    use_dual_prior: bool = False
+    use_fourier_mixer: bool = False
 
 
 class RFDETRBaseConfig(ModelConfig):
