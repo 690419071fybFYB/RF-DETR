@@ -87,7 +87,7 @@ def get_activation(name, inplace=False):
 
 class ConvX(nn.Module):
     """ Conv-bn module"""
-    def __init__(self, in_planes, out_planes, kernel=3, stride=1, groups=1, dilation=1, act='relu', layer_norm=False, rms_norm=False, use_fdconv=False):
+    def __init__(self, in_planes, out_planes, kernel=3, stride=1, groups=1, dilation=1, act='relu', layer_norm=False, rms_norm=False, use_fdconv=False, use_dynamic_fusion=False):
         super(ConvX, self).__init__()
         if not isinstance(kernel, tuple):
             kernel = (kernel, kernel)
@@ -95,7 +95,7 @@ class ConvX(nn.Module):
         if use_fdconv and kernel[0] > 1:
             self.conv = FDConv(in_planes, out_planes, kernel_size=kernel,
                               stride=stride, padding=padding, groups=groups,
-                              dilation=dilation, bias=False)
+                              dilation=dilation, bias=False, use_dynamic_fusion=use_dynamic_fusion)
         else:
             self.conv = nn.Conv2d(in_planes, out_planes, kernel_size=kernel,
                                   stride=stride, padding=padding, groups=groups,
@@ -115,12 +115,12 @@ class ConvX(nn.Module):
 class Bottleneck(nn.Module):
     """Standard bottleneck."""
 
-    def __init__(self, c1, c2, shortcut=True, g=1, k=(3, 3), e=0.5, act='silu', layer_norm=False, rms_norm=False, use_fdconv=False):
+    def __init__(self, c1, c2, shortcut=True, g=1, k=(3, 3), e=0.5, act='silu', layer_norm=False, rms_norm=False, use_fdconv=False, use_dynamic_fusion=False):
         """ ch_in, ch_out, shortcut, groups, kernels, expand """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = ConvX(c1, c_, k[0], 1, act=act, layer_norm=layer_norm, rms_norm=rms_norm, use_fdconv=False) # 1x1 usually
-        self.cv2 = ConvX(c_, c2, k[1], 1, groups=g, act=act, layer_norm=layer_norm, rms_norm=rms_norm, use_fdconv=use_fdconv) # 3x3 usually
+        self.cv2 = ConvX(c_, c2, k[1], 1, groups=g, act=act, layer_norm=layer_norm, rms_norm=rms_norm, use_fdconv=use_fdconv, use_dynamic_fusion=use_dynamic_fusion) # 3x3 usually
         self.add = shortcut and c1 == c2
 
     def forward(self, x):
@@ -131,7 +131,7 @@ class Bottleneck(nn.Module):
 class C2f(nn.Module):
     """Faster Implementation of CSP Bottleneck with 2 convolutions."""
 
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='silu', layer_norm=False, rms_norm=False, use_fdconv=False):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='silu', layer_norm=False, rms_norm=False, use_fdconv=False, use_dynamic_fusion=False):
         """ ch_in, ch_out, number, shortcut, groups, expansion """
         super().__init__()
         self.c = int(c2 * e)  # hidden channels

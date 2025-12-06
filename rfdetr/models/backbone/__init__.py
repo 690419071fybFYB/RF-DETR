@@ -75,6 +75,7 @@ def build_backbone(
     num_windows,
     positional_encoding_size,
     use_dynamic_fusion=False,
+    use_fourier_mixer=False,
 ):
     """
     Useful args:
