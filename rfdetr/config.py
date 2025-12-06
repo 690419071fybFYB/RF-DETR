@@ -38,6 +38,7 @@ class ModelConfig(BaseModel):
     segmentation_head: bool = False
     mask_downsample_ratio: int = 4
     use_dynamic_query: bool = True
+    use_dual_prior: bool = False
 
 
 class RFDETRBaseConfig(ModelConfig):

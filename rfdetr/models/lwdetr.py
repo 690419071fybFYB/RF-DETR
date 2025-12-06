@@ -78,6 +78,55 @@ class QueryBudgetPredictor(nn.Module):
         k_int = torch.clamp(k_float.round().long(), self.min_k, self.max_queries)
         return k_int
 
+
+class DualPriorCalibration(nn.Module):
+    """
+    [INNOVATION] Dual Prior Calibration: Learnable Spatial Density and Class Co-occurrence.
+    """
+    def __init__(self, num_classes, resolution=32):
+        super().__init__()
+        # Spatial density prior: [num_classes, H, W]
+        self.spatial_prior = nn.Parameter(torch.zeros(num_classes, resolution, resolution))
+        # Class co-occurrence prior: [num_classes, num_classes]
+        self.co_occurrence = nn.Parameter(torch.eye(num_classes))
+        
+        # Initialize spatial prior with small noise to break symmetry, or just zeros
+        nn.init.normal_(self.spatial_prior, std=0.01)
+
+    def forward_spatial(self, logits, reference_points):
+        """
+        Add spatial bias to logits based on reference points.
+        logits: [B, Q, num_classes]
+        reference_points: [B, Q, 2] (cx, cy)
+        """
+        bs, num_queries = reference_points.shape[:2]
+        
+        # Prepare grid: ref_points in [0, 1] -> [-1, 1]
+        grid = reference_points[..., :2] * 2.0 - 1.0
+        grid = grid.unsqueeze(2) # [B, Q, 1, 2]
+        
+        # Expand prior: [1, C, H, W] -> [B, C, H, W]
+        prior_map = self.spatial_prior.unsqueeze(0).expand(bs, -1, -1, -1)
+        
+        # Sample: [B, C, Q, 1]
+        spatial_bias = F.grid_sample(prior_map, grid, align_corners=False)
+        spatial_bias = spatial_bias.squeeze(-1).permute(0, 2, 1) # [B, Q, C]
+        
+        return logits + spatial_bias
+
+    def forward_co_occurrence(self, probs):
+        """
+        Refine probabilities using co-occurrence matrix.
+        probs: [B, Q, num_classes]
+        """
+        # A simple approach: refined = probs @ co_occurrence
+        # We ensure co_occurrence is positive (maybe softmax or sigmoid?) 
+        # But for now, we follow the raw parameter approach as per idea description.
+        # "multiply each predicted class confidence by the relevant co-occurrence prior"
+        # Let's use sigmoid on weights to keep them valid.
+        co_matrix = self.co_occurrence.sigmoid()
+        return torch.matmul(probs, co_matrix)
+
 class LWDETR(nn.Module):
     """ This is the Group DETR v3 module that performs object detection """
     def __init__(self,
@@ -91,7 +140,8 @@ class LWDETR(nn.Module):
                  two_stage=False,
                  lite_refpoint_refine=False,
                  bbox_reparam=False,
-                 use_dynamic_query=True):
+                 use_dynamic_query=True,
+                 use_dual_prior=False):
         """ Initializes the model.
         Parameters:
             backbone: torch module of the backbone to be used. See backbone.py
@@ -154,6 +204,11 @@ class LWDETR(nn.Module):
             self.query_budget_predictor = QueryBudgetPredictor(
                 hidden_dim, min_k=1, max_queries=self.max_queries
             )
+
+        # Dual Prior Calibration
+        self.use_dual_prior = use_dual_prior
+        if self.use_dual_prior:
+            self.dpc = DualPriorCalibration(num_classes)
 
         self._export = False
 
@@ -312,6 +367,15 @@ class LWDETR(nn.Module):
                 outputs_coord = (self.bbox_embed(hs) + ref_unsigmoid).sigmoid()
 
             outputs_class = self.class_embed(hs)
+
+            if self.use_dual_prior:
+                # Add spatial prior bias
+                # ref_unsigmoid is un-sigmoid, so we need sigmoid() for grid sampling
+                # BUT the DPC module handles [0,1] inputs inside.
+                # ref_unsigmoid + bbox_embed -> sigmoid is the coord.
+                # Actually `outputs_coord` is already sigmoided: 
+                # outputs_coord = (self.bbox_embed(hs) + ref_unsigmoid).sigmoid()
+                outputs_class = self.dpc.forward_spatial(outputs_class, outputs_coord[..., :2])
 
             if self.segmentation_head is not None:
                 outputs_masks = self.segmentation_head(features[0].tensors, hs, samples.tensors.shape[-2:])
@@ -992,6 +1056,7 @@ def build_model(args):
         lite_refpoint_refine=args.lite_refpoint_refine,
         bbox_reparam=args.bbox_reparam,
         use_dynamic_query=args.use_dynamic_query,
+        use_dual_prior=args.use_dual_prior,
     )
     return model
 
