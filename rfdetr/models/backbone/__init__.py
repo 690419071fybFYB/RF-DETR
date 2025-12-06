@@ -74,6 +74,7 @@ def build_backbone(
     patch_size,
     num_windows,
     positional_encoding_size,
+    use_fourier_mixer,
 ):
     """
     Useful args:
@@ -104,6 +105,7 @@ def build_backbone(
         patch_size=patch_size,
         num_windows=num_windows,
         positional_encoding_size=positional_encoding_size,
+        use_fourier_mixer=use_fourier_mixer,
     )
 
     model = Joiner(backbone, position_embedding)

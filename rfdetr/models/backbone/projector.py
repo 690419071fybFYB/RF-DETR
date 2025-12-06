@@ -146,6 +146,50 @@ class C2f(nn.Module):
         return self.cv2(torch.cat(y, 1))
 
 
+
+class FourierTokenMixer(nn.Module):
+    """
+    [INNOVATION] Fourier Token Mixer Projector
+    Applies FFT -> Learnable Gain -> IFFT
+    """
+    def __init__(self, dim, max_res=64):
+        super().__init__()
+        self.dim = dim
+        self.max_res = max_res
+        # Learnable gain: [dim, max_res, max_res // 2 + 1] (for rfft output)
+        # We use a fixed size prior and interpolate.
+        self.gain = nn.Parameter(torch.ones(dim, max_res, max_res // 2 + 1, 2)) # 2 for real/imag scaling
+        # Initialize to identity-like (1 for real, 0 for imag)?
+        # Or just magnitude scaling.
+        # Let's use simple real-valued gain on the complex spectrum for stability.
+        # gain: [dim, H, W]
+        self.gain_real = nn.Parameter(torch.ones(dim, max_res, max_res // 2 + 1))
+
+    def forward(self, x):
+        # x: [B, C, H, W]
+        B, C, H, W = x.shape
+        # FFT
+        x_fft = torch.fft.rfft2(x) # [B, C, H, W//2 + 1] complex
+        
+        # Interpolate gain to match current resolution
+        # gain_real: [C, H_ref, W_ref] -> [1, C, H, W_curr]
+        # We need to treat C as batch for interpolation or just repeat.
+        # F.interpolate takes [N, C, H, W].
+        gain = F.interpolate(
+            self.gain_real.unsqueeze(0), 
+            size=(H, W // 2 + 1), 
+            mode='bilinear', 
+            align_corners=False
+        ) # [1, C, H, W//2 + 1]
+        
+        # Apply gain
+        x_fft = x_fft * gain
+        
+        # IFFT
+        x = torch.fft.irfft2(x_fft, s=(H, W))
+        return x
+
+
 class MultiScaleProjector(nn.Module):
     """
     This module implements MultiScaleProjector in :paper:`lwdetr`.
@@ -163,6 +207,7 @@ class MultiScaleProjector(nn.Module):
         survival_prob=1.0,
         force_drop_last_n_features=0,
         use_fdconv=True,
+        use_fourier_mixer=False,
     ):
         """
         Args:
@@ -234,8 +279,13 @@ class MultiScaleProjector(nn.Module):
             in_dim = int(sum(in_channel // max(1, scale) for in_channel in in_channels))
             layers = [
                 C2f(in_dim, out_channels, num_blocks, layer_norm=layer_norm, use_fdconv=use_fdconv),
-                get_norm('LN', out_channels),
             ]
+            
+            if use_fourier_mixer:
+                layers.append(FourierTokenMixer(out_channels))
+                
+            layers.append(get_norm('LN', out_channels))
+            
             layers = nn.Sequential(*layers)
             stages.append(layers)
 

@@ -54,6 +54,7 @@ class Backbone(BackboneBase):
                  patch_size: int = 14,
                  num_windows: int = 4,
                  positional_encoding_size: bool = False,
+                 use_fourier_mixer: bool = False,
                  ):
         super().__init__()
         # an example name here would be "dinov2_base" or "dinov2_registers_windowed_base"
@@ -105,6 +106,7 @@ class Backbone(BackboneBase):
             scale_factors=scale_factors,
             layer_norm=layer_norm,
             rms_norm=rms_norm,
+            use_fourier_mixer=use_fourier_mixer,
         )
 
         self._export = False
