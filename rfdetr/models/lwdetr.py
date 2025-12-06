@@ -96,22 +96,28 @@ class DualPriorCalibration(nn.Module):
     def forward_spatial(self, logits, reference_points):
         """
         Add spatial bias to logits based on reference points.
-        logits: [B, Q, num_classes]
-        reference_points: [B, Q, 2] (cx, cy)
+        logits: [B, Q, num_classes] or [B, L, Q, num_classes]
+        reference_points: [B, Q, 2] (cx, cy) or [B, L, Q, 2]
         """
-        bs, num_queries = reference_points.shape[:2]
-        
-        # Prepare grid: ref_points in [0, 1] -> [-1, 1]
-        grid = reference_points[..., :2] * 2.0 - 1.0
-        grid = grid.unsqueeze(2) # [B, Q, 1, 2]
+        bs = reference_points.shape[0]
         
         # Expand prior: [1, C, H, W] -> [B, C, H, W]
         prior_map = self.spatial_prior.unsqueeze(0).expand(bs, -1, -1, -1)
         
-        # Sample: [B, C, Q, 1]
-        spatial_bias = F.grid_sample(prior_map, grid, align_corners=False)
-        spatial_bias = spatial_bias.squeeze(-1).permute(0, 2, 1) # [B, Q, C]
-        
+        if reference_points.dim() == 3:
+            # [B, Q, 2]
+            grid = reference_points[..., :2] * 2.0 - 1.0
+            grid = grid.unsqueeze(2) # [B, Q, 1, 2]
+            spatial_bias = F.grid_sample(prior_map, grid, align_corners=False) # [B, C, Q, 1]
+            spatial_bias = spatial_bias.squeeze(-1).permute(0, 2, 1) # [B, Q, C]
+        elif reference_points.dim() == 4:
+             # [B, L, Q, 2]
+            grid = reference_points[..., :2] * 2.0 - 1.0 # [B, L, Q, 2]
+            spatial_bias = F.grid_sample(prior_map, grid, align_corners=False) # [B, C, L, Q]
+            spatial_bias = spatial_bias.permute(0, 2, 3, 1) # [B, L, Q, C]
+        else:
+            raise ValueError(f"Unsupported reference_points shape: {reference_points.shape}")
+
         return logits + spatial_bias
 
     def forward_co_occurrence(self, probs):
