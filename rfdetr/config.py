@@ -147,6 +147,9 @@ class TrainConfig(BaseModel):
     expanded_scales: bool = True
     do_random_resize_via_padding: bool = False
     use_ema: bool = True
+    use_dual_prior: bool = False
+    use_fourier_mixer: bool = False
+    use_dynamic_fusion: bool = False
     num_workers: int = 2
     weight_decay: float = 1e-4
     early_stopping: bool = False

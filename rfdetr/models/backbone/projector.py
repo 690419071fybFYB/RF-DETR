@@ -160,9 +160,11 @@ class MultiScaleProjector(nn.Module):
         num_blocks=3,
         layer_norm=False,
         rms_norm=False,
+        use_fdconv=True,
+        use_fourier_mixer=False,
+        use_dynamic_fusion=False,
         survival_prob=1.0,
         force_drop_last_n_features=0,
-        use_fdconv=True,
     ):
         """
         Args:
@@ -233,7 +235,7 @@ class MultiScaleProjector(nn.Module):
 
             in_dim = int(sum(in_channel // max(1, scale) for in_channel in in_channels))
             layers = [
-                C2f(in_dim, out_channels, num_blocks, layer_norm=layer_norm, use_fdconv=use_fdconv),
+                C2f(in_dim, out_channels, num_blocks, layer_norm=layer_norm, use_fdconv=use_fdconv, use_dynamic_fusion=use_dynamic_fusion),
                 get_norm('LN', out_channels),
             ]
             layers = nn.Sequential(*layers)

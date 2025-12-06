@@ -337,14 +337,30 @@ class FrequencyBandModulation(nn.Module):
                 spatial_kernel=3,
                 init='zero',
                 max_size=(64, 64), # 预计算mask的最大尺寸
+                dynamic_fusion=False, # [INNOVATION]
                 **kwargs,
                 ):
         super().__init__()
         self.k_list = k_list
+        self.dynamic_fusion = dynamic_fusion
         self.lowfreq_att = lowfreq_att
         self.in_channels = in_channels
         self.fs_feat = fs_feat
         self.act = act
+
+        if self.dynamic_fusion:
+            # MLP for dynamic weights: Global Avg Pool -> Linear -> ReLU -> Linear -> Sigmoid/Softmax
+            # We predict one weight per band. 
+            # num_bands = len(k_list) + 1 (low freq)
+            self.num_bands = len(k_list) + 1
+            self.fusion_mlp = nn.Sequential(
+                nn.AdaptiveAvgPool2d(1),
+                nn.Flatten(),
+                nn.Linear(in_channels, in_channels // 4),
+                nn.ReLU(),
+                nn.Linear(in_channels // 4, self.num_bands),
+                nn.Softmax(dim=1) # Normalize weights to sum to 1? Or sigmoid? Idea says "soft weights". Softmax makes sense for fusion.
+            )
 
         if spatial_group > 64: 
             spatial_group = in_channels
@@ -476,6 +492,17 @@ class FrequencyBandModulation(nn.Module):
         else:
             x_list.append(pre_x)
             
+        if self.dynamic_fusion:
+            # Predict weights: [B, num_bands]
+            # x_list has len num_bands
+            fusion_weights = self.fusion_mlp(x) # [B, num_bands]
+            
+            w_x_list = []
+            for i, band_out in enumerate(x_list):
+                 w = fusion_weights[:, i].view(b, 1, 1, 1)
+                 w_x_list.append(band_out * w)
+            return sum(w_x_list)
+            
         return sum(x_list)
 
 def get_fft2freq(d1, d2, use_rfft=False):
@@ -550,6 +577,7 @@ class FDConv(nn.Conv2d):
                     'init':'zero',
                     'global_selection':False,
                  },
+                 use_dynamic_fusion=False,
                  **kwargs,
                  ):
         super().__init__(*args, **kwargs)
@@ -563,6 +591,7 @@ class FDConv(nn.Conv2d):
         self.att_multi = att_multi
         self.spatial_freq_decompose = spatial_freq_decompose
         self.use_fbm_if_k_in = use_fbm_if_k_in
+        self.use_dynamic_fusion = use_dynamic_fusion
 
         self.ksm_local_act = ksm_local_act
         self.ksm_global_act = ksm_global_act
@@ -591,7 +620,7 @@ class FDConv(nn.Conv2d):
         
         # print(use_fbm_for_stride, self.stride[0] > 1)
         if self.kernel_size[0] in use_fbm_if_k_in or (use_fbm_for_stride and self.stride[0] > 1):
-            self.FBM = FrequencyBandModulation(self.in_channels, **fbm_cfg)
+            self.FBM = FrequencyBandModulation(self.in_channels, dynamic_fusion=self.use_dynamic_fusion, **fbm_cfg)
             # self.channel_comp = ChannelPool(reduction=16)
             
         if self.use_ksm_local:

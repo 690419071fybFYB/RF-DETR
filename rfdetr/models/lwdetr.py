@@ -968,6 +968,8 @@ def build_model(args):
         load_dinov2_weights=args.pretrain_weights is None,
         patch_size=args.patch_size,
         num_windows=args.num_windows,
+        use_fourier_mixer=args.use_fourier_mixer,
+        use_dynamic_fusion=args.use_dynamic_fusion,
         positional_encoding_size=args.positional_encoding_size,
     )
     if args.encoder_only:
