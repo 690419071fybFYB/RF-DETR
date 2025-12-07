@@ -24,6 +24,7 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 
 from rfdetr.models.ops.modules import MSDeformAttn
+from rfdetr.models.scale_aware_attn import ScaleAwareMSDeformAttn
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -138,7 +139,9 @@ class Transformer(nn.Module):
                  decoder_norm_type='LN',
                  bbox_reparam=False,
                  enable_soqb=True,
-                 soqb_boost_factor: float = 2.0):
+                 soqb_boost_factor: float = 2.0,
+                 enable_scale_aware_query_grouping=False,
+                 scale_aware_num_bins=3):
         super().__init__()
         self.encoder = None
 
@@ -149,7 +152,9 @@ class Transformer(nn.Module):
                                                 dec_n_points=dec_n_points,
                                                 skip_self_attn=False,
                                                 enable_soqb=enable_soqb,
-                                                soqb_boost_factor=soqb_boost_factor,)
+                                                soqb_boost_factor=soqb_boost_factor,
+                                                enable_scale_aware_query_grouping=enable_scale_aware_query_grouping,
+                                                scale_aware_num_bins=scale_aware_num_bins)
         assert decoder_norm_type in ['LN', 'Identity']
         norm = { 
             "LN": lambda channels: nn.LayerNorm(channels),
@@ -290,7 +295,7 @@ class Transformer(nn.Module):
                 refpoint_embed = torch.concat(
                     [refpoint_embed_ts_subset, refpoint_embed_subset], dim=-2)
 
-            hs, references = self.decoder(tgt, memory, memory_key_padding_mask=mask_flatten,
+            hs, references, scale_logits = self.decoder(tgt, memory, memory_key_padding_mask=mask_flatten,
                             pos=lvl_pos_embed_flatten, refpoints_unsigmoid=refpoint_embed,
                             level_start_index=level_start_index, 
                             spatial_shapes=spatial_shapes,
@@ -299,13 +304,14 @@ class Transformer(nn.Module):
             assert self.two_stage, "if not using decoder, two_stage must be True"
             hs = None
             references = None
+            scale_logits = None
         
         if self.two_stage:
             if self.bbox_reparam:
-                return hs, references, memory_ts, boxes_ts
+                return hs, references, memory_ts, boxes_ts, scale_logits
             else:
-                return hs, references, memory_ts, boxes_ts.sigmoid()
-        return hs, references, None, None
+                return hs, references, memory_ts, boxes_ts.sigmoid(), scale_logits
+        return hs, references, None, None, scale_logits
 
 
 class TransformerDecoder(nn.Module):
@@ -367,6 +373,7 @@ class TransformerDecoder(nn.Module):
 
         intermediate = []
         hs_refpoints_unsigmoid = [refpoints_unsigmoid]
+        all_scale_logits = []  # Collect scale logits from all layers
         
         def get_reference(refpoints):
             # [num_queries, batch_size, 4]
@@ -403,7 +410,7 @@ class TransformerDecoder(nn.Module):
 
             query_pos = query_pos * pos_transformation
             
-            output = layer(output, memory, tgt_mask=tgt_mask,
+            output, scale_logits = layer(output, memory, tgt_mask=tgt_mask,
                            memory_mask=memory_mask,
                            tgt_key_padding_mask=tgt_key_padding_mask,
                            memory_key_padding_mask=memory_key_padding_mask,
@@ -412,6 +419,10 @@ class TransformerDecoder(nn.Module):
                            reference_points=refpoints_input,
                            spatial_shapes=spatial_shapes,
                            level_start_index=level_start_index)
+            
+            # Collect scale logits if they exist
+            if scale_logits is not None:
+                all_scale_logits.append(scale_logits)
 
             if not self.lite_refpoint_refine:
                 # box iterative update
@@ -429,6 +440,11 @@ class TransformerDecoder(nn.Module):
             if self.return_intermediate:
                 intermediate.pop()
                 intermediate.append(output)
+        
+        # Stack scale logits if any exist
+        stacked_scale_logits = None
+        if all_scale_logits:
+            stacked_scale_logits = torch.stack(all_scale_logits, dim=0)  # (num_layers, bs, num_queries, num_bins)
 
         if self.return_intermediate:
             if self._export:
@@ -438,20 +454,22 @@ class TransformerDecoder(nn.Module):
                     ref = hs_refpoints_unsigmoid[-1]
                 else:
                     ref = refpoints_unsigmoid
-                return hs, ref
+                return hs, ref, stacked_scale_logits
             # box iterative update
             if self.bbox_embed is not None:
                 return [
                     torch.stack(intermediate),
                     torch.stack(hs_refpoints_unsigmoid),
+                    stacked_scale_logits,
                 ]
             else:
                 return [
                     torch.stack(intermediate), 
-                    refpoints_unsigmoid.unsqueeze(0)
+                    refpoints_unsigmoid.unsqueeze(0),
+                    stacked_scale_logits,
                 ]
 
-        return output.unsqueeze(0)
+        return output.unsqueeze(0), stacked_scale_logits
 
 
 class SmallObjectQueryBoost(nn.Module):
@@ -494,7 +512,9 @@ class TransformerDecoderLayer(nn.Module):
                  num_feature_levels=4, dec_n_points=4, 
                  skip_self_attn=False,
                  enable_soqb=True,
-                 soqb_boost_factor: float = 2.0):
+                 soqb_boost_factor: float = 2.0,
+                 enable_scale_aware_query_grouping=False,
+                 scale_aware_num_bins=3):
         super().__init__()
         # Decoder Self-Attention
         self.self_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=sa_nhead, dropout=dropout, batch_first=True)
@@ -502,8 +522,14 @@ class TransformerDecoderLayer(nn.Module):
         self.norm1 = nn.LayerNorm(d_model)
 
         # Decoder Cross-Attention
-        self.cross_attn = MSDeformAttn(
-            d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points)
+        self.enable_scale_aware_query_grouping = enable_scale_aware_query_grouping
+        if enable_scale_aware_query_grouping:
+            self.cross_attn = ScaleAwareMSDeformAttn(
+                d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points,
+                num_scale_bins=scale_aware_num_bins)
+        else:
+            self.cross_attn = MSDeformAttn(
+                d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points)
 
         self.nhead = ca_nhead
 
@@ -572,14 +598,26 @@ class TransformerDecoderLayer(nn.Module):
             tgt = self.soqb(tgt, reference_points)
 
         # ========== Begin of Cross-Attention =============
-        tgt2 = self.cross_attn(
-            self.with_pos_embed(tgt, query_pos),
-            reference_points,
-            memory,
-            spatial_shapes,
-            level_start_index,
-            memory_key_padding_mask
-        )
+        scale_logits = None
+        if self.enable_scale_aware_query_grouping:
+            tgt2, scale_logits = self.cross_attn(
+                self.with_pos_embed(tgt, query_pos),
+                reference_points,
+                memory,
+                spatial_shapes,
+                level_start_index,
+                memory_key_padding_mask,
+                return_scale_logits=True
+            )
+        else:
+            tgt2 = self.cross_attn(
+                self.with_pos_embed(tgt, query_pos),
+                reference_points,
+                memory,
+                spatial_shapes,
+                level_start_index,
+                memory_key_padding_mask
+            )
         # ========== End of Cross-Attention =============
 
         tgt = tgt + self.dropout2(tgt2)
@@ -587,7 +625,7 @@ class TransformerDecoderLayer(nn.Module):
         tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
         tgt = (tgt + self.dropout3(tgt2))
         tgt = self.norm3(tgt)
-        return tgt
+        return tgt, scale_logits
 
     def forward(self, tgt, memory,
                 tgt_mask: Optional[Tensor] = None,
@@ -617,6 +655,10 @@ def build_transformer(args):
         two_stage = args.two_stage
     except:
         two_stage = False
+    
+    # Get scale-aware query grouping params with defaults
+    enable_scale_aware = getattr(args, 'enable_scale_aware_query_grouping', False)
+    scale_aware_num_bins = getattr(args, 'scale_aware_num_bins', 3)
 
     return Transformer(
         d_model=args.hidden_dim,
@@ -636,6 +678,8 @@ def build_transformer(args):
         bbox_reparam=args.bbox_reparam,
         enable_soqb=True,
         soqb_boost_factor=2.0,
+        enable_scale_aware_query_grouping=enable_scale_aware,
+        scale_aware_num_bins=scale_aware_num_bins,
     )
 
 

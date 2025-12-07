@@ -163,7 +163,7 @@ class LWDETR(nn.Module):
             refpoint_embed_weight = self.refpoint_embed.weight[:self.num_queries]
             query_feat_weight = self.query_feat.weight[:self.num_queries]
 
-        hs, ref_unsigmoid, hs_enc, ref_enc = self.transformer(
+        hs, ref_unsigmoid, hs_enc, ref_enc, scale_logits = self.transformer(
             srcs, masks, poss, refpoint_embed_weight, query_feat_weight)
 
         if hs is not None:

@@ -37,6 +37,10 @@ class ModelConfig(BaseModel):
     cls_loss_coef: float = 1.0
     segmentation_head: bool = False
     mask_downsample_ratio: int = 4
+    # Scale-Aware Query Grouping
+    enable_scale_aware_query_grouping: bool = False
+    scale_aware_num_bins: int = 3  # small, medium, large
+    scale_aware_aux_loss_weight: float = 0.5
 
 
 class RFDETRBaseConfig(ModelConfig):
