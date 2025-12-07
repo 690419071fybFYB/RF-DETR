@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from rfdetr.models.csdmam import CSDMAM
+
 
 
 class LayerNorm(nn.Module):
@@ -140,88 +140,6 @@ class C2f(nn.Module):
         return self.cv2(torch.cat(y, 1))
 
 
-class MiniFPNv3(nn.Module):
-    """
-    Cross-Scale Attention neck to enhance small-object features.
-    Inputs:
-        f40: [B, C, 40, 40]
-        f80: upsample(f40) -> [B, C, 80, 80]
-        f20: downsample(f40) -> [B, C, 20, 20]
-    Output:
-        fused: [B, C, 40, 40]
-    """
-
-    def __init__(self, channels: int = 256, reduce_channels: int = 128):
-        super().__init__()
-        self.reduce_40 = nn.Sequential(
-            nn.Conv2d(channels, reduce_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(reduce_channels),
-            nn.SiLU(inplace=True),
-        )
-        self.reduce_80 = nn.Sequential(
-            nn.Conv2d(channels, reduce_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(reduce_channels),
-            nn.SiLU(inplace=True),
-        )
-        self.reduce_20 = nn.Sequential(
-            nn.Conv2d(channels, reduce_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(reduce_channels),
-            nn.SiLU(inplace=True),
-        )
-
-        # Attention projections
-        self.q_proj = nn.Conv2d(reduce_channels, reduce_channels, kernel_size=1, bias=False)
-        self.k_proj = nn.Conv2d(reduce_channels * 2, reduce_channels * 2, kernel_size=1, bias=False)
-        self.v_proj = nn.Conv2d(reduce_channels * 2, reduce_channels * 2, kernel_size=1, bias=False)
-
-        self.out_proj = nn.Sequential(
-            nn.Conv2d(reduce_channels, channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(channels),
-            nn.SiLU(inplace=True),
-        )
-
-    def _scaled_dot_product(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-        b, c, h, w = q.shape
-        q_flat = q.flatten(2).transpose(1, 2)           # [B, HW, C]
-        k_flat = k.flatten(2)                           # [B, C, HW]
-        v_flat = v.flatten(2).transpose(1, 2)           # [B, HW, C]
-
-        attn = torch.bmm(q_flat, k_flat) / math.sqrt(c)
-        attn = torch.softmax(attn, dim=-1)
-        out = torch.bmm(attn, v_flat)                   # [B, HW, C]
-        return out.transpose(1, 2).view(b, c, h, w)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Multi-scale sampling
-        f40 = x
-        f80 = F.interpolate(f40, scale_factor=2.0, mode="bilinear", align_corners=False)
-        f20 = F.interpolate(f40, scale_factor=0.5, mode="bilinear", align_corners=False)
-
-        # Channel reduction
-        f40_r = self.reduce_40(f40)
-        f80_r = self.reduce_80(f80)
-        f20_r = self.reduce_20(f20)
-
-        # Align to 40x40 for attention
-        f80_40 = F.interpolate(f80_r, scale_factor=0.5, mode="bilinear", align_corners=False)
-        f20_40 = F.interpolate(f20_r, scale_factor=2.0, mode="bilinear", align_corners=False)
-
-        # Projections
-        q = self.q_proj(f40_r)
-        k_cat = torch.cat([f80_40, f20_40], dim=1)
-        v_cat = k_cat
-        k_cat = self.k_proj(k_cat)
-        v_cat = self.v_proj(v_cat)
-
-        k80, k20 = torch.chunk(k_cat, 2, dim=1)
-        v80, v20 = torch.chunk(v_cat, 2, dim=1)
-
-        attn_80 = self._scaled_dot_product(q, k80, v80)
-        attn_20 = self._scaled_dot_product(q, k20, v20)
-
-        fused = f40_r + attn_80 + attn_20
-        return self.out_proj(fused)
-
 
 class MultiScaleProjector(nn.Module):
     """
@@ -254,8 +172,6 @@ class MultiScaleProjector(nn.Module):
         self.survival_prob = survival_prob
         self.force_drop_last_n_features = force_drop_last_n_features
         self.high_res_stage_idx = int(np.argmax(self.scale_factors))
-        self.csdmam = CSDMAM(out_channels)
-        self.mini_fpn = MiniFPNv3(channels=out_channels)
 
         stages_sampling = []
         stages = []
@@ -355,9 +271,6 @@ class MultiScaleProjector(nn.Module):
                 feat_fuse = feat_fuse[0]
             stage_modules = list(stage.children())
             stage_out = stage_modules[0](feat_fuse)
-            if i == self.high_res_stage_idx:
-                stage_out = self.csdmam(stage_out)
-                stage_out = self.mini_fpn(stage_out)
             for module in stage_modules[1:]:
                 stage_out = module(stage_out)
             results.append(stage_out)
