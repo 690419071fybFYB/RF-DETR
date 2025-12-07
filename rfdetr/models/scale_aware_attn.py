@@ -23,12 +23,14 @@ from .ops.functions import ms_deform_attn_core_pytorch
 
 class ScaleAwareMSDeformAttn(nn.Module):
     """
-    Scale-Aware Multi-Scale Deformable Attention Module.
+    Scale-Aware Multi-Scale Deformable Attention Module with Dynamic Gating.
     
-    Extends MSDeformAttn by adding a scale prediction head that predicts
-    which scale bin (small/medium/large) each query should attend to.
-    Based on the predicted scale, attention weights are masked to focus
-    on corresponding feature pyramid levels.
+    Extends MSDeformAttn by adding:
+    1. Scale prediction head: predicts which scale bin (small/medium/large) each query targets.
+    2. Dynamic gating: predicts soft weights for each feature pyramid level.
+    
+    Scale-aware grouping applies hard masking (discrete selection),
+    while dynamic gating applies soft weighting (continuous modulation).
     
     Scale bin to level mapping (for 4-level pyramid):
     - Bin 0 (small objects): attend to levels 0, 1 (high resolution)
@@ -36,7 +38,8 @@ class ScaleAwareMSDeformAttn(nn.Module):
     - Bin 2 (large objects): attend to levels 2, 3 (low resolution)
     """
     
-    def __init__(self, d_model=256, n_levels=4, n_heads=8, n_points=4, num_scale_bins=3):
+    def __init__(self, d_model=256, n_levels=4, n_heads=8, n_points=4, num_scale_bins=3,
+                 enable_dynamic_gating=False, gating_temperature=1.0):
         """
         :param d_model      hidden dimension
         :param n_levels     number of feature levels
@@ -51,6 +54,8 @@ class ScaleAwareMSDeformAttn(nn.Module):
         self.n_heads = n_heads
         self.n_points = n_points
         self.num_scale_bins = num_scale_bins
+        self.enable_dynamic_gating = enable_dynamic_gating
+        self.gating_temperature = gating_temperature
         
         # Main attention components (same as MSDeformAttn)
         self.sampling_offsets = nn.Linear(d_model, n_heads * n_levels * n_points * 2)
@@ -58,12 +63,20 @@ class ScaleAwareMSDeformAttn(nn.Module):
         self.value_proj = nn.Linear(d_model, d_model)
         self.output_proj = nn.Linear(d_model, d_model)
         
-        # Scale prediction head
+        # Scale prediction head (for scale-aware grouping)
         self.scale_pred_head = nn.Sequential(
             nn.Linear(d_model, 64),
             nn.ReLU(inplace=True),
             nn.Linear(64, num_scale_bins)
         )
+        
+        # Dynamic gating head (for adaptive level weighting)
+        if enable_dynamic_gating:
+            self.gating_head = nn.Sequential(
+                nn.Linear(d_model, 64),
+                nn.ReLU(inplace=True),
+                nn.Linear(64, n_levels)
+            )
         
         # Create level mask for each scale bin
         # Shape: (num_scale_bins, n_levels)
@@ -122,6 +135,13 @@ class ScaleAwareMSDeformAttn(nn.Module):
             if isinstance(layer, nn.Linear):
                 xavier_uniform_(layer.weight.data)
                 constant_(layer.bias.data, 0.)
+        
+        # Initialize gating head
+        if self.enable_dynamic_gating:
+            for layer in self.gating_head:
+                if isinstance(layer, nn.Linear):
+                    xavier_uniform_(layer.weight.data)
+                    constant_(layer.bias.data, 0.)
 
     def export(self):
         """Export mode."""
@@ -144,6 +164,7 @@ class ScaleAwareMSDeformAttn(nn.Module):
         N, Len_q, _ = query.shape
         N, Len_in, _ = input_flatten.shape
         
+        # ========== Scale-Aware Grouping (Hard Masking) ==========
         # Predict scale bin for each query
         scale_logits = self.scale_pred_head(query)  # (N, Len_q, num_scale_bins)
         
@@ -161,6 +182,14 @@ class ScaleAwareMSDeformAttn(nn.Module):
         # scale_probs: (N, Len_q, num_scale_bins)
         # level_weights: (N, Len_q, n_levels)
         level_weights = torch.einsum('bqs,sl->bql', scale_probs, self.level_masks)
+        
+        # ========== Dynamic Gating (Soft Weighting) ==========
+        if self.enable_dynamic_gating:
+            # Predict gating weights for each level
+            gating_logits = self.gating_head(query)  # (N, Len_q, n_levels)
+            gating_weights = F.softmax(gating_logits / self.gating_temperature, dim=-1)  # (N, Len_q, n_levels)
+            # Combine with scale-aware level weights (element-wise multiplication for synergy)
+            level_weights = level_weights * gating_weights
         
         # Project values
         value = self.value_proj(input_flatten)

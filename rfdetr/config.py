@@ -41,6 +41,9 @@ class ModelConfig(BaseModel):
     enable_scale_aware_query_grouping: bool = False
     scale_aware_num_bins: int = 3  # small, medium, large
     scale_aware_aux_loss_weight: float = 0.5
+    # Dynamic Multi-Scale Gating
+    enable_dynamic_multiscale_gating: bool = False
+    gating_temperature: float = 1.0  # Controls softmax sharpness
 
 
 class RFDETRBaseConfig(ModelConfig):

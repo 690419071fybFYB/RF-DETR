@@ -141,7 +141,9 @@ class Transformer(nn.Module):
                  enable_soqb=True,
                  soqb_boost_factor: float = 2.0,
                  enable_scale_aware_query_grouping=False,
-                 scale_aware_num_bins=3):
+                 scale_aware_num_bins=3,
+                 enable_dynamic_multiscale_gating=False,
+                 gating_temperature=1.0):
         super().__init__()
         self.encoder = None
 
@@ -154,7 +156,9 @@ class Transformer(nn.Module):
                                                 enable_soqb=enable_soqb,
                                                 soqb_boost_factor=soqb_boost_factor,
                                                 enable_scale_aware_query_grouping=enable_scale_aware_query_grouping,
-                                                scale_aware_num_bins=scale_aware_num_bins)
+                                                scale_aware_num_bins=scale_aware_num_bins,
+                                                enable_dynamic_multiscale_gating=enable_dynamic_multiscale_gating,
+                                                gating_temperature=gating_temperature)
         assert decoder_norm_type in ['LN', 'Identity']
         norm = { 
             "LN": lambda channels: nn.LayerNorm(channels),
@@ -514,7 +518,9 @@ class TransformerDecoderLayer(nn.Module):
                  enable_soqb=True,
                  soqb_boost_factor: float = 2.0,
                  enable_scale_aware_query_grouping=False,
-                 scale_aware_num_bins=3):
+                 scale_aware_num_bins=3,
+                 enable_dynamic_multiscale_gating=False,
+                 gating_temperature=1.0):
         super().__init__()
         # Decoder Self-Attention
         self.self_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=sa_nhead, dropout=dropout, batch_first=True)
@@ -526,7 +532,9 @@ class TransformerDecoderLayer(nn.Module):
         if enable_scale_aware_query_grouping:
             self.cross_attn = ScaleAwareMSDeformAttn(
                 d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points,
-                num_scale_bins=scale_aware_num_bins)
+                num_scale_bins=scale_aware_num_bins,
+                enable_dynamic_gating=enable_dynamic_multiscale_gating,
+                gating_temperature=gating_temperature)
         else:
             self.cross_attn = MSDeformAttn(
                 d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points)
@@ -659,6 +667,8 @@ def build_transformer(args):
     # Get scale-aware query grouping params with defaults
     enable_scale_aware = getattr(args, 'enable_scale_aware_query_grouping', False)
     scale_aware_num_bins = getattr(args, 'scale_aware_num_bins', 3)
+    enable_dynamic_gating = getattr(args, 'enable_dynamic_multiscale_gating', False)
+    gating_temperature = getattr(args, 'gating_temperature', 1.0)
 
     return Transformer(
         d_model=args.hidden_dim,
@@ -680,6 +690,8 @@ def build_transformer(args):
         soqb_boost_factor=2.0,
         enable_scale_aware_query_grouping=enable_scale_aware,
         scale_aware_num_bins=scale_aware_num_bins,
+        enable_dynamic_multiscale_gating=enable_dynamic_gating,
+        gating_temperature=gating_temperature,
     )
 
 
