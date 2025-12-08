@@ -47,6 +47,8 @@ class ModelConfig(BaseModel):
     # Density-Guided Query Initialization
     enable_density_init: bool = False
     density_loss_coef: float = 1.0
+    # Scale-Aware Encoder
+    enable_scale_aware_encoder: bool = False
 
 
 

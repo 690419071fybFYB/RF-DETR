@@ -128,6 +128,86 @@ def gen_encoder_output_proposals(memory, memory_padding_mask, spatial_shapes, un
     return output_memory.to(memory.dtype), output_proposals.to(memory.dtype)
 
 
+class ScaleAwareEncoder(nn.Module):
+    """
+    Scale-Aware Encoder Layer.
+    Applies Scale-Aware MS Deformable Attention to refined feature maps.
+    Serves as a self-attention encoder layers after projector.
+    """
+    def __init__(self, d_model=256, n_levels=4, n_heads=8, n_points=4, num_scale_bins=3,
+                 dropout=0.1, activation="relu", normalize_before=False):
+        super().__init__()
+        
+        # Self-Attention
+        self.self_attn = ScaleAwareMSDeformAttn(
+            d_model, n_levels, n_heads, n_points, num_scale_bins=num_scale_bins,
+            enable_dynamic_gating=False # For encoder, let's start simpler with just scale-aware hard masking
+            # We can expose gating params if needed later
+        )
+        self.dropout1 = nn.Dropout(dropout)
+        self.norm1 = nn.LayerNorm(d_model)
+
+        # FFN
+        dim_feedforward = 1024 # Can be configured
+        self.linear1 = nn.Linear(d_model, dim_feedforward)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(dim_feedforward, d_model)
+        self.dropout2 = nn.Dropout(dropout)
+        self.norm2 = nn.LayerNorm(d_model)
+
+        self.activation = _get_activation_fn(activation)
+        self.normalize_before = normalize_before
+
+    @staticmethod
+    def get_reference_points(spatial_shapes, valid_ratios, device):
+        """
+        Generate reference points for each feature level.
+        Returns: [bs, \sum(hw), n_levels, 2]
+        """
+        ref_points_list = []
+        for lvl, (H, W) in enumerate(spatial_shapes):
+            ref_y, ref_x = torch.meshgrid(torch.linspace(0.5, H - 0.5, H, dtype=torch.float32, device=device),
+                                          torch.linspace(0.5, W - 0.5, W, dtype=torch.float32, device=device))
+            ref_y = ref_y.reshape(-1)[None] / (valid_ratios[:, None, lvl, 1] * H)
+            ref_x = ref_x.reshape(-1)[None] / (valid_ratios[:, None, lvl, 0] * W)
+            ref = torch.stack((ref_x, ref_y), -1)
+            ref_points_list.append(ref)
+        
+        ref_points = torch.cat(ref_points_list, 1)
+        ref_points = ref_points[:, :, None] * valid_ratios[:, None]
+        return ref_points
+
+    def forward(self, src, spatial_shapes, level_start_index, padding_mask=None, valid_ratios=None):
+        """
+        src: [bs, \sum(hw), c]
+        """
+        bs, len_src, c = src.shape
+        
+        # 1. Generate reference points acting as queries
+        # For Encoder Self-Attention, query position == feature position
+        # [bs, \sum(hw), n_levels, 2]
+        if valid_ratios is None:
+            valid_ratios = torch.ones([bs, spatial_shapes.shape[0], 2], device=src.device)
+            
+        reference_points = self.get_reference_points(spatial_shapes, valid_ratios, device=src.device)
+        
+        # 2. Self-Attention
+        # query = src, key = src
+        # We need to treat 'src' as both query and key/value source
+        src2 = self.self_attn(src, reference_points, src, spatial_shapes, level_start_index, padding_mask)
+        
+        src = src + self.dropout1(src2)
+        src = self.norm1(src)
+        
+        # 3. FFN
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        src = src + self.dropout2(src2)
+        src = self.norm2(src)
+        
+        return src
+
+
+
 class Transformer(nn.Module):
 
     def __init__(self, d_model=512, sa_nhead=8, ca_nhead=8, num_queries=300,
@@ -146,7 +226,9 @@ class Transformer(nn.Module):
                  enable_dynamic_multiscale_gating=False,
 
                  gating_temperature=1.0,
-                 enable_density_init=False):
+
+                 enable_density_init=False,
+                 enable_scale_aware_encoder=False):
         super().__init__()
         self.encoder = None
 
@@ -195,6 +277,13 @@ class Transformer(nn.Module):
         self.enable_density_init = enable_density_init
         if enable_density_init:
             self.density_init = DensityGuidedQueryInit(d_model)
+        
+        self.enable_scale_aware_encoder = enable_scale_aware_encoder
+        if enable_scale_aware_encoder:
+            self.scale_aware_encoder = ScaleAwareEncoder(
+                d_model, num_feature_levels, sa_nhead, dec_n_points, 
+                num_scale_bins=scale_aware_num_bins
+            )
 
         self._export = False
     
@@ -242,7 +331,11 @@ class Transformer(nn.Module):
             valid_ratios = torch.stack([self.get_valid_ratio(m) for m in masks], 1)
         lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1) # bs, \sum{hxw}, c 
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=memory.device)
+        spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=memory.device)
         level_start_index = torch.cat((spatial_shapes.new_zeros((1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
+        
+        if self.enable_scale_aware_encoder:
+            memory = self.scale_aware_encoder(memory, spatial_shapes, level_start_index, mask_flatten, valid_ratios)
         
         pred_density = None
         if self.enable_density_init:
@@ -762,7 +855,9 @@ def build_transformer(args):
         scale_aware_num_bins=scale_aware_num_bins,
         enable_dynamic_multiscale_gating=enable_dynamic_gating,
         gating_temperature=gating_temperature,
+
         enable_density_init=getattr(args, 'enable_density_init', False),
+        enable_scale_aware_encoder=getattr(args, 'enable_scale_aware_encoder', False),
     )
 
 

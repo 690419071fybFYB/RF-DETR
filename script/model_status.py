@@ -14,6 +14,9 @@ def main():
     model = RFDETRBase(
         pretrain_weights=None,  # Don't load weights, just inspect structure
         num_classes=4,  # RSOD has 4 classes
+        enable_scale_aware_encoder=True,
+        enable_density_init=True,
+        density_loss_coef=2.0   
     )
     
     # Move to CPU to avoid GPU memory issues during inspection
@@ -28,7 +31,11 @@ def main():
         model.model.model,
         input_size=(1, 3, 560, 560),  # Must be divisible by 56 (block_size)
         depth=4,
-        col_names=["input_size", "output_size", "num_params", "trainable"],
+        col_names=["input_size",
+                    "output_size",
+                    "num_params",
+                    "params_percent",
+                    "mult_adds",],
         row_settings=["var_names"],
         verbose=1
     )
