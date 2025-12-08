@@ -26,6 +26,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from rfdetr.models.density_init import DensityGuidedQueryInit
+
 from rfdetr.util import box_ops
 from rfdetr.util.misc import (NestedTensor, nested_tensor_from_tensor_list,
                        accuracy, get_world_size,
@@ -163,7 +165,7 @@ class LWDETR(nn.Module):
             refpoint_embed_weight = self.refpoint_embed.weight[:self.num_queries]
             query_feat_weight = self.query_feat.weight[:self.num_queries]
 
-        hs, ref_unsigmoid, hs_enc, ref_enc, scale_logits = self.transformer(
+        hs, ref_unsigmoid, hs_enc, ref_enc, scale_logits, pred_density = self.transformer(
             srcs, masks, poss, refpoint_embed_weight, query_feat_weight)
 
         if hs is not None:
@@ -204,10 +206,14 @@ class LWDETR(nn.Module):
 
             if hs is not None:
                 out['enc_outputs'] = {'pred_logits': cls_enc, 'pred_boxes': ref_enc}
+                if pred_density is not None:
+                    out['pred_density'] = pred_density
                 if self.segmentation_head is not None:
                     out['enc_outputs']['pred_masks'] = masks_enc
             else:
                 out = {'pred_logits': cls_enc, 'pred_boxes': ref_enc}
+                if pred_density is not None:
+                    out['pred_density'] = pred_density
                 if self.segmentation_head is not None:
                     out['pred_masks'] = masks_enc
 
@@ -297,7 +303,9 @@ class SetCriterion(nn.Module):
                 ia_bce_loss=False,
                 mask_point_sample_ratio: int = 16,
                 enable_small_obj_loss: bool = False,
-                w_small: float = 2.0,):
+
+                w_small: float = 2.0,
+                density_loss_coef: float = 1.0):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -320,7 +328,9 @@ class SetCriterion(nn.Module):
         self.ia_bce_loss = ia_bce_loss
         self.mask_point_sample_ratio = mask_point_sample_ratio
         self.enable_small_obj_loss = enable_small_obj_loss
+        self.enable_small_obj_loss = enable_small_obj_loss
         self.w_small = w_small
+        self.density_loss_coef = density_loss_coef
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (Binary focal loss)
@@ -523,6 +533,26 @@ class SetCriterion(nn.Module):
         del src_masks
         del target_masks
         return losses
+
+    def loss_density(self, outputs, targets, indices, num_boxes):
+        """Compute the density map loss (MSE)"""
+        assert 'pred_density' in outputs
+        pred_density = outputs['pred_density'] # [B, 1, H, W]
+        
+        # Generate GT density maps on the fly
+        # We need to know the feature map shape H, W
+        # pred_density is [B, 1, H, W]
+        
+        with torch.no_grad():
+            gt_density = DensityGuidedQueryInit.generate_gt_density_map(
+                targets, 
+                pred_density.shape, 
+                sigma=1.0 # Could be a hyperparam or dynamic based on image size
+            )
+            
+        loss_density = F.mse_loss(pred_density, gt_density)
+        
+        return {'loss_density': loss_density * self.density_loss_coef}
     
  
     def _get_src_permutation_idx(self, indices):
@@ -542,7 +572,9 @@ class SetCriterion(nn.Module):
             'labels': self.loss_labels,
             'cardinality': self.loss_cardinality,
             'boxes': self.loss_boxes,
+
             'masks': self.loss_masks,
+            'density': self.loss_density,
         }
         assert loss in loss_map, f'do you really want to compute {loss} loss?'
         return loss_map[loss](outputs, targets, indices, num_boxes, **kwargs)
@@ -579,6 +611,8 @@ class SetCriterion(nn.Module):
             for i, aux_outputs in enumerate(outputs['aux_outputs']):
                 indices = self.matcher(aux_outputs, targets, group_detr=group_detr)
                 for loss in self.losses:
+                    if loss == 'density':
+                        continue
                     kwargs = {}
                     if loss == 'labels':
                         # Logging is enabled only for the last layer
@@ -591,6 +625,8 @@ class SetCriterion(nn.Module):
             enc_outputs = outputs['enc_outputs']
             indices = self.matcher(enc_outputs, targets, group_detr=group_detr)
             for loss in self.losses:
+                if loss == 'density':
+                    continue
                 kwargs = {}
                 if loss == 'labels':
                     # Logging is enabled only for the last layer
@@ -878,6 +914,8 @@ def build_criterion_and_postprocessors(args):
     losses = ['labels', 'boxes', 'cardinality']
     if args.segmentation_head:
         losses.append('masks')
+    if getattr(args, 'enable_density_init', False):
+        losses.append('density')
 
     try:
         sum_group_losses = args.sum_group_losses
@@ -892,7 +930,9 @@ def build_criterion_and_postprocessors(args):
                                 ia_bce_loss=args.ia_bce_loss,
                                 mask_point_sample_ratio=args.mask_point_sample_ratio,
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
-                                w_small=getattr(args, "w_small", 2.0))
+
+                                w_small=getattr(args, "w_small", 2.0),
+                                density_loss_coef=getattr(args, "density_loss_coef", 1.0))
     else:
         criterion = SetCriterion(args.num_classes + 1, matcher=matcher, weight_dict=weight_dict,
                                 focal_alpha=args.focal_alpha, losses=losses, 
@@ -901,7 +941,8 @@ def build_criterion_and_postprocessors(args):
                                 use_position_supervised_loss=args.use_position_supervised_loss,
                                 ia_bce_loss=args.ia_bce_loss,
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
-                                w_small=getattr(args, "w_small", 2.0))
+                                w_small=getattr(args, "w_small", 2.0),
+                                density_loss_coef=getattr(args, "density_loss_coef", 1.0))
     criterion.to(device)
     postprocess = PostProcess(num_select=args.num_select)
 

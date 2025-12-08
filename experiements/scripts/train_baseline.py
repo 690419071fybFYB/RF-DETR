@@ -1,3 +1,4 @@
+
 from rfdetr import RFDETRBase
 
 # Initialize RF-DETR Base model
@@ -12,5 +13,5 @@ model.train(
     batch_size=4,
     grad_accum_steps=4,
     lr=1e-4,
-    output_dir='/home/fyb/mydir/rf-detr/experiements/results/baseline',
+    output_dir='/home/fyb/mydir/rf-detr/experiements/results/baseline_debug',
 )

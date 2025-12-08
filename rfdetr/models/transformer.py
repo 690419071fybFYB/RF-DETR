@@ -25,6 +25,7 @@ from torch import nn, Tensor
 
 from rfdetr.models.ops.modules import MSDeformAttn
 from rfdetr.models.scale_aware_attn import ScaleAwareMSDeformAttn
+from rfdetr.models.density_init import DensityGuidedQueryInit
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -143,7 +144,9 @@ class Transformer(nn.Module):
                  enable_scale_aware_query_grouping=False,
                  scale_aware_num_bins=3,
                  enable_dynamic_multiscale_gating=False,
-                 gating_temperature=1.0):
+
+                 gating_temperature=1.0,
+                 enable_density_init=False):
         super().__init__()
         self.encoder = None
 
@@ -187,6 +190,11 @@ class Transformer(nn.Module):
         self.group_detr = group_detr
         self.num_feature_levels = num_feature_levels
         self.bbox_reparam = bbox_reparam
+
+        # Density-Guided Init
+        self.enable_density_init = enable_density_init
+        if enable_density_init:
+            self.density_init = DensityGuidedQueryInit(d_model)
 
         self._export = False
     
@@ -236,6 +244,16 @@ class Transformer(nn.Module):
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=memory.device)
         level_start_index = torch.cat((spatial_shapes.new_zeros((1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
         
+        pred_density = None
+        if self.enable_density_init:
+             # Extract P3 features (highest resolution) for density prediction
+             # memory: [bs, \sum(hw), c]
+             H_p3, W_p3 = spatial_shapes[0]
+             len_p3 = H_p3 * W_p3
+             # [bs, c, h, w]
+             memory_p3 = memory[:, :len_p3, :].transpose(1, 2).view(bs, self.d_model, H_p3, W_p3)
+             pred_density = self.density_init(memory_p3)
+
         if self.two_stage:
             output_memory, output_proposals = gen_encoder_output_proposals(
                 memory, mask_flatten, spatial_shapes, unsigmoid=not self.bbox_reparam)
@@ -258,7 +276,58 @@ class Transformer(nn.Module):
                         output_memory_gidx) + output_proposals # (bs, \sum{hw}, 4) unsigmoid
 
                 topk = min(self.num_queries, enc_outputs_class_unselected_gidx.shape[-2])
-                topk_proposals_gidx = torch.topk(enc_outputs_class_unselected_gidx.max(-1)[0], topk, dim=1)[1] # bs, nq
+                
+                if self.enable_density_init and pred_density is not None:
+                     # Use density + score to select queries
+                     # We assume density map corresponds to the P3 level (first part of memory)
+                     # But we are selecting from ALL levels.
+                     # Simplified strategy: Only guide selection on P3, or map density to all levels?
+                     # Since P3 is highest res, sticking to P3 selection or broadcasting density?
+                     # Let's map density to the flattened indices.
+                     # Ideally we want to prioritize P3 points in dense regions.
+                     
+                     # Extract scores for combination
+                     class_scores = enc_outputs_class_unselected_gidx.max(-1)[0] # [bs, \sum(hw)]
+                     
+                     # Only use density for P3 part of scores?
+                     # Or upsample density to match other levels? (No, other levels are coarser)
+                     # Let's just use density to modulate P3 scores?
+                     # Simpler: Generate top-k indices purely based on Density for P3, and Scores for others?
+                     # Or: use the sample_queries method which assumes a single map.
+                     
+                     # Current implementation of sample_queries assumes selecting from the density map itself.
+                     # So it selects points from P3.
+                     # If we force selection from P3, we might miss large objects in P5.
+                     
+                     # Hybrid approach:
+                     # 1. Select top-k/2 using standard score (covers P4, P5, large objects)
+                     # 2. Select top-k/2 using density on P3 (covers dense small objects)
+                     
+                     # For now, let's just use the score-based topk as baseline,
+                     # but ADD the density-based loss to guide the features.
+                     # AND, optionally modulate the P3 scores with density?
+                     
+                     # Let's try: Modulating P3 scores with density map values
+                     # pred_density: [B, 1, H3, W3]
+                     # Flatten: [B, H3*W3]
+                     H3, W3 = spatial_shapes[0]
+                     len_p3 = H3 * W3
+                     
+                     density_flat = pred_density.flatten(2).squeeze(1) # [B, L3]
+                     # Sigmoid density to get 0-1 weight
+                     density_weight = density_flat.sigmoid()
+                     
+                     # Modulate scores: boost scores where density is high
+                     # We only touch the first L3 elements of class_scores
+                     # Clone to avoid inplace issues if needed
+                     modulated_scores = class_scores.clone()
+                     modulated_scores[:, :len_p3] += density_weight * 0.5 # Additive boost
+                     
+                     topk_proposals_gidx = torch.topk(modulated_scores, topk, dim=1)[1]
+                     
+                else:
+                    topk_proposals_gidx = torch.topk(enc_outputs_class_unselected_gidx.max(-1)[0], topk, dim=1)[1] # bs, nq
+
                 
                 refpoint_embed_gidx_undetach = torch.gather(
                     enc_outputs_coord_unselected_gidx, 1, topk_proposals_gidx.unsqueeze(-1).repeat(1, 1, 4)) # unsigmoid
@@ -312,10 +381,10 @@ class Transformer(nn.Module):
         
         if self.two_stage:
             if self.bbox_reparam:
-                return hs, references, memory_ts, boxes_ts, scale_logits
+                return hs, references, memory_ts, boxes_ts, scale_logits, pred_density
             else:
-                return hs, references, memory_ts, boxes_ts.sigmoid(), scale_logits
-        return hs, references, None, None, scale_logits
+                return hs, references, memory_ts, boxes_ts.sigmoid(), scale_logits, pred_density
+        return hs, references, None, None, scale_logits, pred_density
 
 
 class TransformerDecoder(nn.Module):
@@ -473,7 +542,8 @@ class TransformerDecoder(nn.Module):
                     stacked_scale_logits,
                 ]
 
-        return output.unsqueeze(0), stacked_scale_logits
+        return output.unsqueeze(0), stacked_scale_logits, pred_density
+
 
 
 class SmallObjectQueryBoost(nn.Module):
@@ -692,6 +762,7 @@ def build_transformer(args):
         scale_aware_num_bins=scale_aware_num_bins,
         enable_dynamic_multiscale_gating=enable_dynamic_gating,
         gating_temperature=gating_temperature,
+        enable_density_init=getattr(args, 'enable_density_init', False),
     )
 
 

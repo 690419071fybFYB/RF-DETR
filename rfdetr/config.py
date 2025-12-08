@@ -44,6 +44,10 @@ class ModelConfig(BaseModel):
     # Dynamic Multi-Scale Gating
     enable_dynamic_multiscale_gating: bool = False
     gating_temperature: float = 1.0  # Controls softmax sharpness
+    # Density-Guided Query Initialization
+    enable_density_init: bool = False
+    density_loss_coef: float = 1.0
+
 
 
 class RFDETRBaseConfig(ModelConfig):
