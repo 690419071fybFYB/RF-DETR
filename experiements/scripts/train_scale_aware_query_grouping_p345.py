@@ -15,8 +15,14 @@ from rfdetr import RFDETRBase
 
 # Initialize RF-DETR Base model with Scale-Aware Query Grouping enabled
 model = RFDETRBase(
+    projector_scale=["P3", "P4", "P5"],  # Multi-scale feature pyramid
     enable_scale_aware_query_grouping=True,  # Enable the new feature
     scale_aware_num_bins=3,  # 3 bins: small, medium, large
+    # Exclude mismatched weights due to architecture change
+    pretrain_exclude_keys=[
+        "backbone.0.projector*",         # Projector shape changed (1 level -> 3 levels)
+        "transformer.decoder.layers*",   # Decoder cross-attn shape changed
+    ]
 )
 
 # Train on RSOD dataset (COCO format)
@@ -28,7 +34,7 @@ model.train(
     batch_size=4,
     grad_accum_steps=4,
     lr=1e-4,
-    output_dir='/home/fyb/mydir/rf-detr/experiements/results/e1_scale_aware_query_grouping',
+    output_dir='/home/fyb/mydir/rf-detr/experiements/results/e1_scale_aware_query_grouping_p345',
     tensorboard=True,
     freeze_encoder=True,  # Freeze backbone for fair comparison
 )

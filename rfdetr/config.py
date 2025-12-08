@@ -44,6 +44,12 @@ class ModelConfig(BaseModel):
     # Dynamic Multi-Scale Gating
     enable_dynamic_multiscale_gating: bool = False
     gating_temperature: float = 1.0  # Controls softmax sharpness
+    # Query Repulsion Loss
+    enable_query_repulsion_loss: bool = False
+    query_repulsion_loss_weight: float = 1.0
+    query_repulsion_margin: float = 0.5  # L2 distance margin for hinge loss
+    query_repulsion_iou_threshold: float = 0.3  # IoU threshold to identify close boxes
+    pretrain_exclude_keys: Optional[List[str]] = None
 
 
 class RFDETRBaseConfig(ModelConfig):

@@ -115,7 +115,13 @@ class Model:
             if args.pretrain_exclude_keys is not None:
                 assert isinstance(args.pretrain_exclude_keys, list)
                 for exclude_key in args.pretrain_exclude_keys:
-                    checkpoint['model'].pop(exclude_key)
+                    if exclude_key.endswith("*"):
+                         prefix = exclude_key[:-1]
+                         keys_to_pop = [k for k in checkpoint['model'].keys() if k.startswith(prefix)]
+                         for k in keys_to_pop:
+                             checkpoint['model'].pop(k)
+                    else:
+                        checkpoint['model'].pop(exclude_key, None)
             if args.pretrain_keys_modify_to_load is not None:
                 from rfdetr.util.obj365_to_coco_model import get_coco_pretrain_from_obj365
                 assert isinstance(args.pretrain_keys_modify_to_load, list)

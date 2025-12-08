@@ -297,7 +297,10 @@ class SetCriterion(nn.Module):
                 ia_bce_loss=False,
                 mask_point_sample_ratio: int = 16,
                 enable_small_obj_loss: bool = False,
-                w_small: float = 2.0,):
+                w_small: float = 2.0,
+                enable_query_repulsion_loss: bool = False,
+                query_repulsion_margin: float = 0.5,
+                query_repulsion_iou_threshold: float = 0.3,):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -321,6 +324,9 @@ class SetCriterion(nn.Module):
         self.mask_point_sample_ratio = mask_point_sample_ratio
         self.enable_small_obj_loss = enable_small_obj_loss
         self.w_small = w_small
+        self.enable_query_repulsion_loss = enable_query_repulsion_loss
+        self.query_repulsion_margin = query_repulsion_margin
+        self.query_repulsion_iou_threshold = query_repulsion_iou_threshold
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (Binary focal loss)
@@ -524,6 +530,88 @@ class SetCriterion(nn.Module):
         del target_masks
         return losses
     
+    def loss_query_repulsion(self, outputs, targets, indices, num_boxes, **kwargs):
+        """
+        Query Repulsion Loss: Encourages diversity among query embeddings (Memory-Efficient with Sampling).
+        
+        For pairs of queries whose predicted boxes are close (high IoU),
+        we apply a margin-based hinge loss to push their embeddings apart.
+        
+        Uses sampling to limit memory usage when there are too many close pairs.
+        """
+        if not self.enable_query_repulsion_loss:
+            return {'loss_query_repulsion': torch.tensor(0.0, device=outputs['pred_boxes'].device)}
+        
+        pred_boxes = outputs['pred_boxes']  # (batch, num_queries, 4)
+        batch_size, num_queries, _ = pred_boxes.shape
+        device = pred_boxes.device
+        
+        # Extract query features
+        if 'query_embeddings' in outputs:
+            query_features = outputs['query_embeddings']  # (batch, num_queries, dim)
+        else:
+            query_features = outputs['pred_logits']  # (batch, num_queries, num_classes)
+        
+        # Normalize features
+        query_features_norm = F.normalize(query_features, p=2, dim=-1)
+        
+        # Dynamic threshold: scale with num_queries but cap at 2000 for safety
+        # This allows ~3 pairs per query on average while preventing OOM
+        max_pairs_per_batch = min(num_queries * 100, 30000)
+        
+        total_loss = 0.0
+        total_pairs = 0
+        
+        # Process each batch separately to save memory
+        for b in range(batch_size):
+            boxes = pred_boxes[b]  # (num_queries, 4)
+            features = query_features_norm[b]  # (num_queries, dim)
+            
+            # Convert to xyxy and compute IoU matrix
+            boxes_xyxy = box_ops.box_cxcywh_to_xyxy(boxes)
+            iou_matrix = box_ops.box_iou(boxes_xyxy, boxes_xyxy)[0]  # (num_queries, num_queries)
+            
+            # Find close pairs (upper triangle only)
+            triu_mask = torch.triu(torch.ones_like(iou_matrix, dtype=torch.bool), diagonal=1)
+            close_mask = (iou_matrix > self.query_repulsion_iou_threshold) & triu_mask
+            
+            # Get indices of close pairs
+            close_indices = close_mask.nonzero(as_tuple=False)  # (num_close_pairs, 2)
+            
+            if close_indices.shape[0] == 0:
+                continue  # No close pairs in this batch
+            
+            # Sample pairs if too many (to prevent OOM)
+            num_close_pairs = close_indices.shape[0]
+            if num_close_pairs > max_pairs_per_batch:
+                # Randomly sample max_pairs_per_batch pairs
+                sample_indices = torch.randperm(num_close_pairs, device=device)[:max_pairs_per_batch]
+                close_indices = close_indices[sample_indices]
+            
+            # Extract features for close pairs only
+            i_indices = close_indices[:, 0]
+            j_indices = close_indices[:, 1]
+            
+            feat_i = features[i_indices]  # (num_sampled_pairs, dim)
+            feat_j = features[j_indices]  # (num_sampled_pairs, dim)
+            
+            # Compute L2 distances for close pairs
+            distances = torch.norm(feat_i - feat_j, p=2, dim=-1)  # (num_sampled_pairs,)
+            
+            # Apply hinge loss
+            losses = F.relu(self.query_repulsion_margin - distances)  # (num_sampled_pairs,)
+            
+            total_loss += losses.sum()
+            total_pairs += close_indices.shape[0]
+        
+        # Average over all close pairs
+        if total_pairs > 0:
+            avg_loss = total_loss / total_pairs
+        else:
+            avg_loss = torch.tensor(0.0, device=device)
+        
+        return {'loss_query_repulsion': avg_loss}
+ 
  
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
@@ -543,6 +631,7 @@ class SetCriterion(nn.Module):
             'cardinality': self.loss_cardinality,
             'boxes': self.loss_boxes,
             'masks': self.loss_masks,
+            'repulsion': self.loss_query_repulsion,
         }
         assert loss in loss_map, f'do you really want to compute {loss} loss?'
         return loss_map[loss](outputs, targets, indices, num_boxes, **kwargs)
@@ -579,6 +668,8 @@ class SetCriterion(nn.Module):
             for i, aux_outputs in enumerate(outputs['aux_outputs']):
                 indices = self.matcher(aux_outputs, targets, group_detr=group_detr)
                 for loss in self.losses:
+                    if loss == 'repulsion':
+                        continue
                     kwargs = {}
                     if loss == 'labels':
                         # Logging is enabled only for the last layer
@@ -591,6 +682,8 @@ class SetCriterion(nn.Module):
             enc_outputs = outputs['enc_outputs']
             indices = self.matcher(enc_outputs, targets, group_detr=group_detr)
             for loss in self.losses:
+                if loss == 'repulsion':
+                    continue
                 kwargs = {}
                 if loss == 'labels':
                     # Logging is enabled only for the last layer
@@ -866,18 +959,29 @@ def build_criterion_and_postprocessors(args):
     if args.segmentation_head:
         weight_dict['loss_mask_ce'] = args.mask_ce_loss_coef
         weight_dict['loss_mask_dice'] = args.mask_dice_loss_coef
+    
+    # Add query repulsion loss if enabled
+    enable_repulsion = getattr(args, 'enable_query_repulsion_loss', False)
+    if enable_repulsion:
+        repulsion_weight = getattr(args, 'query_repulsion_loss_weight', 1.0)
+        weight_dict['loss_query_repulsion'] = repulsion_weight
+    
     # TODO this is a hack
     if args.aux_loss:
         aux_weight_dict = {}
         for i in range(args.dec_layers - 1):
-            aux_weight_dict.update({k + f'_{i}': v for k, v in weight_dict.items()})
+            # Exclude repulsion loss from aux_loss (only compute on final layer)
+            aux_losses = {k: v for k, v in weight_dict.items() if k != 'loss_query_repulsion'}
+            aux_weight_dict.update({k + f'_{i}': v for k, v in aux_losses.items()})
         if args.two_stage:
-            aux_weight_dict.update({k + f'_enc': v for k, v in weight_dict.items()})
+            aux_weight_dict.update({k + f'_enc': v for k, v in weight_dict.items() if k != 'loss_query_repulsion'})
         weight_dict.update(aux_weight_dict)
 
     losses = ['labels', 'boxes', 'cardinality']
     if args.segmentation_head:
         losses.append('masks')
+    if enable_repulsion:
+        losses.append('repulsion')
 
     try:
         sum_group_losses = args.sum_group_losses
@@ -892,7 +996,10 @@ def build_criterion_and_postprocessors(args):
                                 ia_bce_loss=args.ia_bce_loss,
                                 mask_point_sample_ratio=args.mask_point_sample_ratio,
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
-                                w_small=getattr(args, "w_small", 2.0))
+                                w_small=getattr(args, "w_small", 2.0),
+                                enable_query_repulsion_loss=enable_repulsion,
+                                query_repulsion_margin=getattr(args, "query_repulsion_margin", 0.5),
+                                query_repulsion_iou_threshold=getattr(args, "query_repulsion_iou_threshold", 0.3))
     else:
         criterion = SetCriterion(args.num_classes + 1, matcher=matcher, weight_dict=weight_dict,
                                 focal_alpha=args.focal_alpha, losses=losses, 
@@ -901,7 +1008,10 @@ def build_criterion_and_postprocessors(args):
                                 use_position_supervised_loss=args.use_position_supervised_loss,
                                 ia_bce_loss=args.ia_bce_loss,
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
-                                w_small=getattr(args, "w_small", 2.0))
+                                w_small=getattr(args, "w_small", 2.0),
+                                enable_query_repulsion_loss=enable_repulsion,
+                                query_repulsion_margin=getattr(args, "query_repulsion_margin", 0.5),
+                                query_repulsion_iou_threshold=getattr(args, "query_repulsion_iou_threshold", 0.3))
     criterion.to(device)
     postprocess = PostProcess(num_select=args.num_select)
 
