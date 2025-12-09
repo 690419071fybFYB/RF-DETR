@@ -305,7 +305,10 @@ class SetCriterion(nn.Module):
                 enable_small_obj_loss: bool = False,
 
                 w_small: float = 2.0,
-                density_loss_coef: float = 1.0):
+                density_loss_coef: float = 1.0,
+                spectral_density_loss_coef: float = 0.5,
+                spectral_density_band_start: float = 0.05,
+                spectral_density_band_end: float = 0.3):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -331,6 +334,9 @@ class SetCriterion(nn.Module):
         self.enable_small_obj_loss = enable_small_obj_loss
         self.w_small = w_small
         self.density_loss_coef = density_loss_coef
+        self.spectral_density_loss_coef = spectral_density_loss_coef
+        self.spectral_density_band_start = spectral_density_band_start
+        self.spectral_density_band_end = spectral_density_band_end
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (Binary focal loss)
@@ -554,6 +560,85 @@ class SetCriterion(nn.Module):
         
         return {'loss_density': loss_density * self.density_loss_coef}
     
+    def loss_spectral_density(self, outputs, targets, indices, num_boxes):
+        """Compute the spectral density loss (FFT-based high-frequency consistency).
+        
+        Enforces consistency on high-frequency components to prevent oversmoothed 
+        density predictions that lead to missed small object detections.
+        """
+        # Skip if pred_density not in outputs (e.g. auxiliary outputs from decoder layers)
+        if 'pred_density' not in outputs:
+            return {}
+        pred_density = outputs['pred_density']  # [B, 1, H, W]
+        
+        # Generate GT density maps on the fly  
+        with torch.no_grad():
+            gt_density = DensityGuidedQueryInit.generate_gt_density_map(
+                targets,
+                pred_density.shape,
+                sigma=1.0
+            )
+        
+        # Squeeze channel dimension for FFT: [B, H, W]
+        pred_d = pred_density.squeeze(1)
+        gt_d = gt_density.squeeze(1)
+        
+        # Cast to float32 for FFT (BFloat16/Float16 not supported by torch.fft)
+        pred_d = pred_d.float()
+        gt_d = gt_d.float()
+        
+        # Compute 2D FFT
+        pred_fft = torch.fft.rfft2(pred_d, norm='ortho')
+        gt_fft = torch.fft.rfft2(gt_d, norm='ortho')
+        
+        # Compute log-amplitude spectrum (add eps for numerical stability)
+        eps = 1e-8
+        pred_log_amp = torch.log(torch.abs(pred_fft) + eps)
+        gt_log_amp = torch.log(torch.abs(gt_fft) + eps)
+        
+        # Create band-pass frequency weight
+        B, H, W = pred_density.shape[0], pred_density.shape[2], pred_density.shape[3]
+        
+        # 1. Normalize coords to [0, 1]
+        freq_h = torch.fft.rfftfreq(H, device=pred_fft.device) # [0, 0.5] range properly for real FFT
+        freq_w = torch.fft.rfftfreq(W, device=pred_fft.device) # [0, 0.5] range properly for 2nd dim of real FFT? No, rfft2 2nd dim is complex part
+        # Let's stick to grid logic but properly normalized.
+        # rfft2 Output: [B, H, W/2 + 1]
+        
+        freq_y = torch.fft.fftfreq(H, device=pred_fft.device).abs() # [0, ..., 0.5, 0.5, ..., 0]
+        freq_x = torch.fft.rfftfreq(W, device=pred_fft.device)      # [0, ..., 0.5]
+        
+        grid_y, grid_x = torch.meshgrid(freq_y, freq_x, indexing='ij')
+        freq_r = torch.sqrt(grid_y ** 2 + grid_x ** 2)
+        
+        # Band-Pass Mask
+        # Soft mask using sigmoid or just binary mask? Let's use soft mask for gradients
+        # Ideally Gaussian or Trapezoid. Let's use simple binary mask for now, or smooth step.
+        # Let's use linear ramp up/down for band pass.
+        
+        # Normalize to [0, 1] relative to Nyquist (0.5) implies multiplying by 2
+        # But config says [0.05, 0.3] normalized frequency (0 to 1). 
+        # rfftfreq returns [0, 0.5]. So let's multiply freq_r by 2.
+        norm_r = freq_r * 2.0 
+        
+        # Band-Pass Weighting: 1 inside band, decay outside
+        # Simple hard threshold with small smooth transition
+        in_band = (norm_r >= self.spectral_density_band_start) & (norm_r <= self.spectral_density_band_end)
+        band_weight = in_band.float()
+        
+        # Add small base weight to avoid complete gradient loss outside band? 
+        # No, we want to ignore noise. But maybe keep very low freqs? No, we said ignore low freq content.
+        # Let's add a small eps for stability
+        band_weight = band_weight + 0.01 
+        
+        # Normalize weights to mean 1
+        band_weight = band_weight / (band_weight.mean() + eps)
+        
+        # Weighted L1 loss on log-amplitude spectrum
+        weighted_diff = band_weight.unsqueeze(0) * torch.abs(pred_log_amp - gt_log_amp)
+        loss = weighted_diff.mean()
+        
+        return {'loss_spectral_density': loss * self.spectral_density_loss_coef}
  
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
@@ -575,6 +660,7 @@ class SetCriterion(nn.Module):
 
             'masks': self.loss_masks,
             'density': self.loss_density,
+            'spectral_density': self.loss_spectral_density,
         }
         assert loss in loss_map, f'do you really want to compute {loss} loss?'
         return loss_map[loss](outputs, targets, indices, num_boxes, **kwargs)
@@ -902,6 +988,12 @@ def build_criterion_and_postprocessors(args):
     if args.segmentation_head:
         weight_dict['loss_mask_ce'] = args.mask_ce_loss_coef
         weight_dict['loss_mask_dice'] = args.mask_dice_loss_coef
+    
+    # Add new losses to weight_dict
+    if getattr(args, 'enable_density_init', False):
+        weight_dict['loss_density'] = 1.0
+    if getattr(args, 'enable_spectral_density_loss', False):
+        weight_dict['loss_spectral_density'] = 1.0
     # TODO this is a hack
     if args.aux_loss:
         aux_weight_dict = {}
@@ -916,6 +1008,8 @@ def build_criterion_and_postprocessors(args):
         losses.append('masks')
     if getattr(args, 'enable_density_init', False):
         losses.append('density')
+    if getattr(args, 'enable_spectral_density_loss', False):
+        losses.append('spectral_density')
 
     try:
         sum_group_losses = args.sum_group_losses
@@ -932,7 +1026,8 @@ def build_criterion_and_postprocessors(args):
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
 
                                 w_small=getattr(args, "w_small", 2.0),
-                                density_loss_coef=getattr(args, "density_loss_coef", 1.0))
+                                density_loss_coef=getattr(args, "density_loss_coef", 1.0),
+                                spectral_density_loss_coef=getattr(args, "spectral_density_loss_coef", 0.5))
     else:
         criterion = SetCriterion(args.num_classes + 1, matcher=matcher, weight_dict=weight_dict,
                                 focal_alpha=args.focal_alpha, losses=losses, 
@@ -942,7 +1037,8 @@ def build_criterion_and_postprocessors(args):
                                 ia_bce_loss=args.ia_bce_loss,
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
                                 w_small=getattr(args, "w_small", 2.0),
-                                density_loss_coef=getattr(args, "density_loss_coef", 1.0))
+                                density_loss_coef=getattr(args, "density_loss_coef", 1.0),
+                                spectral_density_loss_coef=getattr(args, "spectral_density_loss_coef", 0.5))
     criterion.to(device)
     postprocess = PostProcess(num_select=args.num_select)
 

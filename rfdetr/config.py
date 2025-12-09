@@ -47,6 +47,17 @@ class ModelConfig(BaseModel):
     # Density-Guided Query Initialization
     enable_density_init: bool = False
     density_loss_coef: float = 1.0
+    # Spectral Density Loss (FFT-based high-frequency supervision)
+    enable_spectral_density_loss: bool = False
+    spectral_density_loss_coef: float = 0.1
+    # Band-Pass Filter (Normalized Frequency [0.0, 1.0])
+    # For 640p image:
+    # - Small object (10px) => ~64 cycles => freq ~0.1 (64/640)
+    # - Medium object (32px) => ~20 cycles => freq ~0.03 (20/640)
+    # Default range: [0.05, 0.2] covers 20px-100px range roughly. 
+    # Let's set broad defaults first targeting small/med objects.
+    spectral_density_band_start: float = 0.05
+    spectral_density_band_end: float = 0.3
 
 
 

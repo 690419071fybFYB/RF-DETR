@@ -1,0 +1,146 @@
+[
+    {
+        "Name": "hybrid_query_selection",
+        "Title": "混合分数-密度查询选择机制",
+        "Experiment": "实现一种基于“语义置信度”（来自 Encoder 的 Score）与“空间密度”（Density Map）加权组合的 Top-K 查询选择机制。这确保模型既能选到高置信度的大目标（高 Score），也能保留置信度较低但密度高的小目标（高 Density），从而解决“小目标坍缩”问题。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 6,
+        "novel": true
+    },
+    {
+        "Name": "spectral_density_loss",
+        "Title": "频域一致性密度损失",
+        "Experiment": "在频域（使用 FFT）监督 Density Map 的预测。通过在高频部分施加一致性约束，迫使模型强化小目标的密度峰，避免传统 MSE 损失导致的过度平滑，从而减少漏检。",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": false
+    },
+    {
+        "Name": "density_biased_attention",
+        "Title": "密度偏置的可变形注意力机制",
+        "Experiment": "修改带尺度感知的 Encoder，通过将预测的 Density Map 注入为 Deformable Attention 的“位置偏置”。采样点不仅从特征中学习偏移，还会被显式推动到高密度区域，将特征细化与密度引导合并为一个统一模块。",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "context_preserving_pruning",
+        "Title": "上下文保留式 Token 剪枝",
+        "Experiment": "实现一种 Token 剪枝方法，其中被剪掉的背景 token 不会完全丢弃，而是通过池化聚合成一个“全局上下文 token”。这样模型可以避免对大量背景 token 计算注意力（提速），同时保留必要的环境上下文（保持准确度）。",
+        "Interestingness": 8,
+        "Feasibility": 6,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "dual_frequency_encoder",
+        "Title": "双频编码器特征分解用于小目标保留",
+        "Experiment": "扩展 backbone projector，通过对最高分辨率特征施加固定频域滤波来生成两路特征：Gaussian 模糊得到低频上下文，Laplacian 滤波得到高频细节。Transformer decoder 接受这两个特征流（拼接或并行跨注意力）。使用现有损失训练，评估其在结合密度引导初始化与尺度感知编码器时是否能提高小目标特征保留，缓解小目标坍缩。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "frequency_aware_multi_branch_encoder",
+        "Title": "频率感知多分支编码器与动态跨注意力融合",
+        "Experiment": "修改 backbone projector，使其从最高分辨率特征生成两条并行分支：一个通过可学习的 3×3 卷积得到高频特征，另一个通过平均池化+卷积得到低频特征。在 Transformer decoder 中为两条频率分支分别设计并行的跨注意力模块。使用小 MLP 对每个 query 预测 softmax 权重，用于动态融合来自不同频率分支的注意力输出。结合密度引导初始化与尺度感知编码器，评估是否提升小目标 AP 并缓解小目标坍缩。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "frequency_preserving_encoder_loss",
+        "Title": "频率保留式编码器特征重建损失",
+        "Experiment": "为尺度感知编码器的最高分辨率输出添加一个辅助损失，使其保留来自 backbone 原始特征的高频细节。通过高斯模糊减去原特征得到高频成分，再对编码器与 backbone 的高频成分施加 L1 损失。训练中整合此损失，评估其在结合密度引导初始化与尺度感知编码器时对小目标检测的提升效果。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "high_frequency_residual_encoder",
+        "Title": "带密度引导空间门控的高频残差编码器",
+        "Experiment": "在尺度感知编码器中添加一个高频残差分支（通过可学习高通卷积）。使用由密度图或编码器特征生成的小型卷积模块产生空间注意力 mask。残差特征通过该 mask 与主干输出融合，并添加与 backbone 高频残差信号的 L1 损失。结合密度引导初始化评估小目标检测的提升。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "channel_disentangled_encoder",
+        "Title": "基于通道解耦与余弦正交损失的小目标保留编码器",
+        "Experiment": "将最高分辨率特征通道拆分为“细节分支”和“上下文分支”。细节分支使用轻量残差卷积保持高频，小目标特征；上下文分支正常进行尺度感知编码。添加一个余弦相似度正交损失，使两个分支特征去相关。最终通过可学习的通道门控融合两条分支。结合密度引导初始化与尺度感知编码器评估对小目标 AP 的提升。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "frequency_residual_fusion_with_density_gating",
+        "Title": "基于密度门控的频率残差融合",
+        "Experiment": "在尺度感知编码器中提取 backbone 高频残差信号（原图减去高斯模糊）。设计一个基于 Density Map 的 gating MLP 来产生空间融合权重，将残差作为残差连接融合回编码器最高分辨率特征中，并加入残差重建 L1 损失。结合密度引导初始化评估小目标性能改善。",
+        "Interestingness": 10,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "learned_adaptive_feature_smoothing",
+        "Title": "基于密度引导空间门控的可学习特征自适应平滑",
+        "Experiment": "在尺度感知编码器内部引入一个轻量空间门控模块，输入为 Density Map 与最高分辨率特征的拼接，输出一个 [0,1] 的空间 mask。对特征施加固定深度可分离 Gaussian 平滑，再通过该 mask 残差式融合原特征。结合密度预测损失，评估对小目标 AP 的提升。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "frequency_aware_attention_regularization",
+        "Title": "面向小目标的频率感知注意力正则化",
+        "Experiment": "从尺度感知编码器中提取最高分辨率特征的自注意力权重，并从 backbone 提取对应的 baseline 注意力图，将两者 reshape 成空间关注图后做 2D FFT。约束编码器的注意力高频能量不少于 baseline，作为辅助损失加入训练。结合密度引导初始化评估小目标 AP 改善。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "adaptive_frequency_gating",
+        "Title": "小目标检测中的自适应频率门控特征解耦",
+        "Experiment": "在 backbone projector 中对最高分辨率特征施加 Gaussian 低通与 Laplacian 高频滤波，再使用轻量可学习门控模块根据 Density Map 或特征自适应融合高低频。融合后输入 transformer encoder/decoder。无需显式频域监督即可提升小目标 AP。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "frequency_aware_positional_encoding",
+        "Title": "频率感知多尺度位置编码用于小目标保留",
+        "Experiment": "实现一个频率选择性的位置编码模块，将最高分辨率位置 embedding 分解为低频与高频两部分（如用 DCT 或正弦基函数）。基于 Density Map 或尺度预测 logits 学习门控权重，对频率成分自适应融合。融合后的 embedding 提供给 transformer，评估小目标检测提升。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "learned_multi_band_frequency_decomposition_with_frequency_gating",
+        "Title": "面向小目标的可学习多频带分解与查询条件频率门控融合",
+        "Experiment": "在 backbone projector 中实现可学习的多频带分解（如不同膨胀率卷积或类小波滤波），将生成的多频带特征拼接后作为 keys/values。使用 MLP 结合 query embedding 与 Density Map 全局特征生成 softmax 权重，用于动态控制每个频带的注意力融合。可加正交损失鼓励频带互补。重点评估对小目标 AP 和小目标坍缩问题的改善。",
+        "Interestingness": 10,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "spatially_adaptive_sharpening",
+        "Title": "基于密度图的空间自适应特征锐化",
+        "Experiment": "添加一个轻量 CNN 预测空间锐化系数图（值 ≥ 1），基于 Density Map 或编码器特征。使用反锐化（Unsharp Masking）：features + sharpening_map * (features - GaussianBlur(features))。在稀疏区域添加正则约束防过度锐化。结合密度引导查询，评估是否提升小目标 AP。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    }
+]
