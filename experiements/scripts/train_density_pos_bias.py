@@ -4,7 +4,7 @@
 在 Density Init 的基础上启用密度位置偏置调制
 """
 from rfdetr import RFDETRBase
-
+from torchinfo import summary
 # 实验：Density Init + Density Positional Bias
 model = RFDETRBase(
     enable_density_init=True,
@@ -13,7 +13,7 @@ model = RFDETRBase(
     density_pos_bias_scale=0.1,
     density_loss_coef=1.0,
 )
-
+summary(model.model.model, input_size=(1, 3, 560, 560),depth=7)
 model.train(
     dataset_file='coco',
     dataset_dir='/home/fyb/datasets/RSOD_cocoFormat',

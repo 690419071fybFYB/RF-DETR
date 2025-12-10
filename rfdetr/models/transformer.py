@@ -152,7 +152,9 @@ class Transformer(nn.Module):
                  enable_density_augmented_cross_attn=False,
                  density_augment_scale_factor=0.1,
                  enable_density_positional_bias=False,
-                 density_pos_bias_scale=0.1):
+                 density_pos_bias_scale=0.1,
+                 enable_density_sampling_offset=False,
+                 density_sampling_offset_scale=0.1):
         super().__init__()
         self.encoder = None
 
@@ -167,7 +169,9 @@ class Transformer(nn.Module):
                                                 enable_scale_aware_query_grouping=enable_scale_aware_query_grouping,
                                                 scale_aware_num_bins=scale_aware_num_bins,
                                                 enable_dynamic_multiscale_gating=enable_dynamic_multiscale_gating,
-                                                gating_temperature=gating_temperature)
+                                                gating_temperature=gating_temperature,
+                                                enable_density_sampling_offset=enable_density_sampling_offset,
+                                                density_sampling_offset_scale=density_sampling_offset_scale)
         assert decoder_norm_type in ['LN', 'Identity']
         norm = { 
             "LN": lambda channels: nn.LayerNorm(channels),
@@ -528,7 +532,8 @@ class TransformerDecoder(nn.Module):
                            is_first=(layer_id == 0),
                            reference_points=refpoints_input,
                            spatial_shapes=spatial_shapes,
-                           level_start_index=level_start_index)
+                           level_start_index=level_start_index,
+                           density_map=density_map)
             
             # Collect scale logits if they exist
             if scale_logits is not None:
@@ -627,7 +632,9 @@ class TransformerDecoderLayer(nn.Module):
                  enable_scale_aware_query_grouping=False,
                  scale_aware_num_bins=3,
                  enable_dynamic_multiscale_gating=False,
-                 gating_temperature=1.0):
+                 gating_temperature=1.0,
+                 enable_density_sampling_offset=False,
+                 density_sampling_offset_scale=0.1):
         super().__init__()
         # Decoder Self-Attention
         self.self_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=sa_nhead, dropout=dropout, batch_first=True)
@@ -644,7 +651,9 @@ class TransformerDecoderLayer(nn.Module):
                 gating_temperature=gating_temperature)
         else:
             self.cross_attn = MSDeformAttn(
-                d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points)
+                d_model, n_levels=num_feature_levels, n_heads=ca_nhead, n_points=dec_n_points,
+                enable_density_sampling_offset=enable_density_sampling_offset,
+                density_sampling_offset_scale=density_sampling_offset_scale)
 
         self.nhead = ca_nhead
 
@@ -684,6 +693,7 @@ class TransformerDecoderLayer(nn.Module):
                      reference_points = None,
                      spatial_shapes=None,
                      level_start_index=None,
+                     density_map=None,
                      ):
         bs, num_queries, _ = tgt.shape
         
@@ -731,7 +741,8 @@ class TransformerDecoderLayer(nn.Module):
                 memory,
                 spatial_shapes,
                 level_start_index,
-                memory_key_padding_mask
+                memory_key_padding_mask,
+                density_map=density_map
             )
         # ========== End of Cross-Attention =============
 
@@ -753,11 +764,13 @@ class TransformerDecoderLayer(nn.Module):
                 is_first = False,
                 reference_points = None,
                 spatial_shapes=None,
-                level_start_index=None):
+                level_start_index=None,
+                density_map=None):
         return self.forward_post(tgt, memory, tgt_mask, memory_mask,
                                  tgt_key_padding_mask, memory_key_padding_mask, pos, query_pos, 
                                  query_sine_embed, is_first,
-                                 reference_points, spatial_shapes, level_start_index)
+                                 reference_points, spatial_shapes, level_start_index,
+                                 density_map)
 
 
 def _get_clones(module, N):
@@ -804,6 +817,8 @@ def build_transformer(args):
         density_augment_scale_factor=getattr(args, 'density_augment_scale_factor', 0.1),
         enable_density_positional_bias=getattr(args, 'enable_density_positional_bias', False),
         density_pos_bias_scale=getattr(args, 'density_pos_bias_scale', 0.1),
+        enable_density_sampling_offset=getattr(args, 'enable_density_sampling_offset', False),
+        density_sampling_offset_scale=getattr(args, 'density_sampling_offset_scale', 0.1),
     )
 
 

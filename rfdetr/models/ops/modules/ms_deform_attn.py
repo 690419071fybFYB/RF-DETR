@@ -29,6 +29,7 @@ import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, constant_
 
 from ..functions import ms_deform_attn_core_pytorch
+from rfdetr.models.density_sampling_offset import DensitySamplingOffsetModulation
 
 
 def _is_power_of_2(n):
@@ -40,13 +41,16 @@ def _is_power_of_2(n):
 class MSDeformAttn(nn.Module):
     """Multi-Scale Deformable Attention Module
     """
-    def __init__(self, d_model=256, n_levels=4, n_heads=8, n_points=4):
+    def __init__(self, d_model=256, n_levels=4, n_heads=8, n_points=4,
+                 enable_density_sampling_offset=False, density_sampling_offset_scale=0.1):
         """
         Multi-Scale Deformable Attention Module
         :param d_model      hidden dimension
         :param n_levels     number of feature levels
         :param n_heads      number of attention heads
         :param n_points     number of sampling points per attention head per feature level
+        :param enable_density_sampling_offset  whether to enable density-guided sampling offset modulation
+        :param density_sampling_offset_scale   scale factor for offset modulation
         """
         super().__init__()
         if d_model % n_heads != 0:
@@ -71,6 +75,16 @@ class MSDeformAttn(nn.Module):
         self.output_proj = nn.Linear(d_model, d_model)
 
         self._reset_parameters()
+        
+        # Density Sampling Offset Modulation
+        self.enable_density_sampling_offset = enable_density_sampling_offset
+        if enable_density_sampling_offset:
+            self.density_offset_modulation = DensitySamplingOffsetModulation(
+                n_heads=n_heads,
+                n_points=n_points,
+                scale_factor=density_sampling_offset_scale,
+                target_level=1  # P4 level
+            )
         
         self._export = False
 
@@ -97,7 +111,7 @@ class MSDeformAttn(nn.Module):
         constant_(self.output_proj.bias.data, 0.)
 
     def forward(self, query, reference_points, input_flatten, input_spatial_shapes,
-                input_level_start_index, input_padding_mask=None):
+                input_level_start_index, input_padding_mask=None, density_map=None):
         """
         :param query                       (N, Length_{query}, C)
         :param reference_points            (N, Length_{query}, n_levels, 2), range in [0, 1], top-left (0,0), bottom-right (1, 1), including padding area
@@ -106,6 +120,7 @@ class MSDeformAttn(nn.Module):
         :param input_spatial_shapes        (n_levels, 2), [(H_0, W_0), (H_1, W_1), ..., (H_{L-1}, W_{L-1})]
         :param input_level_start_index     (n_levels, ), [0, H_0*W_0, H_0*W_0+H_1*W_1, H_0*W_0+H_1*W_1+H_2*W_2, ..., H_0*W_0+H_1*W_1+...+H_{L-1}*W_{L-1}]
         :param input_padding_mask          (N, \sum_{l=0}^{L-1} H_l \cdot W_l), True for padding elements, False for non-padding elements
+        :param density_map                 (N, 1, H, W), optional density map for sampling offset modulation
 
         :return output                     (N, Length_{query}, C)
         """
@@ -118,6 +133,13 @@ class MSDeformAttn(nn.Module):
             value = value.masked_fill(input_padding_mask[..., None], float(0))
 
         sampling_offsets = self.sampling_offsets(query).view(N, Len_q, self.n_heads, self.n_levels, self.n_points, 2)
+        
+        # Apply density-guided sampling offset modulation on P4 level
+        if self.enable_density_sampling_offset and density_map is not None:
+            sampling_offsets = self.density_offset_modulation(
+                sampling_offsets, reference_points, density_map
+            )
+        
         attention_weights = self.attention_weights(query).view(N, Len_q, self.n_heads, self.n_levels * self.n_points)
 
         # N, Len_q, n_heads, n_levels, n_points, 2

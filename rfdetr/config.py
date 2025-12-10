@@ -56,6 +56,9 @@ class ModelConfig(BaseModel):
     # Density Positional Bias Modulation
     enable_density_positional_bias: bool = False
     density_pos_bias_scale: float = 0.1
+    # Density Sampling Offset Modulation
+    enable_density_sampling_offset: bool = False
+    density_sampling_offset_scale: float = 0.1
 
 
 
