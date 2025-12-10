@@ -27,6 +27,7 @@ from rfdetr.models.ops.modules import MSDeformAttn
 from rfdetr.models.scale_aware_attn import ScaleAwareMSDeformAttn
 from rfdetr.models.density_init import DensityGuidedQueryInit
 from rfdetr.models.density_cross_attn import DensityAugmentedMemory
+from rfdetr.models.density_pos_bias import DensityPositionalBias
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -149,7 +150,9 @@ class Transformer(nn.Module):
                  gating_temperature=1.0,
                  enable_density_init=False,
                  enable_density_augmented_cross_attn=False,
-                 density_augment_scale_factor=0.1):
+                 density_augment_scale_factor=0.1,
+                 enable_density_positional_bias=False,
+                 density_pos_bias_scale=0.1):
         super().__init__()
         self.encoder = None
 
@@ -177,7 +180,9 @@ class Transformer(nn.Module):
                                           d_model=d_model,
                                           lite_refpoint_refine=lite_refpoint_refine,
                                           bbox_reparam=bbox_reparam,
-                                          enable_soqb=enable_soqb)
+                                          enable_soqb=enable_soqb,
+                                          enable_density_positional_bias=enable_density_positional_bias,
+                                          density_pos_bias_scale=density_pos_bias_scale)
         
         
         self.two_stage = two_stage
@@ -391,7 +396,8 @@ class Transformer(nn.Module):
                             pos=lvl_pos_embed_flatten, refpoints_unsigmoid=refpoint_embed,
                             level_start_index=level_start_index, 
                             spatial_shapes=spatial_shapes,
-                            valid_ratios=valid_ratios.to(memory.dtype) if valid_ratios is not None else valid_ratios)
+                            valid_ratios=valid_ratios.to(memory.dtype) if valid_ratios is not None else valid_ratios,
+                            density_map=pred_density)
         else:
             assert self.two_stage, "if not using decoder, two_stage must be True"
             hs = None
@@ -416,7 +422,9 @@ class TransformerDecoder(nn.Module):
                  d_model=256,
                  lite_refpoint_refine=False,
                  bbox_reparam=False,
-                 enable_soqb=True):
+                 enable_soqb=True,
+                 enable_density_positional_bias=False,
+                 density_pos_bias_scale=0.1):
         super().__init__()
         self.layers = _get_clones(decoder_layer, num_layers)
         self.num_layers = num_layers
@@ -433,6 +441,11 @@ class TransformerDecoder(nn.Module):
                 layer.enable_soqb = enable_soqb
 
         self.ref_point_head = MLP(2 * d_model, d_model, d_model, 2)
+
+        # Density Positional Bias
+        self.enable_density_positional_bias = enable_density_positional_bias
+        if enable_density_positional_bias:
+            self.density_pos_bias = DensityPositionalBias(d_model, density_pos_bias_scale)
 
         self._export = False
     
@@ -460,7 +473,8 @@ class TransformerDecoder(nn.Module):
                 # for memory
                 level_start_index: Optional[Tensor] = None, # num_levels
                 spatial_shapes: Optional[Tensor] = None, # bs, num_levels, 2
-                valid_ratios: Optional[Tensor] = None):
+                valid_ratios: Optional[Tensor] = None,
+                density_map: Optional[Tensor] = None):  # for density positional bias
         output = tgt
 
         intermediate = []
@@ -501,6 +515,10 @@ class TransformerDecoder(nn.Module):
             pos_transformation = 1
 
             query_pos = query_pos * pos_transformation
+
+            # Apply Density Positional Bias
+            if self.enable_density_positional_bias and density_map is not None:
+                query_pos = self.density_pos_bias(query_pos, refpoints_input, density_map)
             
             output, scale_logits = layer(output, memory, tgt_mask=tgt_mask,
                            memory_mask=memory_mask,
@@ -784,6 +802,8 @@ def build_transformer(args):
         enable_density_init=getattr(args, 'enable_density_init', False),
         enable_density_augmented_cross_attn=getattr(args, 'enable_density_augmented_cross_attn', False),
         density_augment_scale_factor=getattr(args, 'density_augment_scale_factor', 0.1),
+        enable_density_positional_bias=getattr(args, 'enable_density_positional_bias', False),
+        density_pos_bias_scale=getattr(args, 'density_pos_bias_scale', 0.1),
     )
 
 

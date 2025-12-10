@@ -53,6 +53,9 @@ class ModelConfig(BaseModel):
     # Density-Augmented Cross-Attention
     enable_density_augmented_cross_attn: bool = False
     density_augment_scale_factor: float = 0.1
+    # Density Positional Bias Modulation
+    enable_density_positional_bias: bool = False
+    density_pos_bias_scale: float = 0.1
 
 
 
