@@ -26,6 +26,7 @@ from torch import nn, Tensor
 from rfdetr.models.ops.modules import MSDeformAttn
 from rfdetr.models.scale_aware_attn import ScaleAwareMSDeformAttn
 from rfdetr.models.density_init import DensityGuidedQueryInit
+from rfdetr.models.density_cross_attn import DensityAugmentedMemory
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -146,7 +147,9 @@ class Transformer(nn.Module):
                  enable_dynamic_multiscale_gating=False,
 
                  gating_temperature=1.0,
-                 enable_density_init=False):
+                 enable_density_init=False,
+                 enable_density_augmented_cross_attn=False,
+                 density_augment_scale_factor=0.1):
         super().__init__()
         self.encoder = None
 
@@ -196,6 +199,15 @@ class Transformer(nn.Module):
         if enable_density_init:
             self.density_init = DensityGuidedQueryInit(d_model)
 
+        # Density-Augmented Cross-Attention
+        self.enable_density_augmented_cross_attn = enable_density_augmented_cross_attn
+        if enable_density_augmented_cross_attn:
+            self.density_augment = DensityAugmentedMemory(
+                hidden_dim=d_model,
+                target_level=1,  # P4 level
+                scale_factor=density_augment_scale_factor
+            )
+
         self._export = False
     
     def export(self):
@@ -243,6 +255,7 @@ class Transformer(nn.Module):
         lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1) # bs, \sum{hxw}, c 
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=memory.device)
         level_start_index = torch.cat((spatial_shapes.new_zeros((1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
+
         
         pred_density = None
         if self.enable_density_init:
@@ -253,6 +266,12 @@ class Transformer(nn.Module):
              # [bs, c, h, w]
              memory_p3 = memory[:, :len_p3, :].transpose(1, 2).view(bs, self.d_model, H_p3, W_p3)
              pred_density = self.density_init(memory_p3)
+
+        # Apply Density-Augmented Cross-Attention (augment P4 memory with density)
+        if self.enable_density_augmented_cross_attn and pred_density is not None:
+            memory = self.density_augment(
+                memory, pred_density, spatial_shapes, level_start_index
+            )
 
         if self.two_stage:
             output_memory, output_proposals = gen_encoder_output_proposals(
@@ -763,6 +782,8 @@ def build_transformer(args):
         enable_dynamic_multiscale_gating=enable_dynamic_gating,
         gating_temperature=gating_temperature,
         enable_density_init=getattr(args, 'enable_density_init', False),
+        enable_density_augmented_cross_attn=getattr(args, 'enable_density_augmented_cross_attn', False),
+        density_augment_scale_factor=getattr(args, 'density_augment_scale_factor', 0.1),
     )
 
 

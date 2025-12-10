@@ -50,6 +50,9 @@ class ModelConfig(BaseModel):
     # Small Object Query Boost
     enable_small_object_query_boost: bool = True
     soqb_boost_factor: float = 2.0
+    # Density-Augmented Cross-Attention
+    enable_density_augmented_cross_attn: bool = False
+    density_augment_scale_factor: float = 0.1
 
 
 
