@@ -47,6 +47,9 @@ class ModelConfig(BaseModel):
     # Density-Guided Query Initialization
     enable_density_init: bool = False
     density_loss_coef: float = 1.0
+    # Small Object Query Boost
+    enable_small_object_query_boost: bool = True
+    soqb_boost_factor: float = 2.0
 
 
 

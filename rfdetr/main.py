@@ -850,7 +850,7 @@ def get_args_parser():
     parser.add_argument('--ema_decay', default=0.9997, type=float)
     parser.add_argument('--ema_tau', default=0, type=float)
 
-    parser.add_argument('--num_workers', default=2, type=int)
+    parser.add_argument('--num_workers', default=0, type=int)
 
     # distributed training parameters
     parser.add_argument('--device', default='cuda',
@@ -1003,7 +1003,7 @@ def populate_args(
     use_ema=False,
     ema_decay=0.9997,
     ema_tau=0,
-    num_workers=2,
+    num_workers=0,
     
     # Distributed training parameters
     device='cuda',

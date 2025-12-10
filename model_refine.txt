@@ -1,0 +1,163 @@
+UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4317.)
+Loading pretrain weights
+============================================================================================================================================
+Layer (type:depth-idx)                                                                     Output Shape              Param #
+============================================================================================================================================
+LWDETR                                                                                     [1, 1, 40, 40]            1,014,000
+├─Joiner: 1-1                                                                              [1, 256, 40, 40]          --
+│    └─Backbone: 2-1                                                                       [1, 256, 40, 40]          --
+│    │    └─DinoV2: 3-1                                                                    [1, 384, 40, 40]          --
+│    │    │    └─WindowedDinov2WithRegistersBackbone: 4-1                                  [1, 384, 40, 40]          --
+│    │    │    │    └─WindowedDinov2WithRegistersEmbeddings: 5-1                           [16, 101, 384]            526,848
+│    │    │    │    │    └─Dinov2WithRegistersPatchEmbeddings: 6-1                         [1, 1600, 384]            --
+│    │    │    │    │    │    └─Conv2d: 7-1                                                [1, 384, 40, 40]          226,176
+│    │    │    │    │    └─Dropout: 6-2                                                    [16, 101, 384]            --
+│    │    │    │    └─WindowedDinov2WithRegistersEncoder: 5-2                              [16, 101, 384]            --
+│    │    │    │    │    └─ModuleList: 6-3                                                 --                        --
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-2                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-3                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-4                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-5                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-6                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-7                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-8                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-9                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-10                     [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-11                     [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-12                     [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-13                     [16, 101, 384]            1,775,232
+│    │    │    │    └─LayerNorm: 5-3                                                       [16, 101, 384]            768
+│    │    │    │    └─LayerNorm: 5-4                                                       [16, 101, 384]            (recursive)
+│    │    │    │    └─LayerNorm: 5-5                                                       [16, 101, 384]            (recursive)
+│    │    │    │    └─LayerNorm: 5-6                                                       [16, 101, 384]            (recursive)
+│    │    └─MultiScaleProjector: 3-2                                                       [1, 256, 40, 40]          --
+│    │    │    └─ModuleList: 4-2                                                           --                        --
+│    │    │    │    └─ModuleList: 5-7                                                      --                        --
+│    │    │    │    │    └─Sequential: 6-4                                                 [1, 384, 40, 40]          --
+│    │    │    │    │    └─Sequential: 6-5                                                 [1, 384, 40, 40]          --
+│    │    │    │    │    └─Sequential: 6-6                                                 [1, 384, 40, 40]          --
+│    │    │    │    │    └─Sequential: 6-7                                                 [1, 384, 40, 40]          --
+│    │    │    └─ModuleList: 4-3                                                           --                        --
+│    │    │    │    └─Sequential: 5-8                                                      --                        --
+│    │    │    │    │    └─C2f: 6-8                                                        [1, 256, 40, 40]          --
+│    │    │    │    │    │    └─ConvX: 7-14                                                [1, 256, 40, 40]          393,728
+│    │    │    │    │    │    └─ModuleList: 7-15                                           --                        886,272
+│    │    │    │    │    │    └─ConvX: 7-16                                                [1, 256, 40, 40]          164,352
+│    │    │    │    │    └─LayerNorm: 6-9                                                  [1, 256, 40, 40]          512
+│    └─PositionEmbeddingSine: 2-2                                                          [1, 256, 40, 40]          --
+├─Transformer: 1-2                                                                         [3, 1, 300, 256]          280,644
+│    └─DensityGuidedQueryInit: 2-3                                                         [1, 1, 40, 40]            --
+│    │    └─DensityPredictor: 3-3                                                          [1, 1, 40, 40]            --
+│    │    │    └─Sequential: 4-4                                                           [1, 1, 40, 40]            --
+│    │    │    │    └─Conv2d: 5-9                                                          [1, 256, 40, 40]          590,080
+│    │    │    │    └─GroupNorm: 5-10                                                      [1, 256, 40, 40]          512
+│    │    │    │    └─ReLU: 5-11                                                           [1, 256, 40, 40]          --
+│    │    │    │    └─Conv2d: 5-12                                                         [1, 1, 40, 40]            257
+│    │    │    │    └─ReLU: 5-13                                                           [1, 1, 40, 40]            --
+│    └─ModuleList: 2-4                                                                     --                        789,504
+│    │    └─Linear: 3-4                                                                    [1, 1600, 256]            65,792
+│    └─ModuleList: 2-5                                                                     --                        6,144
+│    │    └─LayerNorm: 3-5                                                                 [1, 1600, 256]            512
+│    └─ModuleList: 2-10                                                                    --                        (recursive)
+│    │    └─Linear: 3-6                                                                    [1, 1600, 91]             23,387
+│    └─ModuleList: 2-7                                                                     --                        1,591,344
+│    │    └─MLP: 3-7                                                                       [1, 1600, 4]              --
+│    │    │    └─ModuleList: 4-5                                                           --                        --
+│    │    │    │    └─Linear: 5-14                                                         [1, 1600, 256]            65,792
+│    │    │    │    └─Linear: 5-15                                                         [1, 1600, 256]            65,792
+│    │    │    │    └─Linear: 5-16                                                         [1, 1600, 4]              1,028
+│    └─TransformerDecoder: 2-8                                                             [3, 1, 300, 256]          --
+│    │    └─MLP: 3-8                                                                       [1, 300, 256]             --
+│    │    │    └─ModuleList: 4-6                                                           --                        --
+│    │    │    │    └─Linear: 5-17                                                         [1, 300, 256]             131,328
+│    │    │    │    └─Linear: 5-18                                                         [1, 300, 256]             65,792
+│    │    └─ModuleList: 3-13                                                               --                        (recursive)
+│    │    │    └─TransformerDecoderLayer: 4-7                                              [1, 300, 256]             --
+│    │    │    │    └─MultiheadAttention: 5-19                                             [1, 300, 256]             263,168
+│    │    │    │    └─Dropout: 5-20                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-21                                                      [1, 300, 256]             512
+│    │    │    │    └─SmallObjectQueryBoost: 5-22                                          [1, 300, 256]             --
+│    │    │    │    │    └─Sequential: 6-10                                                [1, 300, 256]             --
+│    │    │    │    │    │    └─Linear: 7-17                                               [1, 300, 256]             65,792
+│    │    │    │    │    │    └─GELU: 7-18                                                 [1, 300, 256]             --
+│    │    │    │    │    │    └─Linear: 7-19                                               [1, 300, 256]             65,792
+│    │    │    │    └─MSDeformAttn: 5-23                                                   [1, 300, 256]             --
+│    │    │    │    │    └─Linear: 6-11                                                    [1, 1600, 256]            65,792
+│    │    │    │    │    └─Linear: 6-12                                                    [1, 300, 64]              16,448
+│    │    │    │    │    └─Linear: 6-13                                                    [1, 300, 32]              8,224
+│    │    │    │    │    └─Linear: 6-14                                                    [1, 300, 256]             65,792
+│    │    │    │    └─Dropout: 5-24                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-25                                                      [1, 300, 256]             512
+│    │    │    │    └─Linear: 5-26                                                         [1, 300, 2048]            526,336
+│    │    │    │    └─Dropout: 5-27                                                        [1, 300, 2048]            --
+│    │    │    │    └─Linear: 5-28                                                         [1, 300, 256]             524,544
+│    │    │    │    └─Dropout: 5-29                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-30                                                      [1, 300, 256]             512
+│    │    └─LayerNorm: 3-10                                                                [1, 300, 256]             512
+│    │    └─ModuleList: 3-13                                                               --                        (recursive)
+│    │    │    └─TransformerDecoderLayer: 4-8                                              [1, 300, 256]             --
+│    │    │    │    └─MultiheadAttention: 5-31                                             [1, 300, 256]             263,168
+│    │    │    │    └─Dropout: 5-32                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-33                                                      [1, 300, 256]             512
+│    │    │    │    └─SmallObjectQueryBoost: 5-34                                          [1, 300, 256]             --
+│    │    │    │    │    └─Sequential: 6-15                                                [1, 300, 256]             --
+│    │    │    │    │    │    └─Linear: 7-20                                               [1, 300, 256]             65,792
+│    │    │    │    │    │    └─GELU: 7-21                                                 [1, 300, 256]             --
+│    │    │    │    │    │    └─Linear: 7-22                                               [1, 300, 256]             65,792
+│    │    │    │    └─MSDeformAttn: 5-35                                                   [1, 300, 256]             --
+│    │    │    │    │    └─Linear: 6-16                                                    [1, 1600, 256]            65,792
+│    │    │    │    │    └─Linear: 6-17                                                    [1, 300, 64]              16,448
+│    │    │    │    │    └─Linear: 6-18                                                    [1, 300, 32]              8,224
+│    │    │    │    │    └─Linear: 6-19                                                    [1, 300, 256]             65,792
+│    │    │    │    └─Dropout: 5-36                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-37                                                      [1, 300, 256]             512
+│    │    │    │    └─Linear: 5-38                                                         [1, 300, 2048]            526,336
+│    │    │    │    └─Dropout: 5-39                                                        [1, 300, 2048]            --
+│    │    │    │    └─Linear: 5-40                                                         [1, 300, 256]             524,544
+│    │    │    │    └─Dropout: 5-41                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-42                                                      [1, 300, 256]             512
+│    │    └─LayerNorm: 3-12                                                                [1, 300, 256]             (recursive)
+│    │    └─ModuleList: 3-13                                                               --                        (recursive)
+│    │    │    └─TransformerDecoderLayer: 4-9                                              [1, 300, 256]             --
+│    │    │    │    └─MultiheadAttention: 5-43                                             [1, 300, 256]             263,168
+│    │    │    │    └─Dropout: 5-44                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-45                                                      [1, 300, 256]             512
+│    │    │    │    └─SmallObjectQueryBoost: 5-46                                          [1, 300, 256]             --
+│    │    │    │    │    └─Sequential: 6-20                                                [1, 300, 256]             --
+│    │    │    │    │    │    └─Linear: 7-23                                               [1, 300, 256]             65,792
+│    │    │    │    │    │    └─GELU: 7-24                                                 [1, 300, 256]             --
+│    │    │    │    │    │    └─Linear: 7-25                                               [1, 300, 256]             65,792
+│    │    │    │    └─MSDeformAttn: 5-47                                                   [1, 300, 256]             --
+│    │    │    │    │    └─Linear: 6-21                                                    [1, 1600, 256]            65,792
+│    │    │    │    │    └─Linear: 6-22                                                    [1, 300, 64]              16,448
+│    │    │    │    │    └─Linear: 6-23                                                    [1, 300, 32]              8,224
+│    │    │    │    │    └─Linear: 6-24                                                    [1, 300, 256]             65,792
+│    │    │    │    └─Dropout: 5-48                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-49                                                      [1, 300, 256]             512
+│    │    │    │    └─Linear: 5-50                                                         [1, 300, 2048]            526,336
+│    │    │    │    └─Dropout: 5-51                                                        [1, 300, 2048]            --
+│    │    │    │    └─Linear: 5-52                                                         [1, 300, 256]             524,544
+│    │    │    │    └─Dropout: 5-53                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-54                                                      [1, 300, 256]             512
+│    │    └─LayerNorm: 3-14                                                                [1, 300, 256]             (recursive)
+│    │    └─LayerNorm: 3-15                                                                [1, 300, 256]             (recursive)
+├─MLP: 1-3                                                                                 [3, 1, 300, 4]            --
+│    └─ModuleList: 2-9                                                                     --                        --
+│    │    └─Linear: 3-16                                                                   [3, 1, 300, 256]          65,792
+│    │    └─Linear: 3-17                                                                   [3, 1, 300, 256]          65,792
+│    │    └─Linear: 3-18                                                                   [3, 1, 300, 4]            1,028
+├─Linear: 1-4                                                                              [3, 1, 300, 91]           23,387
+├─Transformer: 1-5                                                                         --                        (recursive)
+│    └─ModuleList: 2-10                                                                    --                        (recursive)
+│    │    └─Linear: 3-19                                                                   [1, 300, 91]              (recursive)
+============================================================================================================================================
+Total params: 33,160,131
+Trainable params: 33,160,131
+Non-trainable params: 0
+Total mult-adds (Units.GIGABYTES): 3.92
+============================================================================================================================================
+Input size (MB): 3.76
+Forward/backward pass size (MB): 902.59
+Params size (MB): 112.65
+Estimated Total Size (MB): 1019.00
+============================================================================================================================================
