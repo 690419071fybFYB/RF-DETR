@@ -1,0 +1,118 @@
+nohup: ignoring input
+Loading pretrain weights
+Traceback (most recent call last):
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torchinfo/torchinfo.py", line 295, in forward_pass
+    _ = model(*x, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/mydir/rf-detr/rfdetr/models/lwdetr.py", line 168, in forward
+    hs, ref_unsigmoid, hs_enc, ref_enc, scale_logits, pred_density = self.transformer(
+                                                                     ^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/mydir/rf-detr/rfdetr/models/transformer.py", line 288, in forward
+    pred_density = self.density_init(memory_p3)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/mydir/rf-detr/rfdetr/models/density_init_improved.py", line 237, in forward
+    density = self.predictor(features)
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/mydir/rf-detr/rfdetr/models/density_init_improved.py", line 148, in forward
+    x = self.up1(x5, x4)      # [B, 8C, H/8, W/8] -> [B, 8C, H/4, W/4]
+        ^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/mydir/rf-detr/rfdetr/models/density_init_improved.py", line 76, in forward
+    return self.conv(x)
+           ^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/mydir/rf-detr/rfdetr/models/density_init_improved.py", line 39, in forward
+    return self.double_conv(x)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/container.py", line 250, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1881, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1829, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/conv.py", line 548, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torch/nn/modules/conv.py", line 543, in _conv_forward
+    return F.conv2d(
+           ^^^^^^^^^
+RuntimeError: Given groups=1, weight of size [512, 1024, 3, 3], expected input[1, 1536, 5, 5] to have 1024 channels, but got 1536 channels instead
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/fyb/mydir/rf-detr/experiements/scripts/train_improved_density.py", line 18, in <module>
+    summary(model.model.model, input_size=(1, 3, 560, 560), depth=7)
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torchinfo/torchinfo.py", line 223, in summary
+    summary_list = forward_pass(
+                   ^^^^^^^^^^^^^
+  File "/home/fyb/envs/torch-cuda/lib/python3.11/site-packages/torchinfo/torchinfo.py", line 304, in forward_pass
+    raise RuntimeError(
+RuntimeError: Failed to run torchinfo. See above stack traces for more details. Executed layers up to: [Joiner: 1, Backbone: 2, DinoV2: 3, WindowedDinov2WithRegistersBackbone: 4, WindowedDinov2WithRegistersEmbeddings: 5, Dinov2WithRegistersPatchEmbeddings: 6, Conv2d: 7, Dropout: 6, WindowedDinov2WithRegistersEncoder: 5, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, WindowedDinov2WithRegistersLayer: 7, LayerNorm: 8, Dinov2WithRegistersSdpaAttention: 8, Dinov2WithRegistersSdpaSelfAttention: 9, Linear: 10, Linear: 10, Linear: 10, Dinov2WithRegistersSelfOutput: 9, Linear: 10, Dropout: 10, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 8, Dinov2WithRegistersMLP: 8, Linear: 9, GELUActivation: 9, Linear: 9, Dinov2WithRegistersLayerScale: 8, Identity: 8, LayerNorm: 5, LayerNorm: 5, LayerNorm: 5, LayerNorm: 5, MultiScaleProjector: 3, Sequential: 6, Sequential: 6, Sequential: 6, Sequential: 6, C2f: 6, ConvX: 7, Conv2d: 8, LayerNorm: 8, SiLU: 8, Bottleneck: 8, ConvX: 9, Conv2d: 10, LayerNorm: 10, SiLU: 10, ConvX: 9, Conv2d: 10, LayerNorm: 10, SiLU: 10, Bottleneck: 8, ConvX: 9, Conv2d: 10, LayerNorm: 10, SiLU: 10, ConvX: 9, Conv2d: 10, LayerNorm: 10, SiLU: 10, Bottleneck: 8, ConvX: 9, Conv2d: 10, LayerNorm: 10, SiLU: 10, ConvX: 9, Conv2d: 10, LayerNorm: 10, SiLU: 10, ConvX: 7, Conv2d: 8, LayerNorm: 8, SiLU: 8, LayerNorm: 6, PositionEmbeddingSine: 2, DoubleConv: 4, Sequential: 5, Conv2d: 6, GroupNorm: 6, ReLU: 6, Conv2d: 6, GroupNorm: 6, ReLU: 6, Down: 4, Sequential: 5, MaxPool2d: 6, DoubleConv: 6, Sequential: 7, Conv2d: 8, GroupNorm: 8, ReLU: 8, Conv2d: 8, GroupNorm: 8, ReLU: 8, Down: 4, Sequential: 5, MaxPool2d: 6, DoubleConv: 6, Sequential: 7, Conv2d: 8, GroupNorm: 8, ReLU: 8, Conv2d: 8, GroupNorm: 8, ReLU: 8, Down: 4, Sequential: 5, MaxPool2d: 6, DoubleConv: 6, Sequential: 7, Conv2d: 8, GroupNorm: 8, ReLU: 8, Conv2d: 8, GroupNorm: 8, ReLU: 8, DoubleConv: 4, Sequential: 5, Conv2d: 6, GroupNorm: 6, ReLU: 6, Conv2d: 6, GroupNorm: 6, ReLU: 6, Upsample: 5]
