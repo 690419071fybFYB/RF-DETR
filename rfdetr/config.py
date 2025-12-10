@@ -59,6 +59,13 @@ class ModelConfig(BaseModel):
     # Density Sampling Offset Modulation
     enable_density_sampling_offset: bool = False
     density_sampling_offset_scale: float = 0.1
+    # Improved Density Prediction
+    enable_improved_density: bool = True  # Use UNet-based density predictor
+    density_adaptive_threshold: bool = True  # Use adaptive threshold for sampling
+    # Density Map Visualization
+    visualize_density: bool = False
+    density_vis_max_samples: int = 4
+    density_vis_interval: int = 50
 
 
 

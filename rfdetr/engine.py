@@ -222,6 +222,23 @@ def train_one_epoch(
                     if k in weight_dict
                 )
 
+                # Visualize density maps if enabled and this is the first accumulation step
+                if (i == 0 and hasattr(args, 'visualize_density') and args.visualize_density
+                    and hasattr(args, 'density_visualizer') and args.density_visualizer is not None):
+                    # Only visualize on main process
+                    if utils.is_main_process():
+                        try:
+                            args.density_visualizer.visualize_batch(
+                                images=new_samples.tensors,
+                                targets=new_targets,
+                                model_outputs=outputs,
+                                epoch=epoch,
+                                step=data_iter_step,
+                                class_names=getattr(args, 'class_names', None)
+                            )
+                        except Exception as e:
+                            print(f"Error visualizing density maps: {e}")
+
 
             scaler.scale(losses).backward()
 

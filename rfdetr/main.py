@@ -45,6 +45,7 @@ from rfdetr.util.drop_scheduler import drop_scheduler
 from rfdetr.util.files import download_file
 from rfdetr.util.get_param_dicts import get_param_dict
 from rfdetr.util.utils import ModelEma, BestMetricHolder, clean_state_dict
+from rfdetr.util.density_visualizer import DensityVisualizer, visualize_density_maps_hook
 
 if str(os.environ.get("USE_FILE_SYSTEM_SHARING", "False")).lower() in ["true", "1"]:
     import torch.multiprocessing
@@ -285,7 +286,17 @@ class Model:
 
 
         output_dir = Path(args.output_dir)
-        
+
+        # Initialize density visualizer if visualization is enabled
+        density_visualizer = None
+        if hasattr(args, 'visualize_density') and args.visualize_density:
+            density_vis_dir = output_dir / 'density_visualizations'
+            density_visualizer = DensityVisualizer(
+                output_dir=str(density_vis_dir),
+                max_samples=getattr(args, 'density_vis_max_samples', 4)
+            )
+            print(f"Density visualizations will be saved to: {density_vis_dir}")
+
         if  utils.is_main_process():
             print("Get benchmark")
             if args.do_benchmark:
@@ -388,9 +399,13 @@ class Model:
 
             model.train()
             criterion.train()
+            # Pass density visualizer to args for use in training loop
+            if density_visualizer is not None:
+                args.density_visualizer = density_visualizer
+
             train_stats = train_one_epoch(
                 model, criterion, lr_scheduler, data_loader_train, optimizer, device, epoch,
-                effective_batch_size, args.clip_max_norm, ema_m=self.ema_m, schedules=schedules, 
+                effective_batch_size, args.clip_max_norm, ema_m=self.ema_m, schedules=schedules,
                 num_training_steps_per_epoch=num_training_steps_per_epoch,
                 vit_encoder_num_layers=args.vit_encoder_num_layers, args=args, callbacks=callbacks)
             train_epoch_time = time.time() - epoch_start_time

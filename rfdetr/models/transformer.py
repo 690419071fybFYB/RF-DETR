@@ -26,6 +26,7 @@ from torch import nn, Tensor
 from rfdetr.models.ops.modules import MSDeformAttn
 from rfdetr.models.scale_aware_attn import ScaleAwareMSDeformAttn
 from rfdetr.models.density_init import DensityGuidedQueryInit
+from rfdetr.models.density_init_improved import DensityGuidedQueryInit as ImprovedDensityGuidedQueryInit
 from rfdetr.models.density_cross_attn import DensityAugmentedMemory
 from rfdetr.models.density_pos_bias import DensityPositionalBias
 
@@ -149,6 +150,9 @@ class Transformer(nn.Module):
 
                  gating_temperature=1.0,
                  enable_density_init=False,
+                 enable_improved_density=False,
+                 density_adaptive_threshold=False,
+                 # Deprecated density modules - disabled for simplification
                  enable_density_augmented_cross_attn=False,
                  density_augment_scale_factor=0.1,
                  enable_density_positional_bias=False,
@@ -205,17 +209,24 @@ class Transformer(nn.Module):
 
         # Density-Guided Init
         self.enable_density_init = enable_density_init
-        if enable_density_init:
-            self.density_init = DensityGuidedQueryInit(d_model)
+        self.enable_improved_density = enable_improved_density
+        self.density_adaptive_threshold = density_adaptive_threshold
 
-        # Density-Augmented Cross-Attention
-        self.enable_density_augmented_cross_attn = enable_density_augmented_cross_attn
-        if enable_density_augmented_cross_attn:
-            self.density_augment = DensityAugmentedMemory(
-                hidden_dim=d_model,
-                target_level=1,  # P4 level
-                scale_factor=density_augment_scale_factor
-            )
+        if enable_density_init:
+            if enable_improved_density:
+                # Use improved UNet-based predictor
+                self.density_init = ImprovedDensityGuidedQueryInit(
+                    d_model,
+                    use_unet=True,
+                    adaptive_threshold=density_adaptive_threshold
+                )
+            else:
+                # Use original simple predictor
+                self.density_init = DensityGuidedQueryInit(d_model)
+
+        # Deprecated: Density-Augmented Cross-Attention (disabled)
+        self.enable_density_augmented_cross_attn = False
+        self.density_augment = None
 
         self._export = False
     
@@ -276,11 +287,11 @@ class Transformer(nn.Module):
              memory_p3 = memory[:, :len_p3, :].transpose(1, 2).view(bs, self.d_model, H_p3, W_p3)
              pred_density = self.density_init(memory_p3)
 
-        # Apply Density-Augmented Cross-Attention (augment P4 memory with density)
-        if self.enable_density_augmented_cross_attn and pred_density is not None:
-            memory = self.density_augment(
-                memory, pred_density, spatial_shapes, level_start_index
-            )
+        # Deprecated: Density-Augmented Cross-Attention (disabled for performance)
+        # if self.enable_density_augmented_cross_attn and pred_density is not None:
+        #     memory = self.density_augment(
+        #         memory, pred_density, spatial_shapes, level_start_index
+        #     )
 
         if self.two_stage:
             output_memory, output_proposals = gen_encoder_output_proposals(
@@ -520,9 +531,9 @@ class TransformerDecoder(nn.Module):
 
             query_pos = query_pos * pos_transformation
 
-            # Apply Density Positional Bias
-            if self.enable_density_positional_bias and density_map is not None:
-                query_pos = self.density_pos_bias(query_pos, refpoints_input, density_map)
+            # Deprecated: Density Positional Bias (disabled)
+            # if self.enable_density_positional_bias and density_map is not None:
+            #     query_pos = self.density_pos_bias(query_pos, refpoints_input, density_map)
             
             output, scale_logits = layer(output, memory, tgt_mask=tgt_mask,
                            memory_mask=memory_mask,
@@ -813,12 +824,15 @@ def build_transformer(args):
         enable_dynamic_multiscale_gating=enable_dynamic_gating,
         gating_temperature=gating_temperature,
         enable_density_init=getattr(args, 'enable_density_init', False),
-        enable_density_augmented_cross_attn=getattr(args, 'enable_density_augmented_cross_attn', False),
-        density_augment_scale_factor=getattr(args, 'density_augment_scale_factor', 0.1),
-        enable_density_positional_bias=getattr(args, 'enable_density_positional_bias', False),
-        density_pos_bias_scale=getattr(args, 'density_pos_bias_scale', 0.1),
-        enable_density_sampling_offset=getattr(args, 'enable_density_sampling_offset', False),
-        density_sampling_offset_scale=getattr(args, 'density_sampling_offset_scale', 0.1),
+        enable_improved_density=getattr(args, 'enable_improved_density', True),
+        density_adaptive_threshold=getattr(args, 'density_adaptive_threshold', True),
+        # Deprecated density modules - disabled
+        enable_density_augmented_cross_attn=False,
+        density_augment_scale_factor=0.1,
+        enable_density_positional_bias=False,
+        density_pos_bias_scale=0.1,
+        enable_density_sampling_offset=False,
+        density_sampling_offset_scale=0.1,
     )
 
 
