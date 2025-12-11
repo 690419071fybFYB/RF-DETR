@@ -519,7 +519,9 @@ class SetCriterion(nn.Module):
         grid_y = cy * 2 - 1
         
         # Shape for grid_sample: [1, N, 1, 2]
+        # Ensure grid has same dtype as pred_density (fixes BFloat16 mismatch)
         grid = torch.stack([grid_x, grid_y], dim=-1).unsqueeze(0).unsqueeze(2)
+        grid = grid.to(dtype=pred_density.dtype)
         
         # Sample from density map (use first batch if multi-batch)
         # Note: In practice, boxes are concatenated so we sample from first batch

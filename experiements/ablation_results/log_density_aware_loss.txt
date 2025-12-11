@@ -1,0 +1,484 @@
+nohup: ignoring input
+UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4317.)
+Loading pretrain weights
+============================================================================================================================================
+Layer (type:depth-idx)                                                                     Output Shape              Param #
+============================================================================================================================================
+LWDETR                                                                                     [1, 1, 40, 40]            1,014,000
+├─Joiner: 1-1                                                                              [1, 256, 40, 40]          --
+│    └─Backbone: 2-1                                                                       [1, 256, 40, 40]          --
+│    │    └─DinoV2: 3-1                                                                    [1, 384, 40, 40]          --
+│    │    │    └─WindowedDinov2WithRegistersBackbone: 4-1                                  [1, 384, 40, 40]          --
+│    │    │    │    └─WindowedDinov2WithRegistersEmbeddings: 5-1                           [16, 101, 384]            526,848
+│    │    │    │    │    └─Dinov2WithRegistersPatchEmbeddings: 6-1                         [1, 1600, 384]            --
+│    │    │    │    │    │    └─Conv2d: 7-1                                                [1, 384, 40, 40]          226,176
+│    │    │    │    │    └─Dropout: 6-2                                                    [16, 101, 384]            --
+│    │    │    │    └─WindowedDinov2WithRegistersEncoder: 5-2                              [16, 101, 384]            --
+│    │    │    │    │    └─ModuleList: 6-3                                                 --                        --
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-2                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-3                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-4                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-5                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-6                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-7                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-8                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-9                      [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-10                     [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-11                     [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-12                     [16, 101, 384]            1,775,232
+│    │    │    │    │    │    └─WindowedDinov2WithRegistersLayer: 7-13                     [16, 101, 384]            1,775,232
+│    │    │    │    └─LayerNorm: 5-3                                                       [16, 101, 384]            768
+│    │    │    │    └─LayerNorm: 5-4                                                       [16, 101, 384]            (recursive)
+│    │    │    │    └─LayerNorm: 5-5                                                       [16, 101, 384]            (recursive)
+│    │    │    │    └─LayerNorm: 5-6                                                       [16, 101, 384]            (recursive)
+│    │    └─MultiScaleProjector: 3-2                                                       [1, 256, 40, 40]          --
+│    │    │    └─ModuleList: 4-2                                                           --                        --
+│    │    │    │    └─ModuleList: 5-7                                                      --                        --
+│    │    │    │    │    └─Sequential: 6-4                                                 [1, 384, 40, 40]          --
+│    │    │    │    │    └─Sequential: 6-5                                                 [1, 384, 40, 40]          --
+│    │    │    │    │    └─Sequential: 6-6                                                 [1, 384, 40, 40]          --
+│    │    │    │    │    └─Sequential: 6-7                                                 [1, 384, 40, 40]          --
+│    │    │    └─ModuleList: 4-3                                                           --                        --
+│    │    │    │    └─Sequential: 5-8                                                      --                        --
+│    │    │    │    │    └─C2f: 6-8                                                        [1, 256, 40, 40]          --
+│    │    │    │    │    │    └─ConvX: 7-14                                                [1, 256, 40, 40]          393,728
+│    │    │    │    │    │    └─ModuleList: 7-15                                           --                        886,272
+│    │    │    │    │    │    └─ConvX: 7-16                                                [1, 256, 40, 40]          164,352
+│    │    │    │    │    └─LayerNorm: 6-9                                                  [1, 256, 40, 40]          512
+│    └─PositionEmbeddingSine: 2-2                                                          [1, 256, 40, 40]          --
+├─Transformer: 1-2                                                                         [3, 1, 300, 256]          280,644
+│    └─DensityGuidedQueryInit: 2-3                                                         [1, 1, 40, 40]            --
+│    │    └─DensityPredictor: 3-3                                                          [1, 1, 40, 40]            --
+│    │    │    └─Sequential: 4-4                                                           [1, 1, 40, 40]            --
+│    │    │    │    └─Conv2d: 5-9                                                          [1, 256, 40, 40]          590,080
+│    │    │    │    └─GroupNorm: 5-10                                                      [1, 256, 40, 40]          512
+│    │    │    │    └─ReLU: 5-11                                                           [1, 256, 40, 40]          --
+│    │    │    │    └─Conv2d: 5-12                                                         [1, 1, 40, 40]            257
+│    │    │    │    └─ReLU: 5-13                                                           [1, 1, 40, 40]            --
+│    └─ModuleList: 2-4                                                                     --                        789,504
+│    │    └─Linear: 3-4                                                                    [1, 1600, 256]            65,792
+│    └─ModuleList: 2-5                                                                     --                        6,144
+│    │    └─LayerNorm: 3-5                                                                 [1, 1600, 256]            512
+│    └─ModuleList: 2-10                                                                    --                        (recursive)
+│    │    └─Linear: 3-6                                                                    [1, 1600, 91]             23,387
+│    └─ModuleList: 2-7                                                                     --                        1,591,344
+│    │    └─MLP: 3-7                                                                       [1, 1600, 4]              --
+│    │    │    └─ModuleList: 4-5                                                           --                        --
+│    │    │    │    └─Linear: 5-14                                                         [1, 1600, 256]            65,792
+│    │    │    │    └─Linear: 5-15                                                         [1, 1600, 256]            65,792
+│    │    │    │    └─Linear: 5-16                                                         [1, 1600, 4]              1,028
+│    └─TransformerDecoder: 2-8                                                             [3, 1, 300, 256]          --
+│    │    └─MLP: 3-8                                                                       [1, 300, 256]             --
+│    │    │    └─ModuleList: 4-6                                                           --                        --
+│    │    │    │    └─Linear: 5-17                                                         [1, 300, 256]             131,328
+│    │    │    │    └─Linear: 5-18                                                         [1, 300, 256]             65,792
+│    │    └─ModuleList: 3-13                                                               --                        (recursive)
+│    │    │    └─TransformerDecoderLayer: 4-7                                              [1, 300, 256]             131,584
+│    │    │    │    └─MultiheadAttention: 5-19                                             [1, 300, 256]             263,168
+│    │    │    │    └─Dropout: 5-20                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-21                                                      [1, 300, 256]             512
+│    │    │    │    └─MSDeformAttn: 5-22                                                   [1, 300, 256]             --
+│    │    │    │    │    └─Linear: 6-10                                                    [1, 1600, 256]            65,792
+│    │    │    │    │    └─Linear: 6-11                                                    [1, 300, 64]              16,448
+│    │    │    │    │    └─Linear: 6-12                                                    [1, 300, 32]              8,224
+│    │    │    │    │    └─Linear: 6-13                                                    [1, 300, 256]             65,792
+│    │    │    │    └─Dropout: 5-23                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-24                                                      [1, 300, 256]             512
+│    │    │    │    └─Linear: 5-25                                                         [1, 300, 2048]            526,336
+│    │    │    │    └─Dropout: 5-26                                                        [1, 300, 2048]            --
+│    │    │    │    └─Linear: 5-27                                                         [1, 300, 256]             524,544
+│    │    │    │    └─Dropout: 5-28                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-29                                                      [1, 300, 256]             512
+│    │    └─LayerNorm: 3-10                                                                [1, 300, 256]             512
+│    │    └─ModuleList: 3-13                                                               --                        (recursive)
+│    │    │    └─TransformerDecoderLayer: 4-8                                              [1, 300, 256]             131,584
+│    │    │    │    └─MultiheadAttention: 5-30                                             [1, 300, 256]             263,168
+│    │    │    │    └─Dropout: 5-31                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-32                                                      [1, 300, 256]             512
+│    │    │    │    └─MSDeformAttn: 5-33                                                   [1, 300, 256]             --
+│    │    │    │    │    └─Linear: 6-14                                                    [1, 1600, 256]            65,792
+│    │    │    │    │    └─Linear: 6-15                                                    [1, 300, 64]              16,448
+│    │    │    │    │    └─Linear: 6-16                                                    [1, 300, 32]              8,224
+│    │    │    │    │    └─Linear: 6-17                                                    [1, 300, 256]             65,792
+│    │    │    │    └─Dropout: 5-34                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-35                                                      [1, 300, 256]             512
+│    │    │    │    └─Linear: 5-36                                                         [1, 300, 2048]            526,336
+│    │    │    │    └─Dropout: 5-37                                                        [1, 300, 2048]            --
+│    │    │    │    └─Linear: 5-38                                                         [1, 300, 256]             524,544
+│    │    │    │    └─Dropout: 5-39                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-40                                                      [1, 300, 256]             512
+│    │    └─LayerNorm: 3-12                                                                [1, 300, 256]             (recursive)
+│    │    └─ModuleList: 3-13                                                               --                        (recursive)
+│    │    │    └─TransformerDecoderLayer: 4-9                                              [1, 300, 256]             131,584
+│    │    │    │    └─MultiheadAttention: 5-41                                             [1, 300, 256]             263,168
+│    │    │    │    └─Dropout: 5-42                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-43                                                      [1, 300, 256]             512
+│    │    │    │    └─MSDeformAttn: 5-44                                                   [1, 300, 256]             --
+│    │    │    │    │    └─Linear: 6-18                                                    [1, 1600, 256]            65,792
+│    │    │    │    │    └─Linear: 6-19                                                    [1, 300, 64]              16,448
+│    │    │    │    │    └─Linear: 6-20                                                    [1, 300, 32]              8,224
+│    │    │    │    │    └─Linear: 6-21                                                    [1, 300, 256]             65,792
+│    │    │    │    └─Dropout: 5-45                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-46                                                      [1, 300, 256]             512
+│    │    │    │    └─Linear: 5-47                                                         [1, 300, 2048]            526,336
+│    │    │    │    └─Dropout: 5-48                                                        [1, 300, 2048]            --
+│    │    │    │    └─Linear: 5-49                                                         [1, 300, 256]             524,544
+│    │    │    │    └─Dropout: 5-50                                                        [1, 300, 256]             --
+│    │    │    │    └─LayerNorm: 5-51                                                      [1, 300, 256]             512
+│    │    └─LayerNorm: 3-14                                                                [1, 300, 256]             (recursive)
+│    │    └─LayerNorm: 3-15                                                                [1, 300, 256]             (recursive)
+├─MLP: 1-3                                                                                 [3, 1, 300, 4]            --
+│    └─ModuleList: 2-9                                                                     --                        --
+│    │    └─Linear: 3-16                                                                   [3, 1, 300, 256]          65,792
+│    │    └─Linear: 3-17                                                                   [3, 1, 300, 256]          65,792
+│    │    └─Linear: 3-18                                                                   [3, 1, 300, 4]            1,028
+├─Linear: 1-4                                                                              [3, 1, 300, 91]           23,387
+├─Transformer: 1-5                                                                         --                        (recursive)
+│    └─ModuleList: 2-10                                                                    --                        (recursive)
+│    │    └─Linear: 3-19                                                                   [1, 300, 91]              (recursive)
+============================================================================================================================================
+Total params: 33,160,131
+Trainable params: 33,160,131
+Non-trainable params: 0
+Total mult-adds (Units.GIGABYTES): 3.92
+============================================================================================================================================
+Input size (MB): 3.76
+Forward/backward pass size (MB): 898.90
+Params size (MB): 111.07
+Estimated Total Size (MB): 1013.74
+============================================================================================================================================
+TensorBoard logging initialized. To monitor logs, use 'tensorboard --logdir /home/fyb/mydir/rf-detr/experiements/results/density_aware_loss' and open http://localhost:6006/ in browser.
+Not using distributed mode
+git:
+  sha: 6e650663e6b1f03f0f8bed973386811381f3f502, status: has uncommited changes, branch: feature/density-augmented-cross-attention
+
+Namespace(num_classes=90, grad_accum_steps=4, amp=True, lr=0.0001, lr_encoder=0.00015, batch_size=4, weight_decay=0.0001, epochs=12, lr_drop=100, clip_max_norm=0.1, lr_vit_layer_decay=0.8, lr_component_decay=0.7, do_benchmark=False, dropout=0, drop_path=0.0, drop_mode='standard', drop_schedule='constant', cutoff_epoch=0, pretrained_encoder=None, pretrain_weights='rf-detr-base.pth', pretrain_exclude_keys=None, pretrain_keys_modify_to_load=None, pretrained_distiller=None, encoder='dinov2_windowed_small', vit_encoder_num_layers=12, window_block_indexes=None, position_embedding='sine', out_feature_indexes=[2, 5, 8, 11], freeze_encoder=False, layer_norm=True, rms_norm=False, backbone_lora=False, force_no_pretrain=False, dec_layers=3, dim_feedforward=2048, hidden_dim=256, sa_nheads=8, ca_nheads=16, num_queries=300, group_detr=13, two_stage=True, projector_scale=['P4'], lite_refpoint_refine=True, num_select=300, dec_n_points=2, decoder_norm='LN', bbox_reparam=True, freeze_batch_norm=False, set_cost_class=2, set_cost_bbox=5, set_cost_giou=2, cls_loss_coef=1.0, bbox_loss_coef=5, giou_loss_coef=2, focal_alpha=0.25, aux_loss=True, sum_group_losses=False, use_varifocal_loss=False, use_position_supervised_loss=False, ia_bce_loss=True, dataset_file='coco', coco_path='/home/fyb/datasets/RSOD_cocoFormat', dataset_dir='/home/fyb/datasets/RSOD_cocoFormat', square_resize_div_64=True, output_dir='/home/fyb/mydir/rf-detr/experiements/results/density_aware_loss', dont_save_weights=False, checkpoint_interval=10, seed=42, resume='', start_epoch=0, eval=False, use_ema=True, ema_decay=0.993, ema_tau=100, num_workers=2, device='cuda', world_size=1, dist_url='env://', sync_bn=True, fp16_eval=False, encoder_only=False, backbone_only=False, resolution=560, use_cls_token=False, multi_scale=True, expanded_scales=True, do_random_resize_via_padding=False, warmup_epochs=0.0, lr_scheduler='step', lr_min_factor=0.0, early_stopping=False, early_stopping_patience=10, early_stopping_min_delta=0.001, early_stopping_use_ema=False, gradient_checkpointing=False, patch_size=14, num_windows=4, positional_encoding_size=37, mask_downsample_ratio=4, enable_scale_aware_query_grouping=False, scale_aware_num_bins=3, scale_aware_aux_loss_weight=0.5, enable_dynamic_multiscale_gating=False, gating_temperature=1.0, enable_density_init=True, density_loss_coef=1.0, enable_small_object_query_boost=False, soqb_boost_factor=2.0, enable_density_augmented_cross_attn=False, density_augment_scale_factor=0.1, enable_density_positional_bias=False, density_pos_bias_scale=0.1, enable_density_sampling_offset=False, density_sampling_offset_scale=0.1, enable_improved_density=False, density_adaptive_threshold=True, enable_density_aware_loss=True, density_aware_alpha=0.5, visualize_density=False, density_vis_max_samples=4, density_vis_interval=50, tensorboard=True, wandb=False, project=None, run=None, class_names={1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane', 6: 'bus', 7: 'train', 8: 'truck', 9: 'boat', 10: 'traffic light', 11: 'fire hydrant', 13: 'stop sign', 14: 'parking meter', 15: 'bench', 16: 'bird', 17: 'cat', 18: 'dog', 19: 'horse', 20: 'sheep', 21: 'cow', 22: 'elephant', 23: 'bear', 24: 'zebra', 25: 'giraffe', 27: 'backpack', 28: 'umbrella', 31: 'handbag', 32: 'tie', 33: 'suitcase', 34: 'frisbee', 35: 'skis', 36: 'snowboard', 37: 'sports ball', 38: 'kite', 39: 'baseball bat', 40: 'baseball glove', 41: 'skateboard', 42: 'surfboard', 43: 'tennis racket', 44: 'bottle', 46: 'wine glass', 47: 'cup', 48: 'fork', 49: 'knife', 50: 'spoon', 51: 'bowl', 52: 'banana', 53: 'apple', 54: 'sandwich', 55: 'orange', 56: 'broccoli', 57: 'carrot', 58: 'hot dog', 59: 'pizza', 60: 'donut', 61: 'cake', 62: 'chair', 63: 'couch', 64: 'potted plant', 65: 'bed', 67: 'dining table', 70: 'toilet', 72: 'tv', 73: 'laptop', 74: 'mouse', 75: 'remote', 76: 'keyboard', 77: 'cell phone', 78: 'microwave', 79: 'oven', 80: 'toaster', 81: 'sink', 82: 'refrigerator', 84: 'book', 85: 'clock', 86: 'vase', 87: 'scissors', 88: 'teddy bear', 89: 'hair drier', 90: 'toothbrush'}, run_test=True, segmentation_head=False, distributed=False)
+number of params: 33160131
+[840]
+loading annotations into memory...
+Done (t=0.24s)
+creating index...
+index created!
+[840]
+loading annotations into memory...
+Done (t=0.01s)
+creating index...
+index created!
+[840]
+loading annotations into memory...
+Done (t=0.01s)
+creating index...
+index created!
+Get benchmark
+Start training
+Grad accum steps:  4
+Total batch size:  16
+LENGTH OF DATA LOADER: 40
+UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at /pytorch/torch/csrc/autograd/python_variable_indexing.cpp:345.)
+UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at /pytorch/torch/csrc/autograd/python_variable_indexing.cpp:345.)
+UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at /pytorch/torch/csrc/autograd/python_variable_indexing.cpp:345.)
+[Epoch 1/12 Step 1/40]
+──────────────────────────────────────────────────
+[Epoch 1/12] [Step 1/40]
+ETA: 00:01:08 | Speed:  0.57 steps/s | Avg: 1.746s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :   100.00%
+  loss_ce             :    1.830
+  loss_ce_0           :    1.778
+  loss_ce_1           :    1.756
+  loss_ce_enc         :    1.759
+  loss_ce_unscaled    :    1.830
+  loss_ce_0_unscaled  :    1.778
+  loss_ce_1_unscaled  :    1.756
+  loss_ce_enc_unscaled:    1.759
+
+  loss_bbox           :    0.278
+  loss_bbox_0         :    0.184
+  loss_bbox_1         :    0.172
+  loss_bbox_unscaled  :    0.056
+  loss_bbox_0_unscaled:    0.037
+  loss_bbox_1_unscaled:    0.034
+  loss_giou           :    0.827
+  loss_giou_0         :    0.537
+  loss_giou_1         :    0.539
+  loss_giou_unscaled  :    0.414
+  loss_giou_0_unscaled:    0.269
+  loss_giou_1_unscaled:    0.269
+
+  loss_ce_enc         :    1.759
+  loss_bbox_enc       :    0.198
+  loss_giou_enc       :    0.565
+
+  lr                  :    0.000
+  loss                :   10.424
+  class_error_unscaled:   100.00%
+  cardinality_error_unscaled:  3893.25%
+  loss_density_unscaled:  403.192
+  cardinality_error_0_unscaled:  3893.25%
+  cardinality_error_1_unscaled:  3892.25%
+  loss_bbox_enc_unscaled:    0.040
+  loss_giou_enc_unscaled:    0.282
+  cardinality_error_enc_unscaled:  3893.25%
+──────────────────────────────────────────────────
+[Epoch 1/12 Step 11/40]
+──────────────────────────────────────────────────
+[Epoch 1/12] [Step 11/40]
+ETA: 00:01:20 | Speed:  0.36 steps/s | Avg: 2.766s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :    33.95%
+  loss_ce             :    0.986
+  loss_ce_0           :    0.990
+  loss_ce_1           :    0.982
+  loss_ce_enc         :    0.995
+  loss_ce_unscaled    :    0.986
+  loss_ce_0_unscaled  :    0.990
+  loss_ce_1_unscaled  :    0.982
+  loss_ce_enc_unscaled:    0.995
+
+  loss_bbox           :    0.329
+  loss_bbox_0         :    0.241
+  loss_bbox_1         :    0.238
+  loss_bbox_unscaled  :    0.066
+  loss_bbox_0_unscaled:    0.048
+  loss_bbox_1_unscaled:    0.048
+  loss_giou           :    0.738
+  loss_giou_0         :    0.533
+  loss_giou_1         :    0.528
+  loss_giou_unscaled  :    0.369
+  loss_giou_0_unscaled:    0.267
+  loss_giou_1_unscaled:    0.264
+
+  loss_ce_enc         :    0.995
+  loss_bbox_enc       :    0.242
+  loss_giou_enc       :    0.559
+
+  lr                  :    0.000
+  loss                :    7.361
+  class_error_unscaled:    33.95%
+  cardinality_error_unscaled:  3892.91%
+  loss_density_unscaled:  157.145
+  cardinality_error_0_unscaled:  3893.80%
+  cardinality_error_1_unscaled:  3891.27%
+  loss_bbox_enc_unscaled:    0.048
+  loss_giou_enc_unscaled:    0.279
+  cardinality_error_enc_unscaled:  3893.61%
+──────────────────────────────────────────────────
+[Epoch 1/12 Step 21/40]
+──────────────────────────────────────────────────
+[Epoch 1/12] [Step 21/40]
+ETA: 00:00:58 | Speed:  0.33 steps/s | Avg: 3.072s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :    19.89%
+  loss_ce             :    0.835
+  loss_ce_0           :    0.861
+  loss_ce_1           :    0.834
+  loss_ce_enc         :    0.853
+  loss_ce_unscaled    :    0.835
+  loss_ce_0_unscaled  :    0.861
+  loss_ce_1_unscaled  :    0.834
+  loss_ce_enc_unscaled:    0.853
+
+  loss_bbox           :    0.247
+  loss_bbox_0         :    0.189
+  loss_bbox_1         :    0.182
+  loss_bbox_unscaled  :    0.049
+  loss_bbox_0_unscaled:    0.038
+  loss_bbox_1_unscaled:    0.036
+  loss_giou           :    0.637
+  loss_giou_0         :    0.480
+  loss_giou_1         :    0.477
+  loss_giou_unscaled  :    0.319
+  loss_giou_0_unscaled:    0.240
+  loss_giou_1_unscaled:    0.239
+
+  loss_ce_enc         :    0.853
+  loss_bbox_enc       :    0.197
+  loss_giou_enc       :    0.512
+
+  lr                  :    0.000
+  loss                :    6.304
+  class_error_unscaled:    19.89%
+  cardinality_error_unscaled:  3892.87%
+  loss_density_unscaled:   82.323
+  cardinality_error_0_unscaled:  3893.33%
+  cardinality_error_1_unscaled:  3892.01%
+  loss_bbox_enc_unscaled:    0.039
+  loss_giou_enc_unscaled:    0.256
+  cardinality_error_enc_unscaled:  3893.24%
+──────────────────────────────────────────────────
+[Epoch 1/12 Step 31/40]
+──────────────────────────────────────────────────
+[Epoch 1/12] [Step 31/40]
+ETA: 00:00:28 | Speed:  0.31 steps/s | Avg: 3.188s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :    13.71%
+  loss_ce             :    0.750
+  loss_ce_0           :    0.783
+  loss_ce_1           :    0.752
+  loss_ce_enc         :    0.774
+  loss_ce_unscaled    :    0.750
+  loss_ce_0_unscaled  :    0.783
+  loss_ce_1_unscaled  :    0.752
+  loss_ce_enc_unscaled:    0.774
+
+  loss_bbox           :    0.216
+  loss_bbox_0         :    0.167
+  loss_bbox_1         :    0.163
+  loss_bbox_unscaled  :    0.043
+  loss_bbox_0_unscaled:    0.033
+  loss_bbox_1_unscaled:    0.033
+  loss_giou           :    0.582
+  loss_giou_0         :    0.446
+  loss_giou_1         :    0.443
+  loss_giou_unscaled  :    0.291
+  loss_giou_0_unscaled:    0.223
+  loss_giou_1_unscaled:    0.222
+
+  loss_ce_enc         :    0.774
+  loss_bbox_enc       :    0.175
+  loss_giou_enc       :    0.471
+
+  lr                  :    0.000
+  loss                :    5.722
+  class_error_unscaled:    13.71%
+  cardinality_error_unscaled:  3892.66%
+  loss_density_unscaled:   55.777
+  cardinality_error_0_unscaled:  3892.98%
+  cardinality_error_1_unscaled:  3892.08%
+  loss_bbox_enc_unscaled:    0.035
+  loss_giou_enc_unscaled:    0.236
+  cardinality_error_enc_unscaled:  3892.91%
+──────────────────────────────────────────────────
+Epoch: [0] Total time: 0:02:11 (3.2925 s / it)
+Averaged stats: cardinality_error_0_unscaled: 3890.5000 (3892.7625) | cardinality_error_1_unscaled: 3890.5000 (3892.0687) | cardinality_error_enc_unscaled: 3890.5000 (3892.7125) | cardinality_error_unscaled: 3890.5000 (3892.5188) | class_error: 0.00 | class_error_unscaled: 0.0000 (10.6247) | loss: 4.6074 (5.4459) | loss_bbox: 0.1338 (0.1997) | loss_bbox_0: 0.1050 (0.1542) | loss_bbox_0_unscaled: 0.0210 (0.0308) | loss_bbox_1: 0.1026 (0.1521) | loss_bbox_1_unscaled: 0.0205 (0.0304) | loss_bbox_enc: 0.1136 (0.1646) | loss_bbox_enc_unscaled: 0.0227 (0.0329) | loss_bbox_unscaled: 0.0268 (0.0399) | loss_ce: 0.5938 (0.7100) | loss_ce_0: 0.6228 (0.7424) | loss_ce_0_unscaled: 0.6228 (0.7424) | loss_ce_1: 0.5923 (0.7127) | loss_ce_1_unscaled: 0.5923 (0.7127) | loss_ce_enc: 0.6228 (0.7371) | loss_ce_enc_unscaled: 0.6228 (0.7371) | loss_ce_unscaled: 0.5938 (0.7100) | loss_density_unscaled: 0.0130 (43.2325) | loss_giou: 0.4683 (0.5570) | loss_giou_0: 0.3766 (0.4305) | loss_giou_0_unscaled: 0.1883 (0.2153) | loss_giou_1: 0.3752 (0.4294) | loss_giou_1_unscaled: 0.1876 (0.2147) | loss_giou_enc: 0.3997 (0.4561) | loss_giou_enc_unscaled: 0.1999 (0.2280) | loss_giou_unscaled: 0.2342 (0.2785) | lr: 0.000100
+Test: [ 0/35] eta: 0:00:30 | time: 0.8593 | data: 0.4679 | max mem: 5597
+  metrics: cardinality_error_0_unscaled: 291.5000 (291.5000) | cardinality_error_1_unscaled: 291.5000 (291.5000) | cardinality_error_enc_unscaled: 291.5000 (291.5000) | cardinality_error_unscaled: 291.5000 (291.5000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.2064 (4.2064) | loss_bbox: 0.0954 (0.0954) | loss_bbox_0: 0.0766 (0.0766) | loss_bbox_0_unscaled: 0.0153 (0.0153) | loss_bbox_1: 0.0774 (0.0774) | loss_bbox_1_unscaled: 0.0155 (0.0155) | loss_bbox_enc: 0.0840 (0.0840) | loss_bbox_enc_unscaled: 0.0168 (0.0168) | loss_bbox_unscaled: 0.0191 (0.0191) | loss_ce: 0.5117 (0.5117) | loss_ce_0: 0.5938 (0.5938) | loss_ce_0_unscaled: 0.5938 (0.5938) | loss_ce_1: 0.5508 (0.5508) | loss_ce_1_unscaled: 0.5508 (0.5508) | loss_ce_enc: 0.5430 (0.5430) | loss_ce_enc_unscaled: 0.5430 (0.5430) | loss_ce_unscaled: 0.5117 (0.5117) | loss_density_unscaled: 0.0195 (0.0195) | loss_giou: 0.4835 (0.4835) | loss_giou_0: 0.3761 (0.3761) | loss_giou_0_unscaled: 0.1880 (0.1880) | loss_giou_1: 0.3921 (0.3921) | loss_giou_1_unscaled: 0.1961 (0.1961) | loss_giou_enc: 0.4221 (0.4221) | loss_giou_enc_unscaled: 0.2111 (0.2111) | loss_giou_unscaled: 0.2418 (0.2418)
+Test: [34/35] eta: 0:00:00 | time: 0.3204 | data: 0.0338 | max mem: 5597
+  metrics: cardinality_error_0_unscaled: 292.2500 (292.4571) | cardinality_error_1_unscaled: 292.2500 (292.4571) | cardinality_error_enc_unscaled: 292.2500 (292.4571) | cardinality_error_unscaled: 292.2500 (292.4571) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.7817) | loss: 4.5919 (4.4610) | loss_bbox: 0.1131 (0.1499) | loss_bbox_0: 0.0922 (0.1165) | loss_bbox_0_unscaled: 0.0184 (0.0233) | loss_bbox_1: 0.0899 (0.1168) | loss_bbox_1_unscaled: 0.0180 (0.0234) | loss_bbox_enc: 0.1035 (0.1315) | loss_bbox_enc_unscaled: 0.0207 (0.0263) | loss_bbox_unscaled: 0.0226 (0.0300) | loss_ce: 0.5859 (0.5731) | loss_ce_0: 0.6211 (0.5983) | loss_ce_0_unscaled: 0.6211 (0.5983) | loss_ce_1: 0.5898 (0.5790) | loss_ce_1_unscaled: 0.5898 (0.5790) | loss_ce_enc: 0.5938 (0.6006) | loss_ce_enc_unscaled: 0.5938 (0.6006) | loss_ce_unscaled: 0.5859 (0.5731) | loss_density_unscaled: 0.0154 (0.0221) | loss_giou: 0.4831 (0.4578) | loss_giou_0: 0.3897 (0.3656) | loss_giou_0_unscaled: 0.1948 (0.1828) | loss_giou_1: 0.3869 (0.3673) | loss_giou_1_unscaled: 0.1935 (0.1837) | loss_giou_enc: 0.4175 (0.4046) | loss_giou_enc_unscaled: 0.2087 (0.2023) | loss_giou_unscaled: 0.2415 (0.2289)
+Test: Total time: 0:00:11 (0.3179 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.2500 (292.4571) | cardinality_error_1_unscaled: 292.2500 (292.4571) | cardinality_error_enc_unscaled: 292.2500 (292.4571) | cardinality_error_unscaled: 292.2500 (292.4571) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.7817) | loss: 4.5919 (4.4610) | loss_bbox: 0.1131 (0.1499) | loss_bbox_0: 0.0922 (0.1165) | loss_bbox_0_unscaled: 0.0184 (0.0233) | loss_bbox_1: 0.0899 (0.1168) | loss_bbox_1_unscaled: 0.0180 (0.0234) | loss_bbox_enc: 0.1035 (0.1315) | loss_bbox_enc_unscaled: 0.0207 (0.0263) | loss_bbox_unscaled: 0.0226 (0.0300) | loss_ce: 0.5859 (0.5731) | loss_ce_0: 0.6211 (0.5983) | loss_ce_0_unscaled: 0.6211 (0.5983) | loss_ce_1: 0.5898 (0.5790) | loss_ce_1_unscaled: 0.5898 (0.5790) | loss_ce_enc: 0.5938 (0.6006) | loss_ce_enc_unscaled: 0.5938 (0.6006) | loss_ce_unscaled: 0.5859 (0.5731) | loss_density_unscaled: 0.0154 (0.0221) | loss_giou: 0.4831 (0.4578) | loss_giou_0: 0.3897 (0.3656) | loss_giou_0_unscaled: 0.1948 (0.1828) | loss_giou_1: 0.3869 (0.3673) | loss_giou_1_unscaled: 0.1935 (0.1837) | loss_giou_enc: 0.4175 (0.4046) | loss_giou_enc_unscaled: 0.2087 (0.2023) | loss_giou_unscaled: 0.2415 (0.2289)
+Accumulating evaluation results...
+DONE (t=0.26s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.544
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.774
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.611
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.221
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.594
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.592
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.295
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.605
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.747
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.417
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.692
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.781
+Test: [ 0/35] eta: 0:00:25 | time: 0.7263 | data: 0.3450 | max mem: 5597
+  metrics: cardinality_error_0_unscaled: 291.5000 (291.5000) | cardinality_error_1_unscaled: 291.5000 (291.5000) | cardinality_error_enc_unscaled: 291.5000 (291.5000) | cardinality_error_unscaled: 291.5000 (291.5000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.2392 (4.2392) | loss_bbox: 0.0958 (0.0958) | loss_bbox_0: 0.0768 (0.0768) | loss_bbox_0_unscaled: 0.0154 (0.0154) | loss_bbox_1: 0.0777 (0.0777) | loss_bbox_1_unscaled: 0.0155 (0.0155) | loss_bbox_enc: 0.0836 (0.0836) | loss_bbox_enc_unscaled: 0.0167 (0.0167) | loss_bbox_unscaled: 0.0192 (0.0192) | loss_ce: 0.5156 (0.5156) | loss_ce_0: 0.6328 (0.6328) | loss_ce_0_unscaled: 0.6328 (0.6328) | loss_ce_1: 0.5391 (0.5391) | loss_ce_1_unscaled: 0.5391 (0.5391) | loss_ce_enc: 0.5469 (0.5469) | loss_ce_enc_unscaled: 0.5469 (0.5469) | loss_ce_unscaled: 0.5156 (0.5156) | loss_density_unscaled: 0.0195 (0.0195) | loss_giou: 0.4830 (0.4830) | loss_giou_0: 0.3764 (0.3764) | loss_giou_0_unscaled: 0.1882 (0.1882) | loss_giou_1: 0.3926 (0.3926) | loss_giou_1_unscaled: 0.1963 (0.1963) | loss_giou_enc: 0.4187 (0.4187) | loss_giou_enc_unscaled: 0.2094 (0.2094) | loss_giou_unscaled: 0.2415 (0.2415)
+Test: [34/35] eta: 0:00:00 | time: 0.3206 | data: 0.0327 | max mem: 5597
+  metrics: cardinality_error_0_unscaled: 292.2500 (292.4571) | cardinality_error_1_unscaled: 292.2500 (292.4571) | cardinality_error_enc_unscaled: 292.2500 (292.4571) | cardinality_error_unscaled: 292.2500 (292.4571) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.7817) | loss: 4.5892 (4.4675) | loss_bbox: 0.1158 (0.1522) | loss_bbox_0: 0.0920 (0.1170) | loss_bbox_0_unscaled: 0.0184 (0.0234) | loss_bbox_1: 0.0918 (0.1178) | loss_bbox_1_unscaled: 0.0184 (0.0236) | loss_bbox_enc: 0.1040 (0.1344) | loss_bbox_enc_unscaled: 0.0208 (0.0269) | loss_bbox_unscaled: 0.0232 (0.0304) | loss_ce: 0.5820 (0.5735) | loss_ce_0: 0.6172 (0.6008) | loss_ce_0_unscaled: 0.6172 (0.6008) | loss_ce_1: 0.5898 (0.5784) | loss_ce_1_unscaled: 0.5898 (0.5784) | loss_ce_enc: 0.5938 (0.5974) | loss_ce_enc_unscaled: 0.5938 (0.5974) | loss_ce_unscaled: 0.5820 (0.5735) | loss_density_unscaled: 0.0154 (0.0221) | loss_giou: 0.4866 (0.4584) | loss_giou_0: 0.3888 (0.3659) | loss_giou_0_unscaled: 0.1944 (0.1830) | loss_giou_1: 0.3902 (0.3676) | loss_giou_1_unscaled: 0.1951 (0.1838) | loss_giou_enc: 0.4141 (0.4040) | loss_giou_enc_unscaled: 0.2071 (0.2020) | loss_giou_unscaled: 0.2433 (0.2292)
+Test: Total time: 0:00:12 (0.3440 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.2500 (292.4571) | cardinality_error_1_unscaled: 292.2500 (292.4571) | cardinality_error_enc_unscaled: 292.2500 (292.4571) | cardinality_error_unscaled: 292.2500 (292.4571) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.7817) | loss: 4.5892 (4.4675) | loss_bbox: 0.1158 (0.1522) | loss_bbox_0: 0.0920 (0.1170) | loss_bbox_0_unscaled: 0.0184 (0.0234) | loss_bbox_1: 0.0918 (0.1178) | loss_bbox_1_unscaled: 0.0184 (0.0236) | loss_bbox_enc: 0.1040 (0.1344) | loss_bbox_enc_unscaled: 0.0208 (0.0269) | loss_bbox_unscaled: 0.0232 (0.0304) | loss_ce: 0.5820 (0.5735) | loss_ce_0: 0.6172 (0.6008) | loss_ce_0_unscaled: 0.6172 (0.6008) | loss_ce_1: 0.5898 (0.5784) | loss_ce_1_unscaled: 0.5898 (0.5784) | loss_ce_enc: 0.5938 (0.5974) | loss_ce_enc_unscaled: 0.5938 (0.5974) | loss_ce_unscaled: 0.5820 (0.5735) | loss_density_unscaled: 0.0154 (0.0221) | loss_giou: 0.4866 (0.4584) | loss_giou_0: 0.3888 (0.3659) | loss_giou_0_unscaled: 0.1944 (0.1830) | loss_giou_1: 0.3902 (0.3676) | loss_giou_1_unscaled: 0.1951 (0.1838) | loss_giou_enc: 0.4141 (0.4040) | loss_giou_enc_unscaled: 0.2071 (0.2020) | loss_giou_unscaled: 0.2433 (0.2292)
+Accumulating evaluation results...
+DONE (t=0.24s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.540
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.769
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.612
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.222
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.596
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.587
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.291
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.607
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.747
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.411
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.780
+Grad accum steps:  4
+Total batch size:  16
+LENGTH OF DATA LOADER: 40
+[Epoch 2/12 Step 1/40]
+──────────────────────────────────────────────────
+[Epoch 2/12] [Step 1/40]
+ETA: 00:01:06 | Speed:  0.59 steps/s | Avg: 1.692s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     1.51%
+  loss_ce             :    0.578
+  loss_ce_0           :    0.579
+  loss_ce_1           :    0.577
+  loss_ce_enc         :    0.585
+  loss_ce_unscaled    :    0.578
+  loss_ce_0_unscaled  :    0.579
+  loss_ce_1_unscaled  :    0.577
+  loss_ce_enc_unscaled:    0.585
+
+  loss_bbox           :    0.117
+  loss_bbox_0         :    0.099
+  loss_bbox_1         :    0.095
+  loss_bbox_unscaled  :    0.023
+  loss_bbox_0_unscaled:    0.020
+  loss_bbox_1_unscaled:    0.019
+  loss_giou           :    0.606
+  loss_giou_0         :    0.494
+  loss_giou_1         :    0.490
+  loss_giou_unscaled  :    0.303
+  loss_giou_0_unscaled:    0.247
+  loss_giou_1_unscaled:    0.245
+
+  loss_ce_enc         :    0.585
+  loss_bbox_enc       :    0.097
+  loss_giou_enc       :    0.513
+
+  lr                  :    0.000
+  loss                :    4.828
+  class_error_unscaled:     1.51%
+  cardinality_error_unscaled:  3888.50%
+  loss_density_unscaled:    0.024
+  cardinality_error_0_unscaled:  3888.50%
+  cardinality_error_1_unscaled:  3888.50%
+  loss_bbox_enc_unscaled:    0.019
+  loss_giou_enc_unscaled:    0.257
+  cardinality_error_enc_unscaled:  3888.50%
+──────────────────────────────────────────────────
+[Epoch 2/12 Step 11/40]
+──────────────────────────────────────────────────
+[Epoch 2/12] [Step 11/40]
+ETA: 00:01:18 | Speed:  0.37 steps/s | Avg: 2.714s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.14%
+  loss_ce             :    0.531
+  loss_ce_0           :    0.551
+  loss_ce_1           :    0.539
+  loss_ce_enc         :    0.555
+  loss_ce_unscaled    :    0.531
+  loss_ce_0_unscaled  :    0.551
+  loss_ce_1_unscaled  :    0.539
+  loss_ce_enc_unscaled:    0.555
+
+  loss_bbox           :    0.126
+  loss_bbox_0         :    0.103
+  loss_bbox_1         :    0.099
+  loss_bbox_unscaled  :    0.025
+  loss_bbox_0_unscaled:    0.021
+  loss_bbox_1_unscaled:    0.020
+  loss_giou           :    0.472
+  loss_giou_0         :    0.385
+  loss_giou_1         :    0.380
+  loss_giou_unscaled  :    0.236
+  loss_giou_0_unscaled:    0.192
+  loss_giou_1_unscaled:    0.190
+
+  loss_ce_enc         :    0.555
+  loss_bbox_enc       :    0.110
+  loss_giou_enc       :    0.406
+
+  lr                  :    0.000
+  loss                :    4.255
+  class_error_unscaled:     0.14%
+  cardinality_error_unscaled:  3890.89%
+  loss_density_unscaled:    0.027
+  cardinality_error_0_unscaled:  3890.89%
+  cardinality_error_1_unscaled:  3890.89%
+  loss_bbox_enc_unscaled:    0.022
+  loss_giou_enc_unscaled:    0.203
+  cardinality_error_enc_unscaled:  3890.89%
+──────────────────────────────────────────────────
