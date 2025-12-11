@@ -62,6 +62,9 @@ class ModelConfig(BaseModel):
     # Improved Density Prediction
     enable_improved_density: bool = True  # Use UNet-based density predictor
     density_adaptive_threshold: bool = True  # Use adaptive threshold for sampling
+    # Density-Aware Loss Weighting
+    enable_density_aware_loss: bool = False
+    density_aware_alpha: float = 0.5  # Weight multiplier for density-aware loss
     # Density Map Visualization
     visualize_density: bool = False
     density_vis_max_samples: int = 4

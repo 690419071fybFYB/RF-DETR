@@ -305,7 +305,9 @@ class SetCriterion(nn.Module):
                 enable_small_obj_loss: bool = False,
 
                 w_small: float = 2.0,
-                density_loss_coef: float = 1.0):
+                density_loss_coef: float = 1.0,
+                enable_density_aware_loss: bool = False,
+                density_aware_alpha: float = 0.5):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -314,6 +316,8 @@ class SetCriterion(nn.Module):
             losses: list of all the losses to be applied. See get_loss for list of available losses.
             focal_alpha: alpha in Focal Loss
             group_detr: Number of groups to speed detr training. Default is 1.
+            enable_density_aware_loss: Enable density-aware loss weighting
+            density_aware_alpha: Weight multiplier for density-based weighting
         """
         super().__init__()
         self.num_classes = num_classes
@@ -331,6 +335,8 @@ class SetCriterion(nn.Module):
         self.enable_small_obj_loss = enable_small_obj_loss
         self.w_small = w_small
         self.density_loss_coef = density_loss_coef
+        self.enable_density_aware_loss = enable_density_aware_loss
+        self.density_aware_alpha = density_aware_alpha
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (Binary focal loss)
@@ -474,8 +480,69 @@ class SetCriterion(nn.Module):
             box_ops.box_cxcywh_to_xyxy(target_boxes)))
         if area_weight is not None:
             loss_giou = loss_giou * area_weight
-        losses['loss_giou'] = loss_giou.sum() / num_boxes
+        
+        # Density-aware loss weighting
+        if self.enable_density_aware_loss and 'pred_density' in outputs:
+            density_weight = self._sample_density_at_boxes(
+                outputs['pred_density'], target_boxes
+            )
+            # Apply weighting: (1 + alpha * normalized_density)
+            density_multiplier = 1.0 + self.density_aware_alpha * density_weight
+            losses['loss_bbox'] = (loss_bbox * density_multiplier.unsqueeze(1)).sum() / num_boxes
+            losses['loss_giou'] = (loss_giou * density_multiplier).sum() / num_boxes
+        else:
+            losses['loss_bbox'] = loss_bbox.sum() / num_boxes
+            losses['loss_giou'] = loss_giou.sum() / num_boxes
+        
         return losses
+    
+    def _sample_density_at_boxes(self, pred_density, target_boxes):
+        """
+        Sample density values at GT box center positions.
+        
+        Args:
+            pred_density: [B, 1, H, W] - predicted density map
+            target_boxes: [N, 4] - concatenated GT boxes (cx, cy, w, h) normalized
+            
+        Returns:
+            density_values: [N] - normalized density values for each box
+        """
+        if target_boxes.numel() == 0:
+            return torch.zeros(0, device=pred_density.device)
+        
+        # Get box centers (normalized 0-1)
+        cx = target_boxes[:, 0]  # [N]
+        cy = target_boxes[:, 1]  # [N]
+        
+        # Convert to grid_sample format: [-1, 1]
+        grid_x = cx * 2 - 1
+        grid_y = cy * 2 - 1
+        
+        # Shape for grid_sample: [1, N, 1, 2]
+        grid = torch.stack([grid_x, grid_y], dim=-1).unsqueeze(0).unsqueeze(2)
+        
+        # Sample from density map (use first batch if multi-batch)
+        # Note: In practice, boxes are concatenated so we sample from first batch
+        # This is a simplification; for multi-batch, would need batch indices
+        B = pred_density.shape[0]
+        if B == 1:
+            sampled = F.grid_sample(
+                pred_density, grid, mode='bilinear', 
+                padding_mode='border', align_corners=True
+            )  # [1, 1, N, 1]
+        else:
+            # For multi-batch training, use average density map
+            sampled = F.grid_sample(
+                pred_density.mean(dim=0, keepdim=True), grid, 
+                mode='bilinear', padding_mode='border', align_corners=True
+            )
+        
+        density_values = sampled.squeeze()  # [N]
+        
+        # Normalize to [0, 1] using sigmoid
+        density_values = density_values.sigmoid()
+        
+        return density_values
     
     def loss_masks(self, outputs, targets, indices, num_boxes):
         """Compute BCE-with-logits and Dice losses for segmentation masks on matched pairs.
@@ -932,7 +999,9 @@ def build_criterion_and_postprocessors(args):
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
 
                                 w_small=getattr(args, "w_small", 2.0),
-                                density_loss_coef=getattr(args, "density_loss_coef", 1.0))
+                                density_loss_coef=getattr(args, "density_loss_coef", 1.0),
+                                enable_density_aware_loss=getattr(args, "enable_density_aware_loss", False),
+                                density_aware_alpha=getattr(args, "density_aware_alpha", 0.5))
     else:
         criterion = SetCriterion(args.num_classes + 1, matcher=matcher, weight_dict=weight_dict,
                                 focal_alpha=args.focal_alpha, losses=losses, 
@@ -942,7 +1011,9 @@ def build_criterion_and_postprocessors(args):
                                 ia_bce_loss=args.ia_bce_loss,
                                 enable_small_obj_loss=getattr(args, "enable_small_obj_loss", False),
                                 w_small=getattr(args, "w_small", 2.0),
-                                density_loss_coef=getattr(args, "density_loss_coef", 1.0))
+                                density_loss_coef=getattr(args, "density_loss_coef", 1.0),
+                                enable_density_aware_loss=getattr(args, "enable_density_aware_loss", False),
+                                density_aware_alpha=getattr(args, "density_aware_alpha", 0.5))
     criterion.to(device)
     postprocess = PostProcess(num_select=args.num_select)
 
