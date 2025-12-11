@@ -1,0 +1,101 @@
+[
+    {
+        "Name": "spectral_residual_attention",
+        "Title": "Spectral Residual Attention for Texture Suppression",
+        "Experiment": "Integrate a spectral residual module in the encoder to suppress repetitive background textures (like water or vegetation) and enhance salient object features in the frequency domain.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 6,
+        "novel": false
+    },
+    {
+        "Name": "density_guided_query_init",
+        "Title": "Density-Guided Query Initialization",
+        "Experiment": "Implement a density map prediction head to guide the initialization of object queries, ensuring more queries are allocated to crowded regions typical in aerial imagery.",
+        "Interestingness": 9,
+        "Feasibility": 5,
+        "Novelty": 7,
+        "novel": false
+    },
+    {
+        "Name": "adaptive_background_pruning",
+        "Title": "Adaptive Background Token Pruning",
+        "Experiment": "Dynamically prune background tokens with high confidence in early encoder layers to reduce computational cost and focus attention on foreground objects, exploiting the high background ratio in RSOD.",
+        "Interestingness": 7,
+        "Feasibility": 6,
+        "Novelty": 5,
+        "novel": true
+    },
+    {
+        "Name": "scale_aware_query_grouping",
+        "Title": "Scale-Aware Adaptive Query Grouping in Transformer Decoder",
+        "Experiment": "Extend the transformer decoder by adding a lightweight scale prediction head to each query embedding to regress object scale during decoding. Based on predicted scales, group queries into a fixed small number (e.g., three) of scale bins per decoder layer (small, medium, large). Modify cross-attention to mask queries so that each group attends only to corresponding feature pyramid levels matching their scale group (e.g., small queries attend only high-resolution features). Implement this by modifying TransformerDecoderLayer in transformer.py to output scale logits and apply attention masking accordingly. Train end-to-end on RSOD dataset and evaluate improvements in mAP, focusing on small objects. Perform ablations on number of scale bins and masking granularity.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "dynamic_multiscale_gating",
+        "Title": "Dynamic Multi-Scale Feature Gating for Adaptive Cross-Attention",
+        "Experiment": "Modify TransformerDecoderLayer in models/transformer.py to add a lightweight gating MLP per query that outputs soft weights over multi-scale feature pyramid levels. Before the cross-attention step, multiply each scale's features by the corresponding gating weight for that query, enabling adaptive fusion of scale features. The gating MLP takes the query embedding as input and outputs logits over scales, followed by a softmax for weighting. Train the model end-to-end on the RSOD dataset using existing losses. Evaluate improvements in mAP, focusing on small and large object detection. Conduct ablation studies varying gating network capacity and softmax temperature to control gating sharpness.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "query_repulsion_loss",
+        "Title": "Spatial Query Repulsion Loss for Densely Packed Object Detection",
+        "Experiment": "Implement a margin-based repulsion loss on transformer decoder query embeddings during training. After matching predicted boxes to ground truth, identify pairs of queries whose predicted boxes have IoU above a threshold or box centers within a certain distance. For these pairs, encourage their query embeddings from the last decoder layer to have L2 distances greater than a margin using a hinge loss. Integrate this loss term in SetCriterion alongside existing losses with a tunable weight. Train end-to-end on RSOD and evaluate improvements in mAP, focusing on small and crowded object metrics. Perform ablations on margin and loss weight.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "local_context_enhancement",
+        "Title": "Local Context Enhancement via Spatial Attention in Multi-Scale Features",
+        "Experiment": "Add a Local Context Enhancement (LCE) module after feature fusion in the MultiScaleProjector (models/backbone/projector.py), applying a lightweight spatial attention block (e.g., convolutional attention or self-attention) to high-resolution pyramid features (e.g., P3, P4). The LCE module learns to emphasize local regions critical for small objects. Introduce a simple learned scalar gating parameter to weight the LCE output adaptively. Train end-to-end on RSOD using existing losses and evaluate improvements in small object mAP. Ablate with and without LCE and with different gating strategies.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "rotary_positional_encoding",
+        "Title": "Rotary Positional Encoding Adapted for Multi-Scale Windowed Transformer in Remote Sensing DETR",
+        "Experiment": "Replace the existing sine or learned positional encoding in models/position_encoding.py with a rotary positional encoding (RoPE) module tailored for multi-scale and windowed attention features. Modify the backbone encoder to output features compatible with rotary embeddings and adjust transformer decoder layers in models/transformer.py to consume rotary positional embeddings for queries and keys. Train the model end-to-end on the RSOD dataset and evaluate mAP improvements, focusing on small and arbitrarily oriented object detection. Conduct ablation comparing baseline positional encoding and the proposed rotary encoding.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 6,
+        "novel": true
+    },
+    {
+        "Name": "cross_scale_feature_attention",
+        "Title": "Cross-Scale Feature Attention for Enhanced Multi-Scale Fusion in Remote Sensing Object Detection",
+        "Experiment": "Modify the MultiScaleProjector module in models/backbone/projector.py to add a Cross-Scale Feature Attention (CSFA) block after pyramid feature computation. Implement CSFA by first applying global average pooling or a bottleneck conv to each pyramid feature map to get fixed-size embeddings per scale. Then apply a lightweight transformer or multi-head self-attention over these scale embeddings to allow inter-scale context fusion. Use the refined embeddings to adaptively re-weight or enhance the original pyramid features via learned gating or residual connection. Integrate this module in the MultiScaleProjector forward pass. Train the model end-to-end on the RSOD dataset and evaluate improvements in mAP, especially for small objects. Conduct ablations comparing no attention, transformer-based CSFA, and convolutional attention-based CSFA.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "orientation_aware_query_attention",
+        "Title": "Orientation-Aware Query Attention for Robust Detection of Rotated Objects in Remote Sensing",
+        "Experiment": "Add an orientation prediction head per query in TransformerDecoderLayer (models/transformer.py) that outputs a continuous orientation embedding. Use this embedding to modulate the query features or attention weights before cross-attention, enhancing orientation sensitivity without explicit spatial rotation of keys and values. Implement optional auxiliary orientation regression loss if angle annotations exist, or a self-supervised consistency loss based on input rotations. Integrate orientation data augmentation during training. Evaluate improvements on RSOD dataset focusing on small, rotated, and dense objects, and ablate the impact of orientation conditioning and loss.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "multi_task_auxiliary_segmentation",
+        "Title": "Multi-Task Auxiliary Learning with Foreground-Background Segmentation for RSOD",
+        "Experiment": "Add a lightweight binary foreground-background segmentation auxiliary head on top of backbone or transformer encoder features in RF-DETR. Use existing bounding box annotations to generate foreground masks for training. Incorporate a binary cross-entropy segmentation loss combined with the detection loss during training with a tunable weight. Modify the training loop to compute and backpropagate this auxiliary loss jointly. Evaluate detection mAP improvements on RSOD, emphasizing small and crowded object detection. Conduct ablations on auxiliary loss weight and location of segmentation head.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    }
+]

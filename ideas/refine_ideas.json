@@ -1,0 +1,82 @@
+[
+    {
+        "Name": "dual_prior_calibration",
+        "Title": "Dual Prior Calibration: Learnable Spatial Density and Class Co-occurrence Priors for RF-DETR",
+        "Experiment": "Add a Dual Prior Calibration (DPC) module to rfdetr/models/lwdetr.py. DPC includes: (a) a learnable spatial density prior (torch.nn.Parameter of shape [num_classes, H, W]), and (b) a learnable class co-occurrence matrix ([num_classes, num_classes]). During training and inference, for each decoder query, sample the spatial prior at the query\u2019s reference point (via bilinear interpolation) and add it as a bias to the class logits. At test time, multiply each predicted class confidence by the relevant co-occurrence prior (row of the matrix) with respect to other high-confidence classes in the image. Both priors are randomly initialized (or optionally loaded from statistics). Optionally add smoothness and sparsity losses to regularize the priors (configurable). All modifications are enabled/disabled via config, defaulting to baseline if off. Train and compare: baseline, spatial prior only, co-occurrence only, both; evaluate mAP, AP50, per-class recall, ECE, and visualize priors. Ablate parameterization and regularization.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "fourier_token_mixer_projector",
+        "Title": "Fourier Token Mixer: Global Learnable Frequency Mixing in Multi-Scale Projector for RF-DETR",
+        "Experiment": "Implement a Fourier Token Mixer module in rfdetr.models.backbone.projector.py, inserted after ConvX/C2f at each MultiScaleProjector pyramid level (configurable per level). The module should: (a) compute a 2D FFT (torch.fft.fft2) of the feature map; (b) multiply by a learnable real-valued gain tensor (per-channel, per-frequency, or shared, selectable via config); (c) apply inverse FFT; (d) optionally, allow a fixed (non-learnable) version for ablation, and/or a version where the gain is dynamically gated by a per-image embedding. Add config toggles for: enable/disable, level selection, parameterization type (real/complex, channel/shared), and gating. Train and compare: (1) baseline, (2) fixed Fourier block, (3) learnable Fourier block, (4) adaptive/gated variant. Evaluate on RSOD for mAP, AP50, per-class recall, and FLOPs. Visualize learned frequency responses and analyze their relationship to scene structure and error patterns. Ablate the effect of parameterization and gating on performance and interpretability.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "dynamic_frequency_fusion",
+        "Title": "Dynamic Frequency Fusion in Multi-Scale Projector for Scene-Adaptive RF-DETR",
+        "Experiment": "Augment MultiScaleProjector (rfdetr.models.backbone.projector.py) so that, at each pyramid level, a lightweight MLP predicts soft weights for the low- and high-frequency outputs of FDConv based on a global pooling (mean or max) of the input feature map. The final feature is a weighted sum: output = w_low * low + w_high * high, with weights learned end-to-end. Add config toggles to switch between dynamic (input-adaptive) and static (fixed equal weights) frequency fusion, and to ablate pooling type. Optionally, compare with vanilla Conv2d (no FDConv). Run experiments on RSOD: (1) baseline, (2) static FDConv, (3) dynamic frequency fusion. Report mAP, AP50, per-class results, and FLOPs. Visualize per-image/level fusion weights to analyze adaptation.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8
+    },
+    {
+        "Name": "domain_aware_adaptive_norm",
+        "Title": "Domain-Aware Adaptive Normalization for RF-DETR in Remote Sensing Object Detection",
+        "Experiment": "1. Implement a lightweight Domain-Aware Adaptive Normalization (DAAN) module as a drop-in replacement for LayerNorm/BatchNorm in ConvX and Bottleneck (rfdetr.models.backbone.projector.py). DAAN computes, for each image (not batch), a global embedding\u2014either (a) input statistics (mean, std, entropy) or (b) a learned pooled feature from the last backbone map\u2014to predict per-channel scale/shift with a small MLP. 2. Add config toggles to select embedding type and affected levels. 3. Integrate DAAN into MultiScaleProjector with config propagation. 4. Train and evaluate on RSOD: (a) baseline, (b) DAAN (stats), (c) DAAN (pooled), (d) level-wise ablation. 5. Add synthetic domain shifts (histogram/brightness changes) at validation to test robustness. 6. Report mAP, AP50, per-class metrics, and any effect on speed/memory. 7. Analyze DAAN outputs per domain and error patterns.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "cross_image_consistency_reg",
+        "Title": "Cross-Image Consistency Regularization for Robust RF-DETR",
+        "Experiment": "Implement a Cross-Image Consistency Regularization (CICR) loss in the training loop (e.g., in rfdetr/engine.py and/or rfdetr/models/lwdetr.py). For each training batch, extract a global pooled feature vector (using mean or max pooling) from the final backbone feature map per image. Compute a pairwise cosine similarity or MSE consistency loss across all images in the batch, encouraging features of similar-class or background images to be close. Add config options to: (a) enable/disable CICR, (b) choose pooling method (mean/max), (c) optionally normalize features, (d) restrict loss to same-class pairs or use all pairs, (e) select background-only consistency (using masks if available), and (f) set a loss weight. Train on RSOD with: (1) baseline, (2) CICR (all pairs), (3) CICR (same-class only), (4) ablate pooling and loss weight. Evaluate mAP, AP50, per-class recall, and robustness to domain shift. Visualize feature similarity matrices and analyze impact on invariance and error patterns.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "context_conditioned_confidence_calibration",
+        "Title": "Context-Conditioned Confidence Calibration (C3) for Robust RF-DETR",
+        "Experiment": "Add a Context-Conditioned Confidence Calibration (C3) head to rfdetr.models.lwdetr.py. For each query in the final (or each, via config) decoder output, form a vector by concatenating the query embedding, normalized spatial reference (cx, cy, w, h), and a global context vector (either average pooled backbone feature or mean of all queries, with option for detach). Pass this through a lightweight (e.g., 2-layer, hidden size 32) MLP to generate a scalar calibration logit per query. This value is added (or multiplied as temperature, config) to the class logits before sigmoid/softmax, during both training and inference. Config toggles control: (a) enable/disable C3, (b) global context type, (c) add vs. scale (temperature), (d) decoder layer(s) applied, (e) optional calibration loss (e.g., ECE) as auxiliary. Optionally, ablate sharing the MLP across queries or batches for efficiency. Train on RSOD: baseline, C3 (with each context type, detach or not, and loss), and ablations. Evaluate mAP, AP50, per-class, ECE, and calibration curves. Visualize calibration values and analyze computational impact. All code paths default to baseline when C3 is off.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "global_context_pool_projector",
+        "Title": "Global Context Pooling in Multi-Scale Projector for Enhanced Spatial Reasoning in RF-DETR",
+        "Experiment": "Insert a global context pooling module in MultiScaleProjector (rfdetr.models.backbone.projector.py) after ConvX/C2f at each pyramid level. The module computes a global context vector using (a) adaptive average pooling (default), (b) global max pooling, or (c) single-head spatial self-attention (configurable). Fuse the context vector back into the feature map via (i) channel-wise gating (default, as in Squeeze-and-Excitation), (ii) addition, or (iii) multiplication, controlled by config. Add config toggles for pooling type, fusion type, and which levels apply the module (all levels by default). Train and compare: (1) baseline (module off), (2) global context pooling at all levels, (3) only highest/lowest-res level, (4) ablation of pooling and fusion type. Evaluate on RSOD for mAP, AP50, per-class recall, and analyze learned context vectors. All changes are modular, backward-compatible, and add minimal inference overhead.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "instance_separation_regularizer",
+        "Title": "Instance Separation Regularization for Diverse Query Predictions in RF-DETR",
+        "Experiment": "Add an Instance Separation Regularizer loss to SetCriterion (rfdetr/models/lwdetr.py). During training only, after Hungarian matching, consider all pairs of decoder queries not matched to the same GT object. For each such pair, if their predicted box centers (or reference points) are closer than a configurable threshold (e.g., 0.05 in normalized coordinates), apply a margin loss (e.g., max(0, margin - distance)) to push them apart. Optionally, add a cosine or L2 repulsion loss on their feature vectors. Config toggles: (a) enable/disable the regularizer, (b) threshold and loss weight, (c) margin type (box center, reference point, feature), (d) restrict to top-k scoring queries. Train on RSOD, comparing baseline vs. regularizer (with ablations). Evaluate mAP, AP50, per-class recall, mean/min query center distances, and duplicate detection rates. Visualize predicted query center distributions and error types before/after. No changes to inference are required.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8
+    },
+    {
+        "Name": "frequency_decoupling_projector",
+        "Title": "Integrating Frequency-Decoupling Convolutions into the Multi-Scale Projector for RF-DETR",
+        "Experiment": "Add a use_fdconv parameter to RFDETRBaseConfig and propagate it so that MultiScaleProjector in rfdetr.models.backbone.projector.py uses FDConv layers instead of standard Conv2d when enabled. Implement toggling for all, none, or select pyramid levels. Run experiments on the RSOD dataset with three settings: (1) Baseline (no FDConv), (2) All levels use FDConv, (3) Only select levels (e.g., high- or low-resolution) use FDConv. Compare mAP, AP50, per-class metrics, and computational cost. Analyze which configuration works best for small and cluttered objects and whether FDConv introduces any efficiency trade-offs.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 7
+    },
+    {
+        "Name": "context_aware_query_budget",
+        "Title": "Context-Aware Query Budgeting for RF-DETR via Scene Complexity Embeddings",
+        "Experiment": "Augment the QueryBudgetPredictor in rfdetr.models.lwdetr.py to take a 'scene complexity embedding' per image. Variant 1: compute spatial entropy (mean or max across spatial locations, averaged or maximized over channels) from the last feature map and concatenate it to the pooled and frequency features. Variant 2: add a small auxiliary MLP head to predict object count/density, supervised via GT annotation counts (with optional loss weighting) or self-supervised from feature statistics. Add config toggles for each variant. Train and compare: (a) baseline F-DQS, (b) F-DQS + entropy, (c) F-DQS + count head, (d) fixed query. Evaluate mAP, AP50, per-class recall, inference FLOPs, and, across binned object counts, the relationship between (predicted and actual) scene complexity and allocated queries. Visualize and analyze which variant best balances efficiency and recall, especially in crowded scenes. Ablate entropy computation (mean vs. max, per-channel vs. global), and weight for count loss.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8
+    }
+]

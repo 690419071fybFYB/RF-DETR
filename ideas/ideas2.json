@@ -1,0 +1,146 @@
+[
+    {
+        "Name": "hybrid_query_selection",
+        "Title": "Hybrid Score-Density Query Selection",
+        "Experiment": "Implement a selection mechanism that picks Top-K queries based on a weighted combination of 'Semantic Objectness' (Encoder Scores) and 'Spatial Density' (Density Map). This ensures we capture both high-confidence large objects (high score) and low-confidence but dense small objects (high density), solving the 'Small Object Collapse' problem.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 6,
+        "novel": true
+    },
+    {
+        "Name": "spectral_density_loss",
+        "Title": "Spectral Consistency Density Loss",
+        "Experiment": "Supervise the Density Map prediction in the Frequency Domain (using FFT). By enforcing consistency on high-frequency components, we force the model to sharpen the density peaks for tiny objects, preventing the 'oversmoothed' predictions typical of MSE loss that lead to missed detections.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": false
+    },
+    {
+        "Name": "density_biased_attention",
+        "Title": "Density-Biased Deformable Attention",
+        "Experiment": "Modify the Scale-Aware Encoder to inject the predicted Density Map as a 'Location Bias' into the Deformable Attention sampling. Instead of just learning offsets from features, the sampling points are explicitly pushed towards high-density regions, unifying Feature Refinement and Density Guidance into a single module.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "context_preserving_pruning",
+        "Title": "Context-Preserving Token Pruning",
+        "Experiment": "Implement Token Pruning where pruned background tokens are not discarded but aggregated into a single 'Global Context Token' via pooling. This allows the model to skip computing attention on background pixels (speed) while retaining the environmental context (accuracy) needed to distinguish objects from noise.",
+        "Interestingness": 8,
+        "Feasibility": 6,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "dual_frequency_encoder",
+        "Title": "Dual-Frequency Encoder Feature Decomposition for Small Object Preservation",
+        "Experiment": "Extend the backbone projector to produce two feature maps by applying fixed spectral filters on the highest-resolution encoder output: a Gaussian-blurred map for low-frequency context and a Laplacian-filtered map for high-frequency detail. Modify the transformer decoder to accept these dual feature streams either via concatenation or parallel cross-attention modules. Train with existing losses. Evaluate if this helps preserve small object signals when combining density-guided query initialization with scale-aware encoding, mitigating small object collapse.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "frequency_aware_multi_branch_encoder",
+        "Title": "Frequency-Aware Multi-Branch Encoder with Dynamic Cross-Attention Fusion",
+        "Experiment": "Modify the backbone projector to output two parallel feature branches from the highest-resolution encoder feature map: a high-frequency branch extracted via a learnable 3x3 convolutional filter with stride 1, and a low-frequency branch obtained through average pooling followed by a convolution. In the transformer decoder, implement parallel cross-attention modules for each frequency branch. Introduce a lightweight gating MLP on query embeddings to predict softmax weights for dynamically fusing the high- and low-frequency cross-attention outputs per query. Train the model end-to-end with existing detection and density losses, focusing on combining with Density-Guided Query Initialization and Scale-Aware Encoder. Evaluate improvements in small object AP and the mitigation of small object collapse.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "frequency_preserving_encoder_loss",
+        "Title": "Frequency-Preserving Encoder Feature Reconstruction Loss",
+        "Experiment": "Add an auxiliary loss that encourages the Scale-Aware Encoder's highest-resolution output feature map to retain high-frequency details from the backbone's corresponding raw feature. Compute the high-frequency component by subtracting a Gaussian-blurred version of each feature map, then apply an L1 loss between these high-frequency components. Integrate this loss into the training criterion with a tunable weight. Modify the model forward to return both backbone and encoder features needed for loss computation. Evaluate improvements in small object AP when combining Density-Guided Query Initialization and Scale-Aware Encoder, verifying mitigation of the small object collapse issue.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "high_frequency_residual_encoder",
+        "Title": "High-Frequency Residual Path in Scale-Aware Encoder with Density-Guided Spatial Gating",
+        "Experiment": "Add a lightweight parallel high-frequency residual branch to the Scale-Aware Encoder using a learnable high-pass convolution. Generate a spatial attention mask by applying a small convolutional module on predicted density maps or encoder features to serve as gating. Fuse the residual features back into the main encoder output via element-wise multiplication with this spatial gate. Introduce an auxiliary L1 loss between the residual branch output and the high-frequency component of backbone features, computed by subtracting a Gaussian-blurred version of the backbone features. Modify the encoder's forward and loss functions accordingly. Evaluate combined with Density-Guided Query Initialization to verify improved small object detection and reduced small object collapse.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "channel_disentangled_encoder",
+        "Title": "Channel-Disentangled Encoder with Cosine Orthogonality Loss for Small Object Preservation",
+        "Experiment": "Modify the backbone projector to split the highest-resolution encoder features into two complementary channel groups: a 'detail' branch and a 'context' branch. Apply a lightweight residual convolutional block with minimal smoothing to the detail branch to preserve high-frequency small object cues, while the context branch undergoes standard scale-aware encoding refinement. Introduce an orthogonality loss by computing the cosine similarity between flattened detail and context features averaged over the batch and spatial dimensions, encouraging decorrelation. Fuse the two branches via a learned channel-wise sigmoid gating vector before feeding into the transformer decoder. Integrate the orthogonality loss into the training criterion with a tunable weight. Evaluate the combined model with Density-Guided Query Initialization and Scale-Aware Encoder for improved small object AP and mitigation of small object collapse.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "frequency_residual_fusion_with_density_gating",
+        "Title": "Frequency Residual Fusion in Scale-Aware Encoder with Density Map Gating",
+        "Experiment": "In the scale-aware encoder, extract the high-frequency residual of the highest-resolution backbone feature by subtracting a Gaussian-blurred version. Design a lightweight gating MLP conditioned solely on the predicted density map to compute spatial fusion weights. Fuse the residual back into the encoder's highest-resolution feature via element-wise multiplication and addition, modulated by these gating weights as a residual connection. Introduce an auxiliary L1 reconstruction loss on the residual to encourage preservation of detail. Modify the forward pass to output the fused features and residual for loss computation. Train end-to-end alongside existing losses. Evaluate the combined model with Density-Guided Query Initialization and Scale-Aware Encoder on small object AP and small object collapse mitigation.",
+        "Interestingness": 10,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "learned_adaptive_feature_smoothing",
+        "Title": "Learned Adaptive Feature Smoothing with Density-Guided Spatial Gating for Small Object Preservation",
+        "Experiment": "Introduce a lightweight spatial gating module inside the Scale-Aware Encoder that takes as input the concatenation of the predicted density map and the highest-resolution backbone feature map, outputting a spatial attention mask in [0,1]. Apply a fixed depthwise Gaussian smoothing convolution to the highest-resolution backbone feature map and fuse it with the original feature using the learned spatial gate as a soft mask in a residual connection. Modify the encoder forward to include this adaptive smoothing step before multi-scale projection and scale-aware refinement. Train end-to-end with existing losses including the density map loss. Evaluate improvements in small object AP and overall detection metrics, especially in combination with Density-Guided Query Initialization.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "frequency_aware_attention_regularization",
+        "Title": "Frequency-Aware Attention Regularization for Small Object Preservation",
+        "Experiment": "Modify the Scale-Aware Encoder to extract self-attention weights from its highest-resolution block and a corresponding baseline attention map from the backbone encoder before scale-aware refinement. Reshape these attention maps into spatial grids and compute their 2D FFT magnitude spectra. Define a spectral loss that encourages the Scale-Aware Encoder's attention to retain or exceed the high-frequency energy of the baseline within a predefined frequency band. Integrate this spectral loss as an auxiliary term in the training criterion with a tunable weight. Implement hooks or modify forward passes to extract attention weights, compute FFT-based spectral loss, and add it to the total loss. Evaluate the combined model with Density-Guided Query Initialization and Scale-Aware Encoder, focusing on small object AP improvements and mitigation of small object collapse.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "adaptive_frequency_gating",
+        "Title": "Adaptive Frequency Gating for Feature Disentanglement in Small Object Detection",
+        "Experiment": "Augment the backbone projector by applying fixed spectral filters (e.g., Gaussian low-pass and Laplacian high-pass) to the highest-resolution feature map. Implement a lightweight, learnable gating module (MLP or conv layers) that predicts spatial gating masks conditioned on the predicted density map or backbone features to adaptively weight the low- and high-frequency components. Fuse these gated feature maps by concatenation or weighted summation before feeding them to the transformer encoder/decoder. Train end-to-end with existing detection and density losses without explicit spectral supervision. Evaluate improvements on small object AP and check for mitigation of small object collapse when combined with Density-Guided Query Initialization and Scale-Aware Encoder.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "frequency_aware_positional_encoding",
+        "Title": "Frequency-Aware Multi-Scale Positional Encoding for Small Object Preservation",
+        "Experiment": "Implement a frequency-selective positional encoding module that decomposes spatial positions at the highest-resolution encoder scale into low- and high-frequency components using fixed basis functions (e.g., DCT or sinusoidal). Learn simple gating weights conditioned on the predicted density map or scale bin logits to adaptively fuse these frequency components with the original positional encoding. Modify the backbone Joiner or encoder output to produce these enhanced frequency-aware positional embeddings alongside features. Update the transformer decoder to consume the fused positional embeddings. Train end-to-end with existing losses and evaluate improvements on small object AP and mitigation of small object collapse when combined with density-guided query initialization and scale-aware encoder.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "learned_multi_band_frequency_decomposition_with_frequency_gating",
+        "Title": "Learned Multi-Band Frequency Decomposition with Query-Conditioned Frequency Gating for Small Object Preservation",
+        "Experiment": "Implement a learnable multi-band frequency decomposition module in the backbone projector that processes the highest-resolution output into multiple frequency bands via convolutions with different dilation rates or wavelet-inspired filters. Concatenate these frequency band feature maps along the channel dimension to form keys and values for a single transformer decoder cross-attention module. Introduce a lightweight gating MLP that takes each query embedding and a global pooled descriptor of the predicted density map to produce softmax weights over frequency bands. These weights modulate the cross-attention outputs from each frequency band before summation, enabling dynamic per-query frequency-aware attention fusion. Train end-to-end with existing detection and density-guided losses, optionally adding an orthogonality loss to encourage decorrelated frequency bands. Evaluate the method combined with Density-Guided Query Initialization and Scale-Aware Encoder, focusing on improvements in small object AP and mitigation of small object collapse.",
+        "Interestingness": 10,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "spatially_adaptive_sharpening",
+        "Title": "Spatially Adaptive Sharpening of Encoder Features Guided by Density Maps for Small Object Preservation",
+        "Experiment": "Add a lightweight CNN head to predict a spatial sharpening coefficient map (shape [B,1,H,W], values >= 1) from the predicted density map and/or encoder features before the scale-aware encoder. Apply unsharp masking: sharpened_features = features + sharpening_map * (features - GaussianBlur(features)), where sharpening_map is constrained via activation (e.g., ReLU+1). Add a regularization loss weighted inversely by density to keep sharpening_map close to 1 in sparse regions. Train end-to-end with existing losses including density loss. Modify forward passes and losses accordingly. Evaluate improvements in small object AP and verify mitigation of small object collapse when combined with density-guided query initialization and scale-aware encoder.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    }
+]

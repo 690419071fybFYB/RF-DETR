@@ -1,0 +1,42 @@
+[
+    {
+        "Name": "query_repulsion_loss",
+        "Title": "Spatial Query Repulsion Loss for Reducing Duplicate Detections in Dense Regions",
+        "Experiment": "Add a repulsion loss that penalizes multiple queries detecting the same object. For queries with high IoU between their predicted boxes, apply a loss that pushes their reference points apart. Weight the repulsion loss by the local density - stronger repulsion in dense regions to prevent duplicate detections.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 8
+    },
+    {
+        "Name": "multi_scale_density_supervision",
+        "Title": "Multi-Scale Density Supervision for Scale-Aware Small Object Detection",
+        "Experiment": "Extend density prediction from single P3 level to multi-scale (P3, P4, P5). Each scale predicts density maps for objects of different sizes. P3 focuses on small objects, P4 on medium, P5 on large. Aggregate multi-scale density losses with learnable scale weights. This should improve scale-awareness and detection of objects at different sizes.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 7
+    },
+    {
+        "Name": "contrastive_query_learning",
+        "Title": "Contrastive Query Learning for Improved Query Diversity in Dense Regions",
+        "Experiment": "Add a contrastive loss that encourages query embeddings in the same dense region to be similar (positive pairs) while pushing apart queries from different regions (negative pairs). This helps queries specialize for specific areas and reduces duplicate detections in dense scenes. Implement using cosine similarity between query features.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "feature_pyramid_gating",
+        "Title": "Learnable Feature Pyramid Gating Based on Object Density",
+        "Experiment": "Implement a gating mechanism that dynamically weights the contribution of each FPN level (P3-P5) based on the predicted density distribution. Dense regions receive stronger P3 (high-resolution) features while sparse regions rely more on P4/P5. Use a lightweight MLP to predict gating weights from the density map.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7
+    },
+    {
+        "Name": "boundary_aware_query_refinement",
+        "Title": "Boundary-Aware Query Position Refinement for Adjacent Objects",
+        "Experiment": "Add a boundary prediction head alongside density prediction that estimates object boundaries. Use boundary information to refine query reference points, pushing them away from object boundaries and towards object centers. This should help distinguish adjacent objects in dense clusters.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8
+    }
+]

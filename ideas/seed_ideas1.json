@@ -1,0 +1,34 @@
+[
+    {
+        "Name": "adaptive_frequency_gating_p4",
+        "Title": "Adaptive Frequency Gating (P4 Only)",
+        "Experiment": "Implement a lightweight 'Frequency Gating Module' that operates ONLY on the P4 feature map. Use Dilated Convolutions (rate=1, 2) to extract high/low frequency components from P4, and use the Density Map to spatially weight their fusion. This avoids the noise of P3 while recovering high-frequency details hidden in P4.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 7
+    },
+    {
+        "Name": "scale_aware_query_grouping",
+        "Title": "Scale-Aware Query Grouping",
+        "Experiment": "Modify the Transformer Decoder to group Object Queries into 'Small' and 'Large' specialist groups. Use the global Density Map to dynamically assign queries to groups (e.g., if density is high, activate more 'Small' queries). This allows the model to allocate computational capacity adaptively based on the scene's object distribution.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "density_conditional_feature_modulation",
+        "Title": "Density-Conditional Feature Modulation",
+        "Experiment": "Implement a spatially-variant 'Squeeze-and-Excitation' block. Instead of a global vector, predict a spatial modulation map from the Density Map. Multiply the P4 feature map by this modulation map to suppress background noise in sparse regions and enhance feature magnitude in dense/small-object regions.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7
+    },
+    {
+        "Name": "contrastive_density_regularization",
+        "Title": "Contrastive Density Regularization",
+        "Experiment": "Add a contrastive loss term that pulls feature representations of 'dense small objects' closer to a learnable prototype, while pushing 'background' features away. Use the Density Map to generate the positive/negative masks for this contrastive learning, forcing the encoder to learn more discriminative features for small objects.",
+        "Interestingness": 7,
+        "Feasibility": 7,
+        "Novelty": 6
+    }
+]

@@ -3,6 +3,7 @@
 
 在 P3/P4/P5 每个层级分别预测密度图
 P3 → 小目标, P4 → 中目标, P5 → 大目标
+使用更平稳的训练配置
 """
 from rfdetr import RFDETRBase
 from torchinfo import summary
@@ -25,6 +26,13 @@ model.train(
     epochs=12,
     batch_size=4,
     grad_accum_steps=4,
+    # 更平稳的训练配置
     lr=1e-4,
+    lr_scheduler='cosine',       # 余弦退火调度
+    lr_min_factor=0.01,          # 最低衰减到 1%
+    warmup_epochs=2,             # 预热 2 个 epoch
+    clip_max_norm=0.05,          # 更小的梯度裁剪
+    use_ema=True,                # 启用 EMA
+    ema_decay=0.9998,            # EMA 衰减系数
     output_dir='/home/fyb/mydir/rf-detr/experiements/results/multiscale_density',
 )

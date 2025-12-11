@@ -1,0 +1,110 @@
+[
+    {
+        "Name": "adaptive_frequency_gating_p4",
+        "Title": "Adaptive Frequency Gating (P4 Only)",
+        "Experiment": "Implement a lightweight 'Frequency Gating Module' that operates ONLY on the P4 feature map. Use Dilated Convolutions (rate=1, 2) to extract high/low frequency components from P4, and use the Density Map to spatially weight their fusion. This avoids the noise of P3 while recovering high-frequency details hidden in P4.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "scale_aware_query_grouping",
+        "Title": "Scale-Aware Query Grouping",
+        "Experiment": "Modify the Transformer Decoder to group Object Queries into 'Small' and 'Large' specialist groups. Use the global Density Map to dynamically assign queries to groups (e.g., if density is high, activate more 'Small' queries). This allows the model to allocate computational capacity adaptively based on the scene's object distribution.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_conditional_feature_modulation",
+        "Title": "Density-Conditional Feature Modulation",
+        "Experiment": "Implement a spatially-variant 'Squeeze-and-Excitation' block. Instead of a global vector, predict a spatial modulation map from the Density Map. Multiply the P4 feature map by this modulation map to suppress background noise in sparse regions and enhance feature magnitude in dense/small-object regions.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "contrastive_density_regularization",
+        "Title": "Contrastive Density Regularization",
+        "Experiment": "Add a contrastive loss term that pulls feature representations of 'dense small objects' closer to a learnable prototype, while pushing 'background' features away. Use the Density Map to generate the positive/negative masks for this contrastive learning, forcing the encoder to learn more discriminative features for small objects.",
+        "Interestingness": 7,
+        "Feasibility": 7,
+        "Novelty": 6,
+        "novel": true
+    },
+    {
+        "Name": "density_guided_spatial_attention_p4",
+        "Title": "Density-Guided Spatial Attention Modulation on P4",
+        "Experiment": "Normalize the predicted density map to [0,1] range using min-max normalization, optionally apply sigmoid smoothing to avoid hard thresholds. Broadcast this spatial mask to match the cross-attention weights shape corresponding to the P4 feature level in the Transformer decoder. During cross-attention computation in TransformerDecoderLayer, multiply or add (logits) this mask to attention weights for P4 before softmax to spatially modulate attention towards dense regions. Modify the forward pass to accept density map as input and apply gating only on P4 level attention weights. Evaluate detection metrics compared to baseline Density-Guided Query Initialization without spatial attention modulation, verifying training stability and performance on small objects.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "density_positional_bias_modulation",
+        "Title": "Density-Guided Positional Bias Modulation in Transformer Decoder",
+        "Experiment": "Incorporate a learnable positional bias from the predicted density map into the Transformer Decoder. Bilinearly sample scalar density values at each query's normalized reference point coordinates from the single-channel density map output by the DensityPredictor. Pass these values through a lightweight linear projection to produce per-query bias vectors matching the hidden dimension. Add these density-based bias vectors to the query positional embeddings before self- and cross-attention in decoder layers, enabling smooth spatial modulation toward dense regions. Modify the decoder forward methods to accept and use this bias. Evaluate improvements on small/dense object detection AP and training stability compared to the baseline Density-Guided Query Initialization, ensuring minimal added complexity and no discrete gating or masking.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_aware_query_scaling",
+        "Title": "Density-Aware Soft Scaling of Transformer Queries",
+        "Experiment": "In the Transformer forward pass, after obtaining the predicted density map from the DensityPredictor (P4 features), apply adaptive average pooling to reduce spatial dimensions to a small fixed size (e.g., 4x4), flatten, and pass through a lightweight MLP to produce a gating vector matching the query_feat embedding dimension. Apply a sigmoid activation to ensure gating factors are in (0,1). Multiply the initial query_feat embeddings by this gating vector broadcasted across queries before input to the decoder. Modify transformer forward to accept and use this gating. Evaluate improvements on small/dense object AP and training stability compared to baseline density-guided query initialization without query scaling.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "density_augmented_cross_attention",
+        "Title": "Density-Augmented Cross-Attention Keys and Values",
+        "Experiment": "In the TransformerDecoderLayer, incorporate the predicted density map from the P4 feature as an auxiliary spatial feature for cross-attention memory keys and values. First, apply a lightweight 1x1 convolution or linear projection to the density map to produce a density embedding with the same channel dimension as the P4 memory features. Then, fuse this embedding with the P4 memory features by element-wise addition. Modify the cross-attention forward pass to use these fused features for the P4 level only, leaving other levels unchanged. Train the model end-to-end with the existing losses and density-guided query initialization enabled. Evaluate detection metrics focusing on small/dense objects and monitor training stability compared to baseline.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_guided_sampling_offset_modulation",
+        "Title": "Density-Guided Deformable Attention Sampling Offset Modulation",
+        "Experiment": "Modify the Transformer forward pass to output the predicted density map from the stable P4 feature level. In the TransformerDecoderLayer, implement a small MLP that takes as input the density values sampled via bilinear interpolation at each query's normalized reference point location on the density map. The MLP outputs an offset modulation vector (in range constrained by sigmoid or tanh scaled) matching the shape of sampling offsets for that query. Add this modulation vector additively to the original sampling offsets for the P4 feature level only, prior to computing deformable attention. Keep other feature levels unmodified to maintain stability. Train end-to-end with Density-Guided Query Initialization and evaluate improvements in small object AP and overall stability compared to baseline without offset modulation. This approach allows spatially adaptive sampling patterns conditioned on object density, improving fine-detail capture without excessive noise or complexity.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_modulated_residual_p4",
+        "Title": "Density-Modulated Residual Refinement on P4 Feature",
+        "Experiment": "Implement a lightweight DensityModulatedResidualBlock module that refines the P4 feature map based on the predicted density map from the DensityPredictor. This block consists of a bottleneck residual path: a 1x1 conv reducing channels to a smaller intermediate dimension (e.g., hidden_dim // 4), followed by ReLU, then a 3x3 conv, ReLU, and finally a 1x1 conv restoring the original channel dimension. The predicted density map is passed through a 1x1 conv to generate a spatial gating map matching the bottleneck output channels, followed by a sigmoid activation. The bottleneck output is element-wise multiplied by this gating map, then added back to the original P4 feature to produce a refined feature. Integrate this module into the Transformer forward pass after density prediction, replacing the P4 feature before flattening and passing to the encoder and query initialization. Optionally include a learnable scalar to scale the gating strength. Evaluate improvements in small/dense object AP, training stability, and feature discrimination compared to baseline Density-Guided Query Initialization without refinement, maintaining minimal complexity and noise.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "density_modulated_positional_encoding",
+        "Title": "Density-Modulated Positional Encoding for Multi-Scale Transformer Decoding",
+        "Experiment": "Implement a lightweight spatial modulation of the Transformer decoder cross-attention positional embeddings using the predicted P4 density map. Use a pointwise (kernel size 1) convolutional layer on the density map to generate spatial scaling masks matching the spatial resolutions of each feature pyramid level (P3, P4, P5). Apply these masks multiplicatively to the sine/cosine positional embeddings before adding them to queries and keys in cross-attention layers only. Modify the positional encoding and transformer decoder forward methods to accept and apply this modulation. Train end-to-end with Density-Guided Query Initialization enabled, then evaluate improvements in small object AP and training stability compared to the baseline.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_conditioned_self_attention_gating",
+        "Title": "Density-Conditioned Gating of Transformer Decoder Self-Attention",
+        "Experiment": "Enhance TransformerDecoderLayer by adding a density conditioning input: compute a global scalar from the predicted P4 density map via global average pooling and sigmoid normalization. Pass this scalar through a lightweight MLP to produce per-head gating factors in (0,1). Multiply these gating factors with the self-attention weights' head dimension before softmax, effectively modulating the contribution of each attention head based on object density. Keep gating per-head, not per-query, to maintain stability. Modify Transformer.forward to compute and pass this density scalar to all decoder layers. Evaluate detection AP improvements on small/dense objects and training stability compared to baseline Density-Guided Query Initialization.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    }
+]
