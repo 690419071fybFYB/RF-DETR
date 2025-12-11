@@ -1,0 +1,119 @@
+[
+    {
+        "Name": "query_repulsion_loss",
+        "Title": "Spatial Query Repulsion Loss for Reducing Duplicate Detections in Dense Regions",
+        "Experiment": "Add a repulsion loss that penalizes multiple queries detecting the same object. For queries with high IoU between their predicted boxes, apply a loss that pushes their reference points apart. Weight the repulsion loss by the local density - stronger repulsion in dense regions to prevent duplicate detections.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "multi_scale_density_supervision",
+        "Title": "Multi-Scale Density Supervision for Scale-Aware Small Object Detection",
+        "Experiment": "Extend density prediction from single P3 level to multi-scale (P3, P4, P5). Each scale predicts density maps for objects of different sizes. P3 focuses on small objects, P4 on medium, P5 on large. Aggregate multi-scale density losses with learnable scale weights. This should improve scale-awareness and detection of objects at different sizes.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "contrastive_query_learning",
+        "Title": "Contrastive Query Learning for Improved Query Diversity in Dense Regions",
+        "Experiment": "Add a contrastive loss that encourages query embeddings in the same dense region to be similar (positive pairs) while pushing apart queries from different regions (negative pairs). This helps queries specialize for specific areas and reduces duplicate detections in dense scenes. Implement using cosine similarity between query features.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": false
+    },
+    {
+        "Name": "feature_pyramid_gating",
+        "Title": "Learnable Feature Pyramid Gating Based on Object Density",
+        "Experiment": "Implement a gating mechanism that dynamically weights the contribution of each FPN level (P3-P5) based on the predicted density distribution. Dense regions receive stronger P3 (high-resolution) features while sparse regions rely more on P4/P5. Use a lightweight MLP to predict gating weights from the density map.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "boundary_aware_query_refinement",
+        "Title": "Boundary-Aware Query Position Refinement for Adjacent Objects",
+        "Experiment": "Add a boundary prediction head alongside density prediction that estimates object boundaries. Use boundary information to refine query reference points, pushing them away from object boundaries and towards object centers. This should help distinguish adjacent objects in dense clusters.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_gated_local_attention",
+        "Title": "Density-Gated Local Attention for Adaptive Query Coordination",
+        "Experiment": "Implement local attention where each query attends to its k-nearest neighbors based on reference points. Use multi-head self-attention with a gating mechanism: retrieve density value at each query's reference point from the predicted density map, and scale attention logits by (1 + scale_factor * density). This increases attention strength in dense regions for better coordination. Integrate as a pre-decoder module after query initialization. Add in transformer.py as DensityGatedLocalAttention, called before decoder layers. Evaluate impact on mAP, AP-small, and duplicate detection rate, with ablation on the gating effect.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "density_guided_focal_loss",
+        "Title": "Density-Guided Focal Loss for Emphasizing Small Objects in Dense Regions",
+        "Experiment": "Modify the classification focal loss to weight samples based on local object density. For each matched query-target pair in the loss computation, sample the predicted density map at the ground truth box center (or predicted reference point). Compute a density weight: weight = 1 + gamma * normalized_density, where gamma is a hyperparameter (e.g., 0.5). Multiply the focal loss for that match by the weight, giving more emphasis to objects in dense regions where small objects are prevalent. This helps the model focus on challenging dense areas during training. Implement by modifying the loss_labels function in SetCriterion (lwdetr.py) to include density sampling and weight computation. Evaluate impact on AP-small and overall mAP, with ablation on gamma and density normalization.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "graph_query_feature_enhancement",
+        "Title": "Graph-based Query Feature Enhancement for Structural Context in Dense Clusters",
+        "Experiment": "Insert a GraphQueryFeatureEnhancement module after query initialization and before decoder layers in TransformerDecoder.forward. The module builds a k-NN graph based on query reference points (center coordinates), performs edge convolution: for each query and its k neighbors, concatenate query feature, neighbor feature, and relative xy delta; pass through a shared MLP (input dim 3*d_model, hidden dim 128, output dim d_model) with ReLU and dropout (0.1); aggregate via max-pooling over neighbors; add residual to original query features. This provides local structural context to help distinguish adjacent objects in dense regions. Implementation steps: 1) Add class GraphQueryFeatureEnhancement in transformer.py with parameters d_model, k=10, dropout=0.1. 2) In TransformerDecoder.__init__, conditionally instantiate if config.enable_graph_query_enhancement. 3) In TransformerDecoder.forward, after obtaining tgt and reference_points from init (or SmallObjectQueryBoost), apply: tgt = tgt + self.gqfe(tgt, reference_points). 4) Add config flags in ModelConfig: enable_graph_query_enhancement (bool), graph_k_neighbors (int). 5) Update build_transformer to pass config. 6) Ensure batched computation using efficient topk. Evaluate impact on mAP@50:95, AP-small, and duplicate detection rate (recall at IoU=0.9). Ablation on k and dropout.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "density_aware_feature_repulsion_loss",
+        "Title": "Density-Aware Feature Repulsion Loss for Reducing Feature Confusion in Dense Object Clusters",
+        "Experiment": "Add a loss that pushes apart features of queries matched to different objects in dense regions to reduce confusion between adjacent small objects. Implementation: 1) In SetCriterion (lwdetr.py), add loss_feature_repulsion that takes query features from decoder outputs (e.g., tgt from decoder), reference points, matching indices, and predicted density map. 2) For each image in batch, gather matched queries (size M) and their assigned GT indices. 3) Sample local density for each matched query from density map at its reference point. 4) Compute pairwise Euclidean distances between reference points. 5) For each pair with different GT assignments, compute adaptive threshold: base_threshold / (1 + density_scale * avg_density) where avg_density is mean of the two queries' densities. 6) If distance < adaptive threshold, compute cosine similarity between their query features. 7) Compute repulsion loss: max(0, similarity - margin). 8) Weight loss by avg_density to focus on dense regions. 9) Sum over pairs and average over batch. 10) Add config flags: enable_feature_repulsion_loss, feature_repulsion_coef, repulsion_base_threshold (e.g., 0.15), repulsion_density_scale (e.g., 2.0), repulsion_margin (e.g., 0.1). 11) Evaluate impact on mAP@50:95, AP-small, and duplicate detection rate (IoU>0.9). Expected: improved discrimination between neighboring objects, especially in dense small object clusters.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "adaptive_density_scale_loss_weighting",
+        "Title": "Adaptive Density-Scale Loss Weighting for Small Object Detection",
+        "Experiment": "Weight classification loss per object based on its size and local density to emphasize small objects in dense regions. Implementation in SetCriterion.loss_labels: 1) For each matched pair, compute scale factor: 1 - sqrt(gt_box_area)/max_img_dim (range 0-1, higher for smaller objects). 2) If outputs contain 'density_map', sample density at GT center (normalized coords) via bilinear interpolation, normalize per image to [0,1]. 3) Compute weight = 1 + scale_coef * scale_factor + density_coef * normalized_density (if density available). 4) Optionally normalize weights per batch to maintain loss scale (configurable). 5) Multiply each pair's focal loss by its weight before averaging. 6) Add config: enable_adaptive_loss_weighting (bool), scale_coef (default 1.0), density_coef (default 0.5), normalize_weights (bool, default True). 7) Evaluate over 12 epochs on mAP@50:95, AP-small, and per-size AP. Ablation on coefficients and normalization.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "density_aware_relative_position_encoding",
+        "Title": "Density-Aware Relative Position Encoding for Improved Spatial Reasoning in Dense Clusters",
+        "Experiment": "Enhance query features with relative position information to neighboring queries, weighted by local density for better spatial reasoning in dense clusters. Implementation: 1) After query initialization in TransformerDecoder.forward, compute k-nearest neighbors (k=5) for each query based on reference points. 2) For each query-neighbor pair, compute relative position vector (\u0394x, \u0394y) in normalized coordinates. 3) Encode relative positions using sine/cosine embeddings (dim=64). 4) Sample density values at query reference points from predicted density map. 5) Aggregate neighbor encodings with density-weighted attention: weight = softmax(density_query * similarity(query_feat, neighbor_feat)/temperature). 6) Add aggregated relative position encoding to query features. 7) Add config: enable_relative_position_encoding (bool), relpos_k_neighbors (default 5), relpos_dim (default 64), relpos_temperature (default 1.0). 8) Evaluate impact on mAP@50:95, AP-small, and performance on object clusters (measured by detection accuracy for objects within certain distance thresholds). Ablation on k and temperature.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": false
+    },
+    {
+        "Name": "density_guided_local_feature_alignment",
+        "Title": "Density-Guided Local Feature Alignment for Consistent Representation in Dense Clusters",
+        "Experiment": "Add a loss that encourages neighboring queries in dense regions to have similar features, leveraging the insight that objects in dense clusters often share similar appearance. Implementation: 1) In SetCriterion (lwdetr.py), add loss_density_feature_alignment that takes query features from decoder outputs, reference points, and predicted density map. 2) For each query, find k=10 nearest neighbors based on Euclidean distance between reference points (normalized coordinates). 3) Compute cosine similarity between each query-neighbor pair. 4) Sample density values at both points via bilinear interpolation on density map, normalize per image to [0,1]. 5) Compute alignment weight = sqrt(density_query * density_neighbor). 6) Apply loss: L = -mean(alignment_weight * similarity). This encourages higher similarity for pairs in dense regions. 7) Add config flags: enable_density_feature_alignment (bool), alignment_loss_coef (default 0.1), alignment_k_neighbors (default 10). 8) Evaluate impact over 12 epochs on mAP@50:95 and AP-small, with additional analysis on feature consistency in dense vs sparse regions (compute intra-cluster feature distance). Ablation study on k and loss coefficient.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 8,
+        "novel": false
+    },
+    {
+        "Name": "multi_scale_edge_enhancement",
+        "Title": "Multi-Scale Edge Enhancement with Adaptive Attention for Small Object Features",
+        "Experiment": "Add a Multi-Scale Edge Enhancement (MSEE) module to enhance features for small object detection. Implementation: 1) Create rfdetr/models/multi_scale_edge_enhancement.py with class MultiScaleEdgeEnhancement. It takes P3 feature maps [B,C,H,W], applies three parallel 3\u00d73 conv layers with dilation rates [1,2,3] (each followed by GroupNorm(32, C) and ReLU), sums their outputs. Then a small network (1\u00d71 conv \u2192 GroupNorm \u2192 ReLU \u2192 3\u00d73 conv \u2192 GroupNorm \u2192 ReLU \u2192 1\u00d71 conv \u2192 sigmoid) generates a single-channel attention map. The summed features are multiplied by the attention map (broadcast across channels) and added residually to the input. 2) In lwdetr.py forward, apply MSEE to P3 features before projection. 3) Add config flags: enable_msee (bool), msee_dilation_rates (list, default [1,2,3]). 4) Train for 12 epochs, evaluate mAP@50:95 and AP-small. Ablation on dilation rates and attention design.",
+        "Interestingness": 9,
+        "Feasibility": 9,
+        "Novelty": 8,
+        "novel": false
+    }
+]
