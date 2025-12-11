@@ -165,8 +165,15 @@ class LWDETR(nn.Module):
             refpoint_embed_weight = self.refpoint_embed.weight[:self.num_queries]
             query_feat_weight = self.query_feat.weight[:self.num_queries]
 
-        hs, ref_unsigmoid, hs_enc, ref_enc, scale_logits, pred_density = self.transformer(
+        hs, ref_unsigmoid, hs_enc, ref_enc, scale_logits, density_outputs = self.transformer(
             srcs, masks, poss, refpoint_embed_weight, query_feat_weight)
+        
+        # Extract density from dict
+        pred_density = None
+        pred_multiscale_densities = None
+        if density_outputs is not None:
+            pred_density = density_outputs.get('pred_density')
+            pred_multiscale_densities = density_outputs.get('pred_multiscale_densities')
 
         if hs is not None:
             if self.bbox_reparam:
@@ -208,12 +215,16 @@ class LWDETR(nn.Module):
                 out['enc_outputs'] = {'pred_logits': cls_enc, 'pred_boxes': ref_enc}
                 if pred_density is not None:
                     out['pred_density'] = pred_density
+                if pred_multiscale_densities is not None:
+                    out['pred_multiscale_densities'] = pred_multiscale_densities
                 if self.segmentation_head is not None:
                     out['enc_outputs']['pred_masks'] = masks_enc
             else:
                 out = {'pred_logits': cls_enc, 'pred_boxes': ref_enc}
                 if pred_density is not None:
                     out['pred_density'] = pred_density
+                if pred_multiscale_densities is not None:
+                    out['pred_multiscale_densities'] = pred_multiscale_densities
                 if self.segmentation_head is not None:
                     out['pred_masks'] = masks_enc
 
@@ -623,6 +634,69 @@ class SetCriterion(nn.Module):
         
         return {'loss_density': loss_density * self.density_loss_coef}
     
+    def loss_multiscale_density(self, outputs, targets, indices, num_boxes):
+        """Compute multi-scale density loss."""
+        if 'pred_multiscale_densities' not in outputs:
+            return {}
+        
+        pred_densities = outputs['pred_multiscale_densities']  # List of [B, 1, H, W]
+        
+        # Area thresholds for different scales
+        area_thresholds = [(0, 0.01), (0.01, 0.1), (0.1, 1.0)]  # small, medium, large
+        sigmas = [1.0, 1.5, 2.0]
+        
+        total_loss = 0.0
+        for level_idx, (pred_density, sigma, (area_min, area_max)) in enumerate(
+            zip(pred_densities, sigmas, area_thresholds)
+        ):
+            with torch.no_grad():
+                gt_density = self._generate_scale_specific_gt(
+                    targets, pred_density.shape, sigma, area_min, area_max
+                )
+            
+            loss = F.mse_loss(pred_density, gt_density)
+            total_loss = total_loss + loss / len(pred_densities)
+        
+        return {'loss_multiscale_density': total_loss * self.density_loss_coef}
+    
+    def _generate_scale_specific_gt(self, targets, density_shape, sigma, area_min, area_max):
+        """Generate GT density for specific object size range."""
+        B, _, H, W = density_shape
+        device = targets[0]['labels'].device if len(targets) > 0 else 'cuda'
+        
+        gt_list = []
+        y_range = torch.arange(H, device=device, dtype=torch.float32)
+        x_range = torch.arange(W, device=device, dtype=torch.float32)
+        grid_y, grid_x = torch.meshgrid(y_range, x_range, indexing='ij')
+        grid_y = grid_y.unsqueeze(0)
+        grid_x = grid_x.unsqueeze(0)
+        
+        for i in range(B):
+            if i >= len(targets):
+                gt_list.append(torch.zeros((1, H, W), device=device))
+                continue
+            
+            boxes = targets[i].get('boxes', torch.zeros((0, 4), device=device))
+            if boxes.shape[0] == 0:
+                gt_list.append(torch.zeros((1, H, W), device=device))
+                continue
+            
+            # Filter by area
+            areas = boxes[:, 2] * boxes[:, 3]
+            mask = (areas >= area_min) & (areas < area_max)
+            filtered = boxes[mask]
+            
+            if filtered.shape[0] == 0:
+                gt_list.append(torch.zeros((1, H, W), device=device))
+                continue
+            
+            cx = (filtered[:, 0] * W).view(-1, 1, 1)
+            cy = (filtered[:, 1] * H).view(-1, 1, 1)
+            squared_dist = (grid_x - cx)**2 + (grid_y - cy)**2
+            gaussian = torch.exp(-squared_dist / (2 * sigma**2))
+            gt_list.append(gaussian.sum(dim=0, keepdim=True))
+        
+        return torch.stack(gt_list, dim=0)
  
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
@@ -644,6 +718,7 @@ class SetCriterion(nn.Module):
 
             'masks': self.loss_masks,
             'density': self.loss_density,
+            'multiscale_density': self.loss_multiscale_density,
         }
         assert loss in loss_map, f'do you really want to compute {loss} loss?'
         return loss_map[loss](outputs, targets, indices, num_boxes, **kwargs)
@@ -985,6 +1060,8 @@ def build_criterion_and_postprocessors(args):
         losses.append('masks')
     if getattr(args, 'enable_density_init', False):
         losses.append('density')
+    if getattr(args, 'enable_multiscale_density', False):
+        losses.append('multiscale_density')
 
     try:
         sum_group_losses = args.sum_group_losses

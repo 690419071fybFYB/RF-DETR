@@ -65,6 +65,8 @@ class ModelConfig(BaseModel):
     # Density-Aware Loss Weighting
     enable_density_aware_loss: bool = False
     density_aware_alpha: float = 0.5  # Weight multiplier for density-aware loss
+    # Multi-Scale Density Supervision
+    enable_multiscale_density: bool = False
     # Density Map Visualization
     visualize_density: bool = False
     density_vis_max_samples: int = 4

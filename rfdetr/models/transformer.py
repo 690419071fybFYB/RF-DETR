@@ -29,6 +29,7 @@ from rfdetr.models.density_init import DensityGuidedQueryInit
 from rfdetr.models.density_init_improved import DensityGuidedQueryInit as ImprovedDensityGuidedQueryInit
 from rfdetr.models.density_cross_attn import DensityAugmentedMemory
 from rfdetr.models.density_pos_bias import DensityPositionalBias
+from rfdetr.models.multiscale_density_head import MultiScaleDensityHead
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -158,7 +159,8 @@ class Transformer(nn.Module):
                  enable_density_positional_bias=False,
                  density_pos_bias_scale=0.1,
                  enable_density_sampling_offset=False,
-                 density_sampling_offset_scale=0.1):
+                 density_sampling_offset_scale=0.1,
+                 enable_multiscale_density=False):
         super().__init__()
         self.encoder = None
 
@@ -228,6 +230,11 @@ class Transformer(nn.Module):
         self.enable_density_augmented_cross_attn = False
         self.density_augment = None
 
+        # Multi-Scale Density Supervision
+        self.enable_multiscale_density = enable_multiscale_density
+        if enable_multiscale_density:
+            self.multiscale_density_head = MultiScaleDensityHead(d_model, num_levels=3)
+
         self._export = False
     
     def export(self):
@@ -278,6 +285,7 @@ class Transformer(nn.Module):
 
         
         pred_density = None
+        pred_multiscale_densities = None
         if self.enable_density_init:
              # Extract P3 features (highest resolution) for density prediction
              # memory: [bs, \sum(hw), c]
@@ -286,6 +294,11 @@ class Transformer(nn.Module):
              # [bs, c, h, w]
              memory_p3 = memory[:, :len_p3, :].transpose(1, 2).view(bs, self.d_model, H_p3, W_p3)
              pred_density = self.density_init(memory_p3)
+
+        # Multi-Scale Density Supervision
+        if self.enable_multiscale_density:
+            # Use srcs directly (before flattening) for multi-scale density
+            pred_multiscale_densities = self.multiscale_density_head(srcs[:3])  # P3, P4, P5
 
         # Deprecated: Density-Augmented Cross-Attention (disabled for performance)
         # if self.enable_density_augmented_cross_attn and pred_density is not None:
@@ -419,12 +432,20 @@ class Transformer(nn.Module):
             references = None
             scale_logits = None
         
+        # Prepare density outputs
+        density_outputs = None
+        if pred_density is not None or pred_multiscale_densities is not None:
+            density_outputs = {
+                'pred_density': pred_density,
+                'pred_multiscale_densities': pred_multiscale_densities,
+            }
+        
         if self.two_stage:
             if self.bbox_reparam:
-                return hs, references, memory_ts, boxes_ts, scale_logits, pred_density
+                return hs, references, memory_ts, boxes_ts, scale_logits, density_outputs
             else:
-                return hs, references, memory_ts, boxes_ts.sigmoid(), scale_logits, pred_density
-        return hs, references, None, None, scale_logits, pred_density
+                return hs, references, memory_ts, boxes_ts.sigmoid(), scale_logits, density_outputs
+        return hs, references, None, None, scale_logits, density_outputs
 
 
 class TransformerDecoder(nn.Module):
@@ -833,6 +854,7 @@ def build_transformer(args):
         density_pos_bias_scale=0.1,
         enable_density_sampling_offset=False,
         density_sampling_offset_scale=0.1,
+        enable_multiscale_density=getattr(args, 'enable_multiscale_density', False),
     )
 
 
