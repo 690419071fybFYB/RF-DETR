@@ -1,0 +1,27 @@
+# RF-DETR 核心依赖
+# 不包含 torch（使用服务器预装版本）
+# 版本约束放宽，避免依赖冲突
+
+# 检测框架
+supervision
+roboflow
+pycocotools
+
+# 深度学习工具
+timm
+transformers
+einops
+accelerate
+
+# 数据处理
+numpy
+pillow
+opencv-python-headless
+
+# 可视化
+matplotlib
+tqdm
+
+# 其他
+pyyaml
+scipy
