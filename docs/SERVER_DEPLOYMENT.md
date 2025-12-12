@@ -317,6 +317,114 @@ print(torch.cuda.is_available())  # 应该返回 True
 
 ---
 
+## 🌐 第七部分：服务器代理配置（可选）
+
+> 如果需要在服务器上访问 GitHub、HuggingFace 等国外网站，可以配置代理
+
+### 7.1 安装 mihomo（Clash 替代品）
+
+```bash
+# 下载 mihomo（使用国内镜像）
+cd /root
+wget https://ghproxy.cc/https://github.com/MetaCubeX/mihomo/releases/download/v1.18.10/mihomo-linux-amd64-v1.18.10.gz
+
+# 解压并安装
+gunzip mihomo-linux-amd64-v1.18.10.gz
+chmod +x mihomo-linux-amd64-v1.18.10
+mv mihomo-linux-amd64-v1.18.10 /usr/local/bin/clash
+
+# 验证
+clash -v
+```
+
+### 7.2 下载订阅配置
+
+```bash
+# 创建配置目录
+mkdir -p ~/.config/clash
+
+# 下载订阅（替换为你的订阅链接）
+wget -O ~/.config/clash/config.yaml --user-agent="ClashforWindows" "你的订阅链接?flag=clash"
+
+# 检查配置
+head -20 ~/.config/clash/config.yaml
+```
+
+### 7.3 下载 GeoIP 数据库
+
+```bash
+# 下载 GeoIP 数据库（必须，否则无法启动）
+wget -O ~/.config/clash/geoip.metadb "https://ghproxy.cc/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb"
+
+# 下载 GeoSite 数据库
+wget -O ~/.config/clash/geosite.dat "https://ghproxy.cc/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+
+# 检查文件
+ls -lh ~/.config/clash/
+```
+
+### 7.4 启动代理
+
+```bash
+# 后台启动
+nohup clash -d ~/.config/clash > /root/clash.log 2>&1 &
+
+# 等待启动
+sleep 5
+
+# 检查是否运行
+ps aux | grep -v grep | grep clash
+
+# 查看日志
+tail -20 /root/clash.log
+```
+
+### 7.5 设置环境变量
+
+```bash
+# 临时设置（当前会话有效）
+# 注意：端口根据你的配置文件中的 mixed-port 或 port 设置
+export http_proxy=http://127.0.0.1:7897
+export https_proxy=http://127.0.0.1:7897
+export all_proxy=socks5://127.0.0.1:7897
+
+# 永久设置（添加到 ~/.bashrc）
+echo 'export http_proxy=http://127.0.0.1:7897' >> ~/.bashrc
+echo 'export https_proxy=http://127.0.0.1:7897' >> ~/.bashrc
+source ~/.bashrc
+
+# 测试代理
+curl -I https://www.google.com
+```
+
+### 7.6 关闭代理
+
+```bash
+# 取消环境变量
+unset http_proxy
+unset https_proxy
+unset all_proxy
+
+# 停止 clash 进程
+pkill clash
+```
+
+### 7.7 常用国内镜像（无需代理）
+
+```bash
+# pip 使用清华镜像
+pip install xxx -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# HuggingFace 镜像
+export HF_ENDPOINT=https://hf-mirror.com
+
+# GitHub 文件加速
+# 原链接: https://github.com/xxx/xxx/releases/download/v1.0/file.zip
+# 加速链接: https://ghproxy.cc/https://github.com/xxx/xxx/releases/download/v1.0/file.zip
+```
+
+---
+
 ## 📝 备注
 
 - 本教程基于 RF-DETR 项目
