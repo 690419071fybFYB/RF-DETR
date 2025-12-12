@@ -135,7 +135,8 @@ pip install opencv-python-headless
 #### 方法 B：使用 uv（更快，推荐）
 
 ```bash
-# 安装 uv（官方方式）
+# ========== 安装 uv ==========
+# 官方方式
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc
 
@@ -149,12 +150,21 @@ pip install uv
 # 验证安装
 uv --version
 
-# 创建虚拟环境
-cd /root/RF-DETR
-uv venv --python 3.11
+# ========== 创建全局可重复使用的环境 ==========
+# 创建环境目录（放在 /root/envs/ 下，可多个项目共用）
+mkdir -p /root/envs
+uv venv /root/envs/rfdetr --python 3.11
 
 # 激活环境
-source .venv/bin/activate
+source /root/envs/rfdetr/bin/activate
+
+# 添加到 ~/.bashrc 方便下次使用
+echo 'alias rfdetr="source /root/envs/rfdetr/bin/activate"' >> ~/.bashrc
+source ~/.bashrc
+# 以后只需输入 rfdetr 即可激活环境
+
+# ========== 安装依赖 ==========
+cd /root/RF-DETR
 
 # 安装依赖（比 pip 快 10-100 倍）
 uv pip install -r requirements.txt
@@ -162,7 +172,7 @@ uv pip install -r requirements.txt
 # 使用国内镜像安装依赖
 uv pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 使用 headless OpenCV
+# 使用 headless OpenCV（服务器推荐）
 uv pip uninstall opencv-python
 uv pip install opencv-python-headless
 ```
