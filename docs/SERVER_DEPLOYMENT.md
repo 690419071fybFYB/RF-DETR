@@ -340,6 +340,9 @@ clash -v
 ### 7.2 下载订阅配置
 
 ```bash
+# 安装 nano
+apt-get update && apt-get install -y nano
+
 # 创建配置目录
 mkdir -p ~/.config/clash
 
@@ -425,7 +428,163 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 ---
 
-## 📝 备注
+## � 第八部分：Linux 常用命令速查
+
+### 8.1 文件操作
+
+```bash
+# 查看当前目录
+pwd
+
+# 列出文件（详细信息）
+ls -lh
+
+# 查看文件内容
+cat file.txt           # 全部内容
+head -20 file.txt      # 前 20 行
+tail -50 file.txt      # 后 50 行
+tail -f file.txt       # 实时查看（常用于日志）
+
+# 复制/移动/删除
+cp file.txt backup.txt
+cp -r folder/ backup/  # 复制文件夹
+mv old.txt new.txt     # 重命名/移动
+rm file.txt            # 删除文件
+rm -rf folder/         # 删除文件夹（谨慎使用！）
+
+# 创建文件夹
+mkdir -p path/to/folder
+
+# 查找文件
+find . -name "*.py"    # 查找所有 .py 文件
+find . -name "*.log" -delete  # 删除所有 .log 文件
+
+# 文件大小
+du -sh folder/         # 文件夹大小
+du -sh *               # 当前目录各文件大小
+df -h                  # 磁盘使用情况
+```
+
+### 8.2 进程管理
+
+```bash
+# 查看进程
+ps aux | grep python
+ps aux | grep train
+
+# 杀死进程
+kill PID               # 正常终止
+kill -9 PID            # 强制终止
+pkill -f "train.py"    # 按名称杀死
+
+# 后台运行
+nohup python train.py > log.txt 2>&1 &
+
+# 查看后台任务
+jobs
+bg                     # 放到后台
+fg                     # 调到前台
+
+# 实时监控
+htop                   # 系统资源监控
+nvidia-smi             # GPU 使用情况
+watch -n 1 nvidia-smi  # 每秒刷新 GPU 状态
+```
+
+### 8.3 网络相关
+
+```bash
+# 下载文件
+wget URL
+wget -O filename URL   # 指定文件名
+curl -O URL
+
+# 查看网络连接
+netstat -tlnp          # 查看监听端口
+ss -tlnp               # 同上，更现代
+
+# 测试网络
+ping google.com
+curl -I https://google.com
+```
+
+### 8.4 压缩/解压
+
+```bash
+# tar.gz
+tar -czvf archive.tar.gz folder/    # 压缩
+tar -xzvf archive.tar.gz            # 解压
+
+# zip
+zip -r archive.zip folder/          # 压缩
+unzip archive.zip                   # 解压
+
+# 分块
+split -b 50M bigfile.pth parts_     # 分块
+cat parts_* > bigfile.pth           # 合并
+```
+
+### 8.5 文本处理
+
+```bash
+# 搜索
+grep "error" log.txt              # 搜索关键词
+grep -r "import" --include="*.py" # 递归搜索
+
+# 统计
+wc -l file.txt         # 行数
+wc -w file.txt         # 词数
+
+# 编辑
+nano file.txt          # nano 编辑器
+vim file.txt           # vim 编辑器
+```
+
+### 8.6 系统信息
+
+```bash
+# 系统信息
+uname -a               # 系统版本
+cat /etc/os-release    # 发行版信息
+free -h                # 内存使用
+lscpu                  # CPU 信息
+
+# GPU 信息
+nvidia-smi
+nvidia-smi -L          # GPU 列表
+
+# Python/CUDA 版本
+python --version
+nvcc --version
+```
+
+### 8.7 权限相关
+
+```bash
+# 修改权限
+chmod +x script.sh     # 添加执行权限
+chmod 755 script.sh    # rwxr-xr-x
+chmod 644 file.txt     # rw-r--r--
+
+# 修改所有者
+chown user:group file.txt
+```
+
+### 8.8 常用快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl + C` | 终止当前命令 |
+| `Ctrl + Z` | 暂停当前命令（bg/fg 恢复） |
+| `Ctrl + D` | 退出终端 |
+| `Ctrl + L` | 清屏 |
+| `Ctrl + R` | 搜索历史命令 |
+| `Tab` | 自动补全 |
+| `↑/↓` | 浏览历史命令 |
+
+---
+
+## �📝 备注
 
 - 本教程基于 RF-DETR 项目
 - 测试服务器：AutoDL / 阿里云 / 腾讯云
