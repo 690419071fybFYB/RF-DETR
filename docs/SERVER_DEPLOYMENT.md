@@ -114,7 +114,47 @@ apt-get install -y wget curl git vim htop
 
 ### 3.4 创建 Python 环境
 
-#### 方法 A：使用 Conda
+#### 方法 A：使用服务器预装环境（推荐，最快）
+
+> 大多数云服务器（AutoDL、阿里云等）已预装 PyTorch，直接使用可避免重复下载
+
+```bash
+# ========== 步骤1：查看预装环境 ==========
+conda env list
+# 常见预装环境名：base, pytorch, py38, py310, py312 等
+
+# 激活预装环境
+conda activate py312  # 或服务器提供的环境名
+
+# 验证 PyTorch 已安装
+python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
+
+# ========== 步骤2：只安装其他依赖（跳过 torch） ==========
+cd /root/RF-DETR
+
+# 方法1：手动安装核心依赖
+pip install supervision roboflow pycocotools timm transformers einops tqdm pillow matplotlib
+
+# 方法2：从 requirements.txt 排除 torch 后安装
+grep -vE "^(torch|nvidia|triton)" requirements.txt > /tmp/requirements_no_torch.txt
+pip install -r /tmp/requirements_no_torch.txt
+
+# 方法3：使用 uv 加速（排除 torch）
+grep -vE "^(torch|nvidia|triton)" requirements.txt > /tmp/requirements_no_torch.txt
+uv pip install -r /tmp/requirements_no_torch.txt
+
+# ========== 步骤3：安装项目本身 ==========
+pip install -e . --no-deps
+
+# ========== 步骤4：使用 headless OpenCV ==========
+pip uninstall opencv-python -y
+pip install opencv-python-headless
+
+# ========== 验证 ==========
+python -c "from rfdetr import RFDETRBase; print('✅ 环境配置成功！')"
+```
+
+#### 方法 B：使用 Conda 创建新环境
 
 ```bash
 # 创建环境
@@ -132,7 +172,7 @@ pip uninstall opencv-python -y
 pip install opencv-python-headless
 ```
 
-#### 方法 B：使用 uv（更快，推荐）
+#### 方法 C：使用 uv 创建独立环境
 
 ```bash
 # ========== 安装 uv ==========
