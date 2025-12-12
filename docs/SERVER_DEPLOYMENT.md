@@ -267,12 +267,70 @@ nohup python experiements/scripts/ablation_baseline.py > logs/train.log 2>&1 &
 
 # 查看日志
 tail -f logs/train.log
-
-# 查看进程
-ps aux | grep python
 ```
 
-### 5.3 运行批量实验
+### 5.3 查看后台任务
+
+```bash
+# ========== 方法1：查看所有 Python 进程 ==========
+ps aux | grep python
+
+# 输出示例：
+# root  12345  99.0  5.0 ... python experiements/scripts/ablation_baseline.py
+#       ↑ PID（进程ID）
+
+# ========== 方法2：只看训练相关进程 ==========
+ps aux | grep -E "train|ablation" | grep -v grep
+
+# ========== 方法3：查看当前 shell 的后台任务 ==========
+jobs
+
+# ========== 方法4：实时监控进程 ==========
+htop                    # 系统监控（按 F10 退出）
+watch -n 1 "ps aux | grep python"  # 每秒刷新
+
+# ========== 方法5：查看 GPU 使用情况 ==========
+nvidia-smi              # 显示 GPU 状态
+watch -n 1 nvidia-smi   # 每秒刷新 GPU 状态
+```
+
+### 5.4 杀死后台任务
+
+```bash
+# ========== 方法1：按 PID 杀死（推荐） ==========
+# 先查看进程获取 PID
+ps aux | grep python
+# 假设 PID 是 12345
+kill 12345              # 正常终止
+kill -9 12345           # 强制终止（进程无响应时使用）
+
+# ========== 方法2：按名称杀死 ==========
+pkill -f "ablation_baseline.py"     # 杀死包含该名称的进程
+pkill -f "ablation"                 # 杀死所有包含 ablation 的进程
+pkill -9 -f "train.py"              # 强制杀死
+
+# ========== 方法3：杀死所有 Python 进程（谨慎使用！） ==========
+pkill python            # 杀死所有 python 进程
+killall python          # 同上
+
+# ========== 方法4：杀死多个进程 ==========
+kill 12345 12346 12347  # 同时杀死多个 PID
+
+# ========== 方法5：使用 jobs 和 fg/bg ==========
+jobs                    # 查看当前 shell 的后台任务
+# 输出：[1]+  Running   nohup python train.py ...
+fg %1                   # 把任务 1 调到前台
+# 然后按 Ctrl+C 停止
+
+# ========== 常用组合 ==========
+# 查找并杀死所有训练进程
+ps aux | grep -E "train|ablation" | grep -v grep | awk '{print $2}' | xargs kill -9
+
+# 杀死所有使用 GPU 的 Python 进程
+nvidia-smi | grep python | awk '{print $5}' | xargs kill -9
+```
+
+### 5.5 运行批量实验
 
 ```bash
 chmod +x run_ablation_study.sh
