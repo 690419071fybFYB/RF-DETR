@@ -90,6 +90,7 @@ class Model:
         args = populate_args(**kwargs)
         self.args = args
         self.resolution = args.resolution
+        #获取模型
         self.model = build_model(args)
         self.device = torch.device(args.device)
         if args.pretrain_weights is not None:
@@ -269,7 +270,7 @@ class Model:
                 collate_fn=utils.collate_fn, 
                 num_workers=args.num_workers
             )
-        
+        #获取数据集
         data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
                                     drop_last=False, collate_fn=utils.collate_fn, 
                                     num_workers=args.num_workers)
@@ -380,6 +381,7 @@ class Model:
         best_map_50 = 0
         best_map_ema_5095 = 0
         best_map_ema_50 = 0
+        #开始训练
         for epoch in range(args.start_epoch, args.epochs):
             epoch_start_time = time.time()
             if args.distributed:
@@ -396,7 +398,7 @@ class Model:
                 criterion.w_small = current_w_small
             if hasattr(criterion, "matcher") and hasattr(criterion.matcher, "w_small"):
                 criterion.matcher.w_small = current_w_small
-
+            #训练
             model.train()
             criterion.train()
             # Pass density visualizer to args for use in training loop

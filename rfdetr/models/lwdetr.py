@@ -976,7 +976,7 @@ class MLP(nn.Module):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
         return x
 
-
+#根据参数搭建模型
 def build_model(args):
     # the `num_classes` naming here is somewhat misleading.
     # it indeed corresponds to `max_obj_id + 1`, where max_obj_id
@@ -1023,7 +1023,7 @@ def build_model(args):
     transformer = build_transformer(args)
 
     segmentation_head = SegmentationHead(args.hidden_dim, args.dec_layers, downsample_ratio=args.mask_downsample_ratio) if args.segmentation_head else None
-
+    #搭建模型
     model = LWDETR(
         backbone,
         transformer,
@@ -1037,7 +1037,7 @@ def build_model(args):
         bbox_reparam=args.bbox_reparam,
     )
     return model
-
+#构建损失函数和后处理
 def build_criterion_and_postprocessors(args):
     device = torch.device(args.device)
     matcher = build_matcher(args)

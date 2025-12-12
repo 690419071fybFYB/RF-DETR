@@ -26,6 +26,7 @@ class Joiner(nn.Sequential):
         """ """
         x = self[0](tensor_list)
         pos = []
+        #为输出的每一个p级别特征图生成位置编码图
         for x_ in x:
             pos.append(self[1](x_, align_dim_orders=False).to(x_.tensors.dtype))
         return x, pos

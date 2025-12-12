@@ -17,5 +17,5 @@ summary(model.model.model,input_size=(1,3,560,560),depth=7)
 #     batch_size=4,
 #     grad_accum_steps=4,
 #     lr=1e-4,
-#     output_dir='/home/fyb/mydir/rf-detr/experiements/results/ablation_density_init',
+#     output_dir='/home/fyb/mydir/rf-detr/experiements/results/ablation_density_init_debug',
 # )

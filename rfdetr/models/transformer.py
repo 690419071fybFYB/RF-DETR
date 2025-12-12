@@ -317,10 +317,14 @@ class Transformer(nn.Module):
     
                 enc_outputs_class_unselected_gidx = self.enc_out_class_embed[g_idx](output_memory_gidx)
                 if self.bbox_reparam:
+                    #预测中心点的偏移量
                     enc_outputs_coord_delta_gidx = self.enc_out_bbox_embed[g_idx](output_memory_gidx)
+                    #预测中心点的坐标
                     enc_outputs_coord_cxcy_gidx = enc_outputs_coord_delta_gidx[...,
                         :2] * output_proposals[..., 2:] + output_proposals[..., :2]
+                    #预测中心点的宽高
                     enc_outputs_coord_wh_gidx = enc_outputs_coord_delta_gidx[..., 2:].exp() * output_proposals[..., 2:]
+                    #预测中心点的坐标和宽高
                     enc_outputs_coord_unselected_gidx = torch.concat(
                         [enc_outputs_coord_cxcy_gidx, enc_outputs_coord_wh_gidx], dim=-1)
                 else:
@@ -374,7 +378,7 @@ class Transformer(nn.Module):
                      # Clone to avoid inplace issues if needed
                      modulated_scores = class_scores.clone()
                      modulated_scores[:, :len_p3] += density_weight * 0.5 # Additive boost
-                     
+                     #从所有的点中选出分数最高的三百个点,分数指的就是该像素点有物体的概率
                      topk_proposals_gidx = torch.topk(modulated_scores, topk, dim=1)[1]
                      
                 else:
@@ -394,6 +398,7 @@ class Transformer(nn.Module):
                 memory_ts.append(tgt_undetach_gidx)
                 boxes_ts.append(refpoint_embed_gidx_undetach)
             # concat on dim=1, the nq dimension, (bs, nq, d) --> (bs, nq, d)
+            #13组encoder都输出自己的参考点，这里将13组参考点连接起来
             refpoint_embed_ts = torch.cat(refpoint_embed_ts, dim=1)
             # (bs, nq, d)
             memory_ts = torch.cat(memory_ts, dim=1)#.transpose(0, 1)
@@ -419,7 +424,7 @@ class Transformer(nn.Module):
                 
                 refpoint_embed = torch.concat(
                     [refpoint_embed_ts_subset, refpoint_embed_subset], dim=-2)
-
+            #送入decoder的tgt,也就是query,其实是encoder微调过的query
             hs, references, scale_logits = self.decoder(tgt, memory, memory_key_padding_mask=mask_flatten,
                             pos=lvl_pos_embed_flatten, refpoints_unsigmoid=refpoint_embed,
                             level_start_index=level_start_index, 
@@ -439,7 +444,9 @@ class Transformer(nn.Module):
                 'pred_density': pred_density,
                 'pred_multiscale_densities': pred_multiscale_densities,
             }
-        
+        #hs, references: 给第二阶段 (最终预测) 用的。
+        #memory_ts, boxes_ts: 给第一阶段 (初选质量) 算 Loss 用的。
+        #density_outputs: 给密度分支 算 Loss 用的。
         if self.two_stage:
             if self.bbox_reparam:
                 return hs, references, memory_ts, boxes_ts, scale_logits, density_outputs
