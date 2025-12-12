@@ -179,14 +179,57 @@ uv pip install opencv-python-headless
 
 ### 3.5 配置国内镜像（可选，加速下载）
 
+#### pip 国内镜像
+
 ```bash
-# pip 使用清华镜像
+# 永久配置清华镜像
 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 或在安装时指定
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
 
-# HuggingFace 镜像
+#### uv 国内镜像（推荐）
+
+```bash
+# ========== 方法1：命令行指定 ==========
+uv pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 安装项目时使用国内源
+uv pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# ========== 方法2：环境变量配置（推荐） ==========
+# 临时设置
+export UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 永久设置（添加到 ~/.bashrc）
+echo 'export UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple' >> ~/.bashrc
+source ~/.bashrc
+
+# 设置后直接使用，无需 -i 参数
+uv pip install -r requirements.txt
+
+# ========== 方法3：增加超时时间（网络不稳定时） ==========
+export UV_HTTP_TIMEOUT=300  # 超时时间设为 300 秒
+
+# 同时设置国内源和超时
+export UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+export UV_HTTP_TIMEOUT=300
+uv pip install -r requirements.txt
+```
+
+#### 常用国内镜像源
+
+| 镜像名称 | 地址 |
+|----------|------|
+| 清华 | `https://pypi.tuna.tsinghua.edu.cn/simple` |
+| 阿里云 | `https://mirrors.aliyun.com/pypi/simple/` |
+| 中科大 | `https://pypi.mirrors.ustc.edu.cn/simple/` |
+| 豆瓣 | `https://pypi.doubanio.com/simple/` |
+
+#### HuggingFace 镜像
+
+```bash
 export HF_ENDPOINT=https://hf-mirror.com
 ```
 
