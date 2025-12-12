@@ -132,12 +132,22 @@ pip uninstall opencv-python -y
 pip install opencv-python-headless
 ```
 
-#### 方法 B：使用 uv（更快）
+#### 方法 B：使用 uv（更快，推荐）
 
 ```bash
-# 安装 uv
+# 安装 uv（官方方式）
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc
+
+# 或使用国内镜像安装 uv
+curl -LsSf https://ghproxy.cc/https://astral.sh/uv/install.sh | sh
+source ~/.bashrc
+
+# 或使用 pip 安装 uv
+pip install uv
+
+# 验证安装
+uv --version
 
 # 创建虚拟环境
 cd /root/RF-DETR
@@ -146,8 +156,11 @@ uv venv --python 3.11
 # 激活环境
 source .venv/bin/activate
 
-# 安装依赖
+# 安装依赖（比 pip 快 10-100 倍）
 uv pip install -r requirements.txt
+
+# 使用国内镜像安装依赖
+uv pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 使用 headless OpenCV
 uv pip uninstall opencv-python
