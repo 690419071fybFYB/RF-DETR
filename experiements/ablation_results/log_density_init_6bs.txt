@@ -73,3 +73,750 @@ ETA: 00:01:15 | Speed:  0.34 steps/s | Avg: 2.907s | LR: 0.000100
   loss_giou_enc_unscaled:    0.248
   cardinality_error_enc_unscaled:  3896.67%
 ──────────────────────────────────────────────────
+[Epoch 1/60 Step 11/27]
+──────────────────────────────────────────────────
+[Epoch 1/60] [Step 11/27]
+ETA: 00:00:59 | Speed:  0.27 steps/s | Avg: 3.732s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :    24.19%
+  loss_ce             :    1.010
+  loss_ce_0           :    1.011
+  loss_ce_1           :    1.000
+  loss_ce_enc         :    0.992
+  loss_ce_unscaled    :    1.010
+  loss_ce_0_unscaled  :    1.011
+  loss_ce_1_unscaled  :    1.000
+  loss_ce_enc_unscaled:    0.992
+
+  loss_bbox           :    0.178
+  loss_bbox_0         :    0.184
+  loss_bbox_1         :    0.183
+  loss_bbox_unscaled  :    0.036
+  loss_bbox_0_unscaled:    0.037
+  loss_bbox_1_unscaled:    0.037
+  loss_giou           :    0.536
+  loss_giou_0         :    0.543
+  loss_giou_1         :    0.539
+  loss_giou_unscaled  :    0.268
+  loss_giou_0_unscaled:    0.271
+  loss_giou_1_unscaled:    0.270
+
+  loss_ce_enc         :    0.992
+  loss_bbox_enc       :    0.190
+  loss_giou_enc       :    0.567
+
+  lr                  :    0.000
+  loss                :    6.931
+  class_error_unscaled:    24.19%
+  cardinality_error_unscaled:  3892.17%
+  loss_density_unscaled:    0.063
+  cardinality_error_0_unscaled:  3892.17%
+  cardinality_error_1_unscaled:  3891.68%
+  loss_bbox_enc_unscaled:    0.038
+  loss_giou_enc_unscaled:    0.284
+  cardinality_error_enc_unscaled:  3892.17%
+──────────────────────────────────────────────────
+[Epoch 1/60 Step 21/27]
+──────────────────────────────────────────────────
+[Epoch 1/60] [Step 21/27]
+ETA: 00:00:23 | Speed:  0.26 steps/s | Avg: 3.918s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :    15.83%
+  loss_ce             :    0.842
+  loss_ce_0           :    0.849
+  loss_ce_1           :    0.838
+  loss_ce_enc         :    0.839
+  loss_ce_unscaled    :    0.842
+  loss_ce_0_unscaled  :    0.849
+  loss_ce_1_unscaled  :    0.838
+  loss_ce_enc_unscaled:    0.839
+
+  loss_bbox           :    0.179
+  loss_bbox_0         :    0.184
+  loss_bbox_1         :    0.183
+  loss_bbox_unscaled  :    0.036
+  loss_bbox_0_unscaled:    0.037
+  loss_bbox_1_unscaled:    0.037
+  loss_giou           :    0.489
+  loss_giou_0         :    0.496
+  loss_giou_1         :    0.491
+  loss_giou_unscaled  :    0.244
+  loss_giou_0_unscaled:    0.248
+  loss_giou_1_unscaled:    0.246
+
+  loss_ce_enc         :    0.839
+  loss_bbox_enc       :    0.187
+  loss_giou_enc       :    0.522
+
+  lr                  :    0.000
+  loss                :    6.098
+  class_error_unscaled:    15.83%
+  cardinality_error_unscaled:  3892.86%
+  loss_density_unscaled:    0.048
+  cardinality_error_0_unscaled:  3892.86%
+  cardinality_error_1_unscaled:  3892.60%
+  loss_bbox_enc_unscaled:    0.037
+  loss_giou_enc_unscaled:    0.261
+  cardinality_error_enc_unscaled:  3892.86%
+──────────────────────────────────────────────────
+Epoch: [0] Total time: 0:01:49 (4.0591 s / it)
+Averaged stats: cardinality_error_0_unscaled: 3891.8335 (3892.5309) | cardinality_error_1_unscaled: 3891.8335 (3892.3334) | cardinality_error_enc_unscaled: 3891.8335 (3892.5309) | cardinality_error_unscaled: 3891.8335 (3892.5309) | class_error: 0.00 | class_error_unscaled: 2.4087 (12.4043) | loss: 5.0700 (5.6899) | loss_bbox: 0.1180 (0.1626) | loss_bbox_0: 0.1238 (0.1670) | loss_bbox_0_unscaled: 0.0248 (0.0334) | loss_bbox_1: 0.1168 (0.1659) | loss_bbox_1_unscaled: 0.0234 (0.0332) | loss_bbox_enc: 0.1227 (0.1697) | loss_bbox_enc_unscaled: 0.0245 (0.0339) | loss_bbox_unscaled: 0.0236 (0.0325) | loss_ce: 0.6645 (0.7821) | loss_ce_0: 0.6763 (0.7965) | loss_ce_0_unscaled: 0.6763 (0.7965) | loss_ce_1: 0.6578 (0.7820) | loss_ce_1_unscaled: 0.6578 (0.7820) | loss_ce_enc: 0.6598 (0.7863) | loss_ce_enc_unscaled: 0.6598 (0.7863) | loss_ce_unscaled: 0.6645 (0.7821) | loss_density_unscaled: 0.0275 (0.0456) | loss_giou: 0.4152 (0.4596) | loss_giou_0: 0.4069 (0.4670) | loss_giou_0_unscaled: 0.2034 (0.2335) | loss_giou_1: 0.4127 (0.4618) | loss_giou_1_unscaled: 0.2064 (0.2309) | loss_giou_enc: 0.4442 (0.4893) | loss_giou_enc_unscaled: 0.2221 (0.2446) | loss_giou_unscaled: 0.2076 (0.2298) | lr: 0.000100
+Test: [ 0/23] eta: 0:00:23 | time: 1.0407 | data: 0.5478 | max mem: 8778
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.4762 (4.4762) | loss_bbox: 0.1073 (0.1073) | loss_bbox_0: 0.1012 (0.1012) | loss_bbox_0_unscaled: 0.0202 (0.0202) | loss_bbox_1: 0.1098 (0.1098) | loss_bbox_1_unscaled: 0.0220 (0.0220) | loss_bbox_enc: 0.1096 (0.1096) | loss_bbox_enc_unscaled: 0.0219 (0.0219) | loss_bbox_unscaled: 0.0215 (0.0215) | loss_ce: 0.5547 (0.5547) | loss_ce_0: 0.5820 (0.5820) | loss_ce_0_unscaled: 0.5820 (0.5820) | loss_ce_1: 0.5547 (0.5547) | loss_ce_1_unscaled: 0.5547 (0.5547) | loss_ce_enc: 0.5742 (0.5742) | loss_ce_enc_unscaled: 0.5742 (0.5742) | loss_ce_unscaled: 0.5547 (0.5547) | loss_density_unscaled: 0.0228 (0.0228) | loss_giou: 0.4441 (0.4441) | loss_giou_0: 0.4384 (0.4384) | loss_giou_0_unscaled: 0.2192 (0.2192) | loss_giou_1: 0.4494 (0.4494) | loss_giou_1_unscaled: 0.2247 (0.2247) | loss_giou_enc: 0.4508 (0.4508) | loss_giou_enc_unscaled: 0.2254 (0.2254) | loss_giou_unscaled: 0.2220 (0.2220)
+Test: [22/23] eta: 0:00:00 | time: 0.4575 | data: 0.0587 | max mem: 8778
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (1.4944) | loss: 4.1287 (4.2293) | loss_bbox: 0.0885 (0.1060) | loss_bbox_0: 0.0886 (0.1029) | loss_bbox_0_unscaled: 0.0177 (0.0206) | loss_bbox_1: 0.0917 (0.1064) | loss_bbox_1_unscaled: 0.0183 (0.0213) | loss_bbox_enc: 0.0982 (0.1085) | loss_bbox_enc_unscaled: 0.0196 (0.0217) | loss_bbox_unscaled: 0.0177 (0.0212) | loss_ce: 0.5781 (0.5701) | loss_ce_0: 0.5898 (0.5891) | loss_ce_0_unscaled: 0.5898 (0.5891) | loss_ce_1: 0.5742 (0.5752) | loss_ce_1_unscaled: 0.5742 (0.5752) | loss_ce_enc: 0.6016 (0.5835) | loss_ce_enc_unscaled: 0.6016 (0.5835) | loss_ce_unscaled: 0.5781 (0.5701) | loss_density_unscaled: 0.0254 (0.0310) | loss_giou: 0.3587 (0.3648) | loss_giou_0: 0.3655 (0.3682) | loss_giou_0_unscaled: 0.1827 (0.1841) | loss_giou_1: 0.3600 (0.3709) | loss_giou_1_unscaled: 0.1800 (0.1855) | loss_giou_enc: 0.3810 (0.3837) | loss_giou_enc_unscaled: 0.1905 (0.1919) | loss_giou_unscaled: 0.1794 (0.1824)
+Test: Total time: 0:00:11 (0.4837 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (1.4944) | loss: 4.1287 (4.2293) | loss_bbox: 0.0885 (0.1060) | loss_bbox_0: 0.0886 (0.1029) | loss_bbox_0_unscaled: 0.0177 (0.0206) | loss_bbox_1: 0.0917 (0.1064) | loss_bbox_1_unscaled: 0.0183 (0.0213) | loss_bbox_enc: 0.0982 (0.1085) | loss_bbox_enc_unscaled: 0.0196 (0.0217) | loss_bbox_unscaled: 0.0177 (0.0212) | loss_ce: 0.5781 (0.5701) | loss_ce_0: 0.5898 (0.5891) | loss_ce_0_unscaled: 0.5898 (0.5891) | loss_ce_1: 0.5742 (0.5752) | loss_ce_1_unscaled: 0.5742 (0.5752) | loss_ce_enc: 0.6016 (0.5835) | loss_ce_enc_unscaled: 0.6016 (0.5835) | loss_ce_unscaled: 0.5781 (0.5701) | loss_density_unscaled: 0.0254 (0.0310) | loss_giou: 0.3587 (0.3648) | loss_giou_0: 0.3655 (0.3682) | loss_giou_0_unscaled: 0.1827 (0.1841) | loss_giou_1: 0.3600 (0.3709) | loss_giou_1_unscaled: 0.1800 (0.1855) | loss_giou_enc: 0.3810 (0.3837) | loss_giou_enc_unscaled: 0.1905 (0.1919) | loss_giou_unscaled: 0.1794 (0.1824)
+Accumulating evaluation results...
+DONE (t=0.21s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.534
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.731
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.622
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.247
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.618
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.586
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.260
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.579
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.725
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.426
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.702
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.766
+Test: [ 0/23] eta: 0:00:22 | time: 0.9896 | data: 0.5106 | max mem: 8778
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.4820 (4.4820) | loss_bbox: 0.1130 (0.1130) | loss_bbox_0: 0.1019 (0.1019) | loss_bbox_0_unscaled: 0.0204 (0.0204) | loss_bbox_1: 0.1091 (0.1091) | loss_bbox_1_unscaled: 0.0218 (0.0218) | loss_bbox_enc: 0.1159 (0.1159) | loss_bbox_enc_unscaled: 0.0232 (0.0232) | loss_bbox_unscaled: 0.0226 (0.0226) | loss_ce: 0.5547 (0.5547) | loss_ce_0: 0.5859 (0.5859) | loss_ce_0_unscaled: 0.5859 (0.5859) | loss_ce_1: 0.5547 (0.5547) | loss_ce_1_unscaled: 0.5547 (0.5547) | loss_ce_enc: 0.5703 (0.5703) | loss_ce_enc_unscaled: 0.5703 (0.5703) | loss_ce_unscaled: 0.5547 (0.5547) | loss_density_unscaled: 0.0227 (0.0227) | loss_giou: 0.4366 (0.4366) | loss_giou_0: 0.4383 (0.4383) | loss_giou_0_unscaled: 0.2191 (0.2191) | loss_giou_1: 0.4478 (0.4478) | loss_giou_1_unscaled: 0.2239 (0.2239) | loss_giou_enc: 0.4538 (0.4538) | loss_giou_enc_unscaled: 0.2269 (0.2269) | loss_giou_unscaled: 0.2183 (0.2183)
+Test: [22/23] eta: 0:00:00 | time: 0.4626 | data: 0.0574 | max mem: 8778
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (1.6302) | loss: 4.1274 (4.2285) | loss_bbox: 0.0888 (0.1050) | loss_bbox_0: 0.0896 (0.1047) | loss_bbox_0_unscaled: 0.0179 (0.0209) | loss_bbox_1: 0.0921 (0.1014) | loss_bbox_1_unscaled: 0.0184 (0.0203) | loss_bbox_enc: 0.0938 (0.1109) | loss_bbox_enc_unscaled: 0.0188 (0.0222) | loss_bbox_unscaled: 0.0178 (0.0210) | loss_ce: 0.5781 (0.5696) | loss_ce_0: 0.5898 (0.5886) | loss_ce_0_unscaled: 0.5898 (0.5886) | loss_ce_1: 0.5820 (0.5773) | loss_ce_1_unscaled: 0.5820 (0.5773) | loss_ce_enc: 0.6016 (0.5819) | loss_ce_enc_unscaled: 0.6016 (0.5819) | loss_ce_unscaled: 0.5781 (0.5696) | loss_density_unscaled: 0.0253 (0.0309) | loss_giou: 0.3656 (0.3668) | loss_giou_0: 0.3634 (0.3696) | loss_giou_0_unscaled: 0.1817 (0.1848) | loss_giou_1: 0.3561 (0.3677) | loss_giou_1_unscaled: 0.1780 (0.1839) | loss_giou_enc: 0.3810 (0.3851) | loss_giou_enc_unscaled: 0.1905 (0.1926) | loss_giou_unscaled: 0.1828 (0.1834)
+Test: Total time: 0:00:11 (0.5142 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (1.6302) | loss: 4.1274 (4.2285) | loss_bbox: 0.0888 (0.1050) | loss_bbox_0: 0.0896 (0.1047) | loss_bbox_0_unscaled: 0.0179 (0.0209) | loss_bbox_1: 0.0921 (0.1014) | loss_bbox_1_unscaled: 0.0184 (0.0203) | loss_bbox_enc: 0.0938 (0.1109) | loss_bbox_enc_unscaled: 0.0188 (0.0222) | loss_bbox_unscaled: 0.0178 (0.0210) | loss_ce: 0.5781 (0.5696) | loss_ce_0: 0.5898 (0.5886) | loss_ce_0_unscaled: 0.5898 (0.5886) | loss_ce_1: 0.5820 (0.5773) | loss_ce_1_unscaled: 0.5820 (0.5773) | loss_ce_enc: 0.6016 (0.5819) | loss_ce_enc_unscaled: 0.6016 (0.5819) | loss_ce_unscaled: 0.5781 (0.5696) | loss_density_unscaled: 0.0253 (0.0309) | loss_giou: 0.3656 (0.3668) | loss_giou_0: 0.3634 (0.3696) | loss_giou_0_unscaled: 0.1817 (0.1848) | loss_giou_1: 0.3561 (0.3677) | loss_giou_1_unscaled: 0.1780 (0.1839) | loss_giou_enc: 0.3810 (0.3851) | loss_giou_enc_unscaled: 0.1905 (0.1926) | loss_giou_unscaled: 0.1828 (0.1834)
+Accumulating evaluation results...
+DONE (t=0.23s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.534
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.730
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.622
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.242
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.615
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.587
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.265
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.574
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.731
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.425
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.700
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.772
+Grad accum steps:  4
+Total batch size:  24
+LENGTH OF DATA LOADER: 27
+[Epoch 2/60 Step 1/27]
+──────────────────────────────────────────────────
+[Epoch 2/60] [Step 1/27]
+ETA: 00:01:15 | Speed:  0.34 steps/s | Avg: 2.919s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.54%
+  loss_ce             :    0.619
+  loss_ce_0           :    0.635
+  loss_ce_1           :    0.630
+  loss_ce_enc         :    0.656
+  loss_ce_unscaled    :    0.619
+  loss_ce_0_unscaled  :    0.635
+  loss_ce_1_unscaled  :    0.630
+  loss_ce_enc_unscaled:    0.656
+
+  loss_bbox           :    0.097
+  loss_bbox_0         :    0.091
+  loss_bbox_1         :    0.094
+  loss_bbox_unscaled  :    0.019
+  loss_bbox_0_unscaled:    0.018
+  loss_bbox_1_unscaled:    0.019
+  loss_giou           :    0.527
+  loss_giou_0         :    0.548
+  loss_giou_1         :    0.552
+  loss_giou_unscaled  :    0.264
+  loss_giou_0_unscaled:    0.274
+  loss_giou_1_unscaled:    0.276
+
+  loss_ce_enc         :    0.656
+  loss_bbox_enc       :    0.098
+  loss_giou_enc       :    0.569
+
+  lr                  :    0.000
+  loss                :    5.116
+  class_error_unscaled:     0.54%
+  cardinality_error_unscaled:  3888.17%
+  loss_density_unscaled:    0.145
+  cardinality_error_0_unscaled:  3888.17%
+  cardinality_error_1_unscaled:  3888.17%
+  loss_bbox_enc_unscaled:    0.020
+  loss_giou_enc_unscaled:    0.284
+  cardinality_error_enc_unscaled:  3888.17%
+──────────────────────────────────────────────────
+[Epoch 2/60 Step 11/27]
+──────────────────────────────────────────────────
+[Epoch 2/60] [Step 11/27]
+ETA: 00:00:58 | Speed:  0.27 steps/s | Avg: 3.656s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.53%
+  loss_ce             :    0.522
+  loss_ce_0           :    0.544
+  loss_ce_1           :    0.529
+  loss_ce_enc         :    0.561
+  loss_ce_unscaled    :    0.522
+  loss_ce_0_unscaled  :    0.544
+  loss_ce_1_unscaled  :    0.529
+  loss_ce_enc_unscaled:    0.561
+
+  loss_bbox           :    0.104
+  loss_bbox_0         :    0.110
+  loss_bbox_1         :    0.106
+  loss_bbox_unscaled  :    0.021
+  loss_bbox_0_unscaled:    0.022
+  loss_bbox_1_unscaled:    0.021
+  loss_giou           :    0.417
+  loss_giou_0         :    0.424
+  loss_giou_1         :    0.420
+  loss_giou_unscaled  :    0.208
+  loss_giou_0_unscaled:    0.212
+  loss_giou_1_unscaled:    0.210
+
+  loss_ce_enc         :    0.561
+  loss_bbox_enc       :    0.114
+  loss_giou_enc       :    0.436
+
+  lr                  :    0.000
+  loss                :    4.288
+  class_error_unscaled:     0.53%
+  cardinality_error_unscaled:  3891.20%
+  loss_density_unscaled:    0.059
+  cardinality_error_0_unscaled:  3891.20%
+  cardinality_error_1_unscaled:  3891.20%
+  loss_bbox_enc_unscaled:    0.023
+  loss_giou_enc_unscaled:    0.218
+  cardinality_error_enc_unscaled:  3891.20%
+──────────────────────────────────────────────────
+[Epoch 2/60 Step 21/27]
+──────────────────────────────────────────────────
+[Epoch 2/60] [Step 21/27]
+ETA: 00:00:22 | Speed:  0.26 steps/s | Avg: 3.778s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.48%
+  loss_ce             :    0.527
+  loss_ce_0           :    0.552
+  loss_ce_1           :    0.536
+  loss_ce_enc         :    0.560
+  loss_ce_unscaled    :    0.527
+  loss_ce_0_unscaled  :    0.552
+  loss_ce_1_unscaled  :    0.536
+  loss_ce_enc_unscaled:    0.560
+
+  loss_bbox           :    0.115
+  loss_bbox_0         :    0.121
+  loss_bbox_1         :    0.118
+  loss_bbox_unscaled  :    0.023
+  loss_bbox_0_unscaled:    0.024
+  loss_bbox_1_unscaled:    0.024
+  loss_giou           :    0.379
+  loss_giou_0         :    0.385
+  loss_giou_1         :    0.382
+  loss_giou_unscaled  :    0.190
+  loss_giou_0_unscaled:    0.192
+  loss_giou_1_unscaled:    0.191
+
+  loss_ce_enc         :    0.560
+  loss_bbox_enc       :    0.128
+  loss_giou_enc       :    0.400
+
+  lr                  :    0.000
+  loss                :    4.203
+  class_error_unscaled:     0.48%
+  cardinality_error_unscaled:  3892.83%
+  loss_density_unscaled:    0.045
+  cardinality_error_0_unscaled:  3892.83%
+  cardinality_error_1_unscaled:  3892.83%
+  loss_bbox_enc_unscaled:    0.026
+  loss_giou_enc_unscaled:    0.200
+  cardinality_error_enc_unscaled:  3892.83%
+──────────────────────────────────────────────────
+Epoch: [1] Total time: 0:01:46 (3.9559 s / it)
+Averaged stats: cardinality_error_0_unscaled: 3893.1667 (3892.6297) | cardinality_error_1_unscaled: 3893.1667 (3892.6297) | cardinality_error_enc_unscaled: 3893.1667 (3892.6297) | cardinality_error_unscaled: 3893.1667 (3892.6297) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3748) | loss: 4.0176 (4.1783) | loss_bbox: 0.1049 (0.1132) | loss_bbox_0: 0.1033 (0.1178) | loss_bbox_0_unscaled: 0.0207 (0.0236) | loss_bbox_1: 0.1040 (0.1152) | loss_bbox_1_unscaled: 0.0208 (0.0230) | loss_bbox_enc: 0.1218 (0.1252) | loss_bbox_enc_unscaled: 0.0244 (0.0250) | loss_bbox_unscaled: 0.0210 (0.0226) | loss_ce: 0.5056 (0.5219) | loss_ce_0: 0.5485 (0.5493) | loss_ce_0_unscaled: 0.5485 (0.5493) | loss_ce_1: 0.5225 (0.5307) | loss_ce_1_unscaled: 0.5225 (0.5307) | loss_ce_enc: 0.5342 (0.5556) | loss_ce_enc_unscaled: 0.5342 (0.5556) | loss_ce_unscaled: 0.5056 (0.5219) | loss_density_unscaled: 0.0199 (0.0463) | loss_giou: 0.3533 (0.3794) | loss_giou_0: 0.3528 (0.3858) | loss_giou_0_unscaled: 0.1764 (0.1929) | loss_giou_1: 0.3558 (0.3820) | loss_giou_1_unscaled: 0.1779 (0.1910) | loss_giou_enc: 0.3659 (0.4022) | loss_giou_enc_unscaled: 0.1830 (0.2011) | loss_giou_unscaled: 0.1767 (0.1897) | lr: 0.000100
+Test: [ 0/23] eta: 0:00:22 | time: 0.9632 | data: 0.4893 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.1207 (4.1207) | loss_bbox: 0.0885 (0.0885) | loss_bbox_0: 0.0898 (0.0898) | loss_bbox_0_unscaled: 0.0180 (0.0180) | loss_bbox_1: 0.0911 (0.0911) | loss_bbox_1_unscaled: 0.0182 (0.0182) | loss_bbox_enc: 0.0935 (0.0935) | loss_bbox_enc_unscaled: 0.0187 (0.0187) | loss_bbox_unscaled: 0.0177 (0.0177) | loss_ce: 0.5312 (0.5312) | loss_ce_0: 0.5820 (0.5820) | loss_ce_0_unscaled: 0.5820 (0.5820) | loss_ce_1: 0.5391 (0.5391) | loss_ce_1_unscaled: 0.5391 (0.5391) | loss_ce_enc: 0.5664 (0.5664) | loss_ce_enc_unscaled: 0.5664 (0.5664) | loss_ce_unscaled: 0.5312 (0.5312) | loss_density_unscaled: 0.0198 (0.0198) | loss_giou: 0.3771 (0.3771) | loss_giou_0: 0.3727 (0.3727) | loss_giou_0_unscaled: 0.1864 (0.1864) | loss_giou_1: 0.3888 (0.3888) | loss_giou_1_unscaled: 0.1944 (0.1944) | loss_giou_enc: 0.4004 (0.4004) | loss_giou_enc_unscaled: 0.2002 (0.2002) | loss_giou_unscaled: 0.1885 (0.1885)
+Test: [22/23] eta: 0:00:00 | time: 0.4377 | data: 0.0590 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.6729) | loss: 4.1090 (4.1647) | loss_bbox: 0.0861 (0.1029) | loss_bbox_0: 0.0856 (0.1104) | loss_bbox_0_unscaled: 0.0171 (0.0221) | loss_bbox_1: 0.0860 (0.1070) | loss_bbox_1_unscaled: 0.0172 (0.0214) | loss_bbox_enc: 0.0939 (0.1129) | loss_bbox_enc_unscaled: 0.0188 (0.0226) | loss_bbox_unscaled: 0.0172 (0.0206) | loss_ce: 0.5430 (0.5497) | loss_ce_0: 0.5664 (0.5684) | loss_ce_0_unscaled: 0.5664 (0.5684) | loss_ce_1: 0.5469 (0.5518) | loss_ce_1_unscaled: 0.5469 (0.5518) | loss_ce_enc: 0.5742 (0.5698) | loss_ce_enc_unscaled: 0.5742 (0.5698) | loss_ce_unscaled: 0.5430 (0.5497) | loss_density_unscaled: 0.0221 (0.0283) | loss_giou: 0.3753 (0.3644) | loss_giou_0: 0.3920 (0.3710) | loss_giou_0_unscaled: 0.1960 (0.1855) | loss_giou_1: 0.3808 (0.3690) | loss_giou_1_unscaled: 0.1904 (0.1845) | loss_giou_enc: 0.4020 (0.3875) | loss_giou_enc_unscaled: 0.2010 (0.1938) | loss_giou_unscaled: 0.1877 (0.1822)
+Test: Total time: 0:00:10 (0.4623 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.6729) | loss: 4.1090 (4.1647) | loss_bbox: 0.0861 (0.1029) | loss_bbox_0: 0.0856 (0.1104) | loss_bbox_0_unscaled: 0.0171 (0.0221) | loss_bbox_1: 0.0860 (0.1070) | loss_bbox_1_unscaled: 0.0172 (0.0214) | loss_bbox_enc: 0.0939 (0.1129) | loss_bbox_enc_unscaled: 0.0188 (0.0226) | loss_bbox_unscaled: 0.0172 (0.0206) | loss_ce: 0.5430 (0.5497) | loss_ce_0: 0.5664 (0.5684) | loss_ce_0_unscaled: 0.5664 (0.5684) | loss_ce_1: 0.5469 (0.5518) | loss_ce_1_unscaled: 0.5469 (0.5518) | loss_ce_enc: 0.5742 (0.5698) | loss_ce_enc_unscaled: 0.5742 (0.5698) | loss_ce_unscaled: 0.5430 (0.5497) | loss_density_unscaled: 0.0221 (0.0283) | loss_giou: 0.3753 (0.3644) | loss_giou_0: 0.3920 (0.3710) | loss_giou_0_unscaled: 0.1960 (0.1855) | loss_giou_1: 0.3808 (0.3690) | loss_giou_1_unscaled: 0.1904 (0.1845) | loss_giou_enc: 0.4020 (0.3875) | loss_giou_enc_unscaled: 0.2010 (0.1938) | loss_giou_unscaled: 0.1877 (0.1822)
+Accumulating evaluation results...
+DONE (t=0.18s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.587
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.869
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.640
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.288
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.607
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.636
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.318
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.604
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.740
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.441
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.685
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.781
+Test: [ 0/23] eta: 0:00:23 | time: 1.0031 | data: 0.5017 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.0885 (4.0885) | loss_bbox: 0.0868 (0.0868) | loss_bbox_0: 0.0890 (0.0890) | loss_bbox_0_unscaled: 0.0178 (0.0178) | loss_bbox_1: 0.0881 (0.0881) | loss_bbox_1_unscaled: 0.0176 (0.0176) | loss_bbox_enc: 0.0896 (0.0896) | loss_bbox_enc_unscaled: 0.0179 (0.0179) | loss_bbox_unscaled: 0.0174 (0.0174) | loss_ce: 0.5273 (0.5273) | loss_ce_0: 0.5898 (0.5898) | loss_ce_0_unscaled: 0.5898 (0.5898) | loss_ce_1: 0.5352 (0.5352) | loss_ce_1_unscaled: 0.5352 (0.5352) | loss_ce_enc: 0.5781 (0.5781) | loss_ce_enc_unscaled: 0.5781 (0.5781) | loss_ce_unscaled: 0.5273 (0.5273) | loss_density_unscaled: 0.0198 (0.0198) | loss_giou: 0.3688 (0.3688) | loss_giou_0: 0.3743 (0.3743) | loss_giou_0_unscaled: 0.1872 (0.1872) | loss_giou_1: 0.3756 (0.3756) | loss_giou_1_unscaled: 0.1878 (0.1878) | loss_giou_enc: 0.3859 (0.3859) | loss_giou_enc_unscaled: 0.1929 (0.1929) | loss_giou_unscaled: 0.1844 (0.1844)
+Test: [22/23] eta: 0:00:00 | time: 0.4617 | data: 0.0577 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.6729) | loss: 4.0631 (4.1406) | loss_bbox: 0.0869 (0.1028) | loss_bbox_0: 0.0849 (0.1106) | loss_bbox_0_unscaled: 0.0170 (0.0221) | loss_bbox_1: 0.0865 (0.1047) | loss_bbox_1_unscaled: 0.0173 (0.0209) | loss_bbox_enc: 0.0937 (0.1116) | loss_bbox_enc_unscaled: 0.0187 (0.0223) | loss_bbox_unscaled: 0.0174 (0.0206) | loss_ce: 0.5391 (0.5481) | loss_ce_0: 0.5586 (0.5684) | loss_ce_0_unscaled: 0.5586 (0.5684) | loss_ce_1: 0.5469 (0.5510) | loss_ce_1_unscaled: 0.5469 (0.5510) | loss_ce_enc: 0.5703 (0.5683) | loss_ce_enc_unscaled: 0.5703 (0.5683) | loss_ce_unscaled: 0.5391 (0.5481) | loss_density_unscaled: 0.0221 (0.0284) | loss_giou: 0.3746 (0.3612) | loss_giou_0: 0.3822 (0.3679) | loss_giou_0_unscaled: 0.1911 (0.1839) | loss_giou_1: 0.3805 (0.3648) | loss_giou_1_unscaled: 0.1903 (0.1824) | loss_giou_enc: 0.3852 (0.3814) | loss_giou_enc_unscaled: 0.1926 (0.1907) | loss_giou_unscaled: 0.1873 (0.1806)
+Test: Total time: 0:00:11 (0.5116 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.6729) | loss: 4.0631 (4.1406) | loss_bbox: 0.0869 (0.1028) | loss_bbox_0: 0.0849 (0.1106) | loss_bbox_0_unscaled: 0.0170 (0.0221) | loss_bbox_1: 0.0865 (0.1047) | loss_bbox_1_unscaled: 0.0173 (0.0209) | loss_bbox_enc: 0.0937 (0.1116) | loss_bbox_enc_unscaled: 0.0187 (0.0223) | loss_bbox_unscaled: 0.0174 (0.0206) | loss_ce: 0.5391 (0.5481) | loss_ce_0: 0.5586 (0.5684) | loss_ce_0_unscaled: 0.5586 (0.5684) | loss_ce_1: 0.5469 (0.5510) | loss_ce_1_unscaled: 0.5469 (0.5510) | loss_ce_enc: 0.5703 (0.5683) | loss_ce_enc_unscaled: 0.5703 (0.5683) | loss_ce_unscaled: 0.5391 (0.5481) | loss_density_unscaled: 0.0221 (0.0284) | loss_giou: 0.3746 (0.3612) | loss_giou_0: 0.3822 (0.3679) | loss_giou_0_unscaled: 0.1911 (0.1839) | loss_giou_1: 0.3805 (0.3648) | loss_giou_1_unscaled: 0.1903 (0.1824) | loss_giou_enc: 0.3852 (0.3814) | loss_giou_enc_unscaled: 0.1926 (0.1907) | loss_giou_unscaled: 0.1873 (0.1806)
+Accumulating evaluation results...
+DONE (t=0.21s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.589
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.866
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.641
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.289
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.611
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.638
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.319
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.605
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.749
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.444
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.692
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.788
+Grad accum steps:  4
+Total batch size:  24
+LENGTH OF DATA LOADER: 27
+[Epoch 3/60 Step 1/27]
+──────────────────────────────────────────────────
+[Epoch 3/60] [Step 1/27]
+ETA: 00:01:14 | Speed:  0.35 steps/s | Avg: 2.883s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :    -0.00%
+  loss_ce             :    0.557
+  loss_ce_0           :    0.594
+  loss_ce_1           :    0.564
+  loss_ce_enc         :    0.590
+  loss_ce_unscaled    :    0.557
+  loss_ce_0_unscaled  :    0.594
+  loss_ce_1_unscaled  :    0.564
+  loss_ce_enc_unscaled:    0.590
+
+  loss_bbox           :    0.141
+  loss_bbox_0         :    0.144
+  loss_bbox_1         :    0.141
+  loss_bbox_unscaled  :    0.028
+  loss_bbox_0_unscaled:    0.029
+  loss_bbox_1_unscaled:    0.028
+  loss_giou           :    0.499
+  loss_giou_0         :    0.491
+  loss_giou_1         :    0.509
+  loss_giou_unscaled  :    0.250
+  loss_giou_0_unscaled:    0.245
+  loss_giou_1_unscaled:    0.255
+
+  loss_ce_enc         :    0.590
+  loss_bbox_enc       :    0.157
+  loss_giou_enc       :    0.497
+
+  lr                  :    0.000
+  loss                :    4.884
+  class_error_unscaled:    -0.00%
+  cardinality_error_unscaled:  3891.50%
+  loss_density_unscaled:    0.017
+  cardinality_error_0_unscaled:  3891.50%
+  cardinality_error_1_unscaled:  3891.50%
+  loss_bbox_enc_unscaled:    0.031
+  loss_giou_enc_unscaled:    0.248
+  cardinality_error_enc_unscaled:  3891.50%
+──────────────────────────────────────────────────
+[Epoch 3/60 Step 11/27]
+──────────────────────────────────────────────────
+[Epoch 3/60] [Step 11/27]
+ETA: 00:00:56 | Speed:  0.28 steps/s | Avg: 3.543s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.46%
+  loss_ce             :    0.561
+  loss_ce_0           :    0.588
+  loss_ce_1           :    0.567
+  loss_ce_enc         :    0.588
+  loss_ce_unscaled    :    0.561
+  loss_ce_0_unscaled  :    0.588
+  loss_ce_1_unscaled  :    0.567
+  loss_ce_enc_unscaled:    0.588
+
+  loss_bbox           :    0.113
+  loss_bbox_0         :    0.114
+  loss_bbox_1         :    0.113
+  loss_bbox_unscaled  :    0.023
+  loss_bbox_0_unscaled:    0.023
+  loss_bbox_1_unscaled:    0.023
+  loss_giou           :    0.419
+  loss_giou_0         :    0.419
+  loss_giou_1         :    0.420
+  loss_giou_unscaled  :    0.209
+  loss_giou_0_unscaled:    0.209
+  loss_giou_1_unscaled:    0.210
+
+  loss_ce_enc         :    0.588
+  loss_bbox_enc       :    0.124
+  loss_giou_enc       :    0.436
+
+  lr                  :    0.000
+  loss                :    4.461
+  class_error_unscaled:     0.46%
+  cardinality_error_unscaled:  3892.24%
+  loss_density_unscaled:    0.047
+  cardinality_error_0_unscaled:  3892.24%
+  cardinality_error_1_unscaled:  3892.24%
+  loss_bbox_enc_unscaled:    0.025
+  loss_giou_enc_unscaled:    0.218
+  cardinality_error_enc_unscaled:  3892.24%
+──────────────────────────────────────────────────
+[Epoch 3/60 Step 21/27]
+──────────────────────────────────────────────────
+[Epoch 3/60] [Step 21/27]
+ETA: 00:00:22 | Speed:  0.27 steps/s | Avg: 3.766s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.24%
+  loss_ce             :    0.563
+  loss_ce_0           :    0.587
+  loss_ce_1           :    0.565
+  loss_ce_enc         :    0.586
+  loss_ce_unscaled    :    0.563
+  loss_ce_0_unscaled  :    0.587
+  loss_ce_1_unscaled  :    0.565
+  loss_ce_enc_unscaled:    0.586
+
+  loss_bbox           :    0.110
+  loss_bbox_0         :    0.111
+  loss_bbox_1         :    0.111
+  loss_bbox_unscaled  :    0.022
+  loss_bbox_0_unscaled:    0.022
+  loss_bbox_1_unscaled:    0.022
+  loss_giou           :    0.396
+  loss_giou_0         :    0.399
+  loss_giou_1         :    0.397
+  loss_giou_unscaled  :    0.198
+  loss_giou_0_unscaled:    0.199
+  loss_giou_1_unscaled:    0.198
+
+  loss_ce_enc         :    0.586
+  loss_bbox_enc       :    0.120
+  loss_giou_enc       :    0.418
+
+  lr                  :    0.000
+  loss                :    4.362
+  class_error_unscaled:     0.24%
+  cardinality_error_unscaled:  3892.83%
+  loss_density_unscaled:    0.044
+  cardinality_error_0_unscaled:  3892.83%
+  cardinality_error_1_unscaled:  3892.83%
+  loss_bbox_enc_unscaled:    0.024
+  loss_giou_enc_unscaled:    0.209
+  cardinality_error_enc_unscaled:  3892.83%
+──────────────────────────────────────────────────
+Epoch: [2] Total time: 0:01:44 (3.8861 s / it)
+Averaged stats: cardinality_error_0_unscaled: 3893.1667 (3892.3704) | cardinality_error_1_unscaled: 3893.1667 (3892.3704) | cardinality_error_enc_unscaled: 3893.1667 (3892.3704) | cardinality_error_unscaled: 3893.1667 (3892.3704) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3317) | loss: 3.9540 (4.3089) | loss_bbox: 0.0947 (0.1080) | loss_bbox_0: 0.1029 (0.1084) | loss_bbox_0_unscaled: 0.0206 (0.0217) | loss_bbox_1: 0.0949 (0.1080) | loss_bbox_1_unscaled: 0.0190 (0.0216) | loss_bbox_enc: 0.1089 (0.1178) | loss_bbox_enc_unscaled: 0.0218 (0.0236) | loss_bbox_unscaled: 0.0189 (0.0216) | loss_ce: 0.5099 (0.5548) | loss_ce_0: 0.5501 (0.5826) | loss_ce_0_unscaled: 0.5501 (0.5826) | loss_ce_1: 0.5218 (0.5588) | loss_ce_1_unscaled: 0.5218 (0.5588) | loss_ce_enc: 0.5325 (0.5800) | loss_ce_enc_unscaled: 0.5325 (0.5800) | loss_ce_unscaled: 0.5099 (0.5548) | loss_density_unscaled: 0.0278 (0.0484) | loss_giou: 0.3418 (0.3906) | loss_giou_0: 0.3503 (0.3946) | loss_giou_0_unscaled: 0.1752 (0.1973) | loss_giou_1: 0.3326 (0.3913) | loss_giou_1_unscaled: 0.1663 (0.1957) | loss_giou_enc: 0.3676 (0.4141) | loss_giou_enc_unscaled: 0.1838 (0.2070) | loss_giou_unscaled: 0.1709 (0.1953) | lr: 0.000100
+Test: [ 0/23] eta: 0:00:23 | time: 1.0303 | data: 0.5219 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.0501 (4.0501) | loss_bbox: 0.0780 (0.0780) | loss_bbox_0: 0.0883 (0.0883) | loss_bbox_0_unscaled: 0.0177 (0.0177) | loss_bbox_1: 0.0799 (0.0799) | loss_bbox_1_unscaled: 0.0160 (0.0160) | loss_bbox_enc: 0.0861 (0.0861) | loss_bbox_enc_unscaled: 0.0172 (0.0172) | loss_bbox_unscaled: 0.0156 (0.0156) | loss_ce: 0.5586 (0.5586) | loss_ce_0: 0.5703 (0.5703) | loss_ce_0_unscaled: 0.5703 (0.5703) | loss_ce_1: 0.5781 (0.5781) | loss_ce_1_unscaled: 0.5781 (0.5781) | loss_ce_enc: 0.5703 (0.5703) | loss_ce_enc_unscaled: 0.5703 (0.5703) | loss_ce_unscaled: 0.5586 (0.5586) | loss_density_unscaled: 0.0193 (0.0193) | loss_giou: 0.3529 (0.3529) | loss_giou_0: 0.3650 (0.3650) | loss_giou_0_unscaled: 0.1825 (0.1825) | loss_giou_1: 0.3553 (0.3553) | loss_giou_1_unscaled: 0.1776 (0.1776) | loss_giou_enc: 0.3673 (0.3673) | loss_giou_enc_unscaled: 0.1837 (0.1837) | loss_giou_unscaled: 0.1764 (0.1764)
+Test: [22/23] eta: 0:00:00 | time: 0.4588 | data: 0.0580 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3623) | loss: 3.9612 (3.9060) | loss_bbox: 0.0822 (0.0971) | loss_bbox_0: 0.0817 (0.0948) | loss_bbox_0_unscaled: 0.0163 (0.0190) | loss_bbox_1: 0.0831 (0.0915) | loss_bbox_1_unscaled: 0.0166 (0.0183) | loss_bbox_enc: 0.0896 (0.1060) | loss_bbox_enc_unscaled: 0.0179 (0.0212) | loss_bbox_unscaled: 0.0164 (0.0194) | loss_ce: 0.5078 (0.5230) | loss_ce_0: 0.5430 (0.5465) | loss_ce_0_unscaled: 0.5430 (0.5465) | loss_ce_1: 0.5273 (0.5357) | loss_ce_1_unscaled: 0.5273 (0.5357) | loss_ce_enc: 0.5469 (0.5395) | loss_ce_enc_unscaled: 0.5469 (0.5395) | loss_ce_unscaled: 0.5078 (0.5230) | loss_density_unscaled: 0.0194 (0.0262) | loss_giou: 0.3305 (0.3375) | loss_giou_0: 0.3325 (0.3390) | loss_giou_0_unscaled: 0.1662 (0.1695) | loss_giou_1: 0.3290 (0.3345) | loss_giou_1_unscaled: 0.1645 (0.1673) | loss_giou_enc: 0.3564 (0.3609) | loss_giou_enc_unscaled: 0.1782 (0.1804) | loss_giou_unscaled: 0.1653 (0.1687)
+Test: Total time: 0:00:11 (0.4866 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3623) | loss: 3.9612 (3.9060) | loss_bbox: 0.0822 (0.0971) | loss_bbox_0: 0.0817 (0.0948) | loss_bbox_0_unscaled: 0.0163 (0.0190) | loss_bbox_1: 0.0831 (0.0915) | loss_bbox_1_unscaled: 0.0166 (0.0183) | loss_bbox_enc: 0.0896 (0.1060) | loss_bbox_enc_unscaled: 0.0179 (0.0212) | loss_bbox_unscaled: 0.0164 (0.0194) | loss_ce: 0.5078 (0.5230) | loss_ce_0: 0.5430 (0.5465) | loss_ce_0_unscaled: 0.5430 (0.5465) | loss_ce_1: 0.5273 (0.5357) | loss_ce_1_unscaled: 0.5273 (0.5357) | loss_ce_enc: 0.5469 (0.5395) | loss_ce_enc_unscaled: 0.5469 (0.5395) | loss_ce_unscaled: 0.5078 (0.5230) | loss_density_unscaled: 0.0194 (0.0262) | loss_giou: 0.3305 (0.3375) | loss_giou_0: 0.3325 (0.3390) | loss_giou_0_unscaled: 0.1662 (0.1695) | loss_giou_1: 0.3290 (0.3345) | loss_giou_1_unscaled: 0.1645 (0.1673) | loss_giou_enc: 0.3564 (0.3609) | loss_giou_enc_unscaled: 0.1782 (0.1804) | loss_giou_unscaled: 0.1653 (0.1687)
+Accumulating evaluation results...
+DONE (t=0.21s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.603
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.834
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.681
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.294
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.643
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.654
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.317
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.630
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.756
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.446
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.725
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.795
+Test: [ 0/23] eta: 0:00:22 | time: 0.9571 | data: 0.4606 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 4.0732 (4.0732) | loss_bbox: 0.0840 (0.0840) | loss_bbox_0: 0.0884 (0.0884) | loss_bbox_0_unscaled: 0.0177 (0.0177) | loss_bbox_1: 0.0817 (0.0817) | loss_bbox_1_unscaled: 0.0163 (0.0163) | loss_bbox_enc: 0.0903 (0.0903) | loss_bbox_enc_unscaled: 0.0181 (0.0181) | loss_bbox_unscaled: 0.0168 (0.0168) | loss_ce: 0.5547 (0.5547) | loss_ce_0: 0.5703 (0.5703) | loss_ce_0_unscaled: 0.5703 (0.5703) | loss_ce_1: 0.5703 (0.5703) | loss_ce_1_unscaled: 0.5703 (0.5703) | loss_ce_enc: 0.5586 (0.5586) | loss_ce_enc_unscaled: 0.5586 (0.5586) | loss_ce_unscaled: 0.5547 (0.5547) | loss_density_unscaled: 0.0192 (0.0192) | loss_giou: 0.3650 (0.3650) | loss_giou_0: 0.3706 (0.3706) | loss_giou_0_unscaled: 0.1853 (0.1853) | loss_giou_1: 0.3657 (0.3657) | loss_giou_1_unscaled: 0.1829 (0.1829) | loss_giou_enc: 0.3735 (0.3735) | loss_giou_enc_unscaled: 0.1868 (0.1868) | loss_giou_unscaled: 0.1825 (0.1825)
+Test: [22/23] eta: 0:00:00 | time: 0.4811 | data: 0.0544 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3623) | loss: 3.9477 (3.8899) | loss_bbox: 0.0827 (0.0951) | loss_bbox_0: 0.0840 (0.0954) | loss_bbox_0_unscaled: 0.0168 (0.0191) | loss_bbox_1: 0.0828 (0.0914) | loss_bbox_1_unscaled: 0.0166 (0.0183) | loss_bbox_enc: 0.0901 (0.1037) | loss_bbox_enc_unscaled: 0.0180 (0.0207) | loss_bbox_unscaled: 0.0165 (0.0190) | loss_ce: 0.5117 (0.5210) | loss_ce_0: 0.5352 (0.5439) | loss_ce_0_unscaled: 0.5352 (0.5439) | loss_ce_1: 0.5234 (0.5292) | loss_ce_1_unscaled: 0.5234 (0.5292) | loss_ce_enc: 0.5469 (0.5394) | loss_ce_enc_unscaled: 0.5469 (0.5394) | loss_ce_unscaled: 0.5117 (0.5210) | loss_density_unscaled: 0.0193 (0.0261) | loss_giou: 0.3327 (0.3381) | loss_giou_0: 0.3301 (0.3390) | loss_giou_0_unscaled: 0.1650 (0.1695) | loss_giou_1: 0.3296 (0.3347) | loss_giou_1_unscaled: 0.1648 (0.1674) | loss_giou_enc: 0.3514 (0.3589) | loss_giou_enc_unscaled: 0.1757 (0.1795) | loss_giou_unscaled: 0.1664 (0.1691)
+Test: Total time: 0:00:11 (0.5075 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3623) | loss: 3.9477 (3.8899) | loss_bbox: 0.0827 (0.0951) | loss_bbox_0: 0.0840 (0.0954) | loss_bbox_0_unscaled: 0.0168 (0.0191) | loss_bbox_1: 0.0828 (0.0914) | loss_bbox_1_unscaled: 0.0166 (0.0183) | loss_bbox_enc: 0.0901 (0.1037) | loss_bbox_enc_unscaled: 0.0180 (0.0207) | loss_bbox_unscaled: 0.0165 (0.0190) | loss_ce: 0.5117 (0.5210) | loss_ce_0: 0.5352 (0.5439) | loss_ce_0_unscaled: 0.5352 (0.5439) | loss_ce_1: 0.5234 (0.5292) | loss_ce_1_unscaled: 0.5234 (0.5292) | loss_ce_enc: 0.5469 (0.5394) | loss_ce_enc_unscaled: 0.5469 (0.5394) | loss_ce_unscaled: 0.5117 (0.5210) | loss_density_unscaled: 0.0193 (0.0261) | loss_giou: 0.3327 (0.3381) | loss_giou_0: 0.3301 (0.3390) | loss_giou_0_unscaled: 0.1650 (0.1695) | loss_giou_1: 0.3296 (0.3347) | loss_giou_1_unscaled: 0.1648 (0.1674) | loss_giou_enc: 0.3514 (0.3589) | loss_giou_enc_unscaled: 0.1757 (0.1795) | loss_giou_unscaled: 0.1664 (0.1691)
+Accumulating evaluation results...
+DONE (t=0.20s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.614
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.851
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.702
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.300
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.644
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.665
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.318
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.635
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.761
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.461
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.720
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.801
+Grad accum steps:  4
+Total batch size:  24
+LENGTH OF DATA LOADER: 27
+[Epoch 4/60 Step 1/27]
+──────────────────────────────────────────────────
+[Epoch 4/60] [Step 1/27]
+ETA: 00:01:03 | Speed:  0.41 steps/s | Avg: 2.453s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.00%
+  loss_ce             :    0.495
+  loss_ce_0           :    0.510
+  loss_ce_1           :    0.501
+  loss_ce_enc         :    0.494
+  loss_ce_unscaled    :    0.495
+  loss_ce_0_unscaled  :    0.510
+  loss_ce_1_unscaled  :    0.501
+  loss_ce_enc_unscaled:    0.494
+
+  loss_bbox           :    0.062
+  loss_bbox_0         :    0.065
+  loss_bbox_1         :    0.063
+  loss_bbox_unscaled  :    0.012
+  loss_bbox_0_unscaled:    0.013
+  loss_bbox_1_unscaled:    0.013
+  loss_giou           :    0.297
+  loss_giou_0         :    0.299
+  loss_giou_1         :    0.299
+  loss_giou_unscaled  :    0.148
+  loss_giou_0_unscaled:    0.150
+  loss_giou_1_unscaled:    0.150
+
+  loss_ce_enc         :    0.494
+  loss_bbox_enc       :    0.068
+  loss_giou_enc       :    0.318
+
+  lr                  :    0.000
+  loss                :    3.473
+  class_error_unscaled:     0.00%
+  cardinality_error_unscaled:  3887.33%
+  loss_density_unscaled:    0.042
+  cardinality_error_0_unscaled:  3887.33%
+  cardinality_error_1_unscaled:  3887.33%
+  loss_bbox_enc_unscaled:    0.014
+  loss_giou_enc_unscaled:    0.159
+  cardinality_error_enc_unscaled:  3887.33%
+──────────────────────────────────────────────────
+[Epoch 4/60 Step 11/27]
+──────────────────────────────────────────────────
+[Epoch 4/60] [Step 11/27]
+ETA: 00:00:54 | Speed:  0.29 steps/s | Avg: 3.424s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.02%
+  loss_ce             :    0.506
+  loss_ce_0           :    0.537
+  loss_ce_1           :    0.514
+  loss_ce_enc         :    0.534
+  loss_ce_unscaled    :    0.506
+  loss_ce_0_unscaled  :    0.537
+  loss_ce_1_unscaled  :    0.514
+  loss_ce_enc_unscaled:    0.534
+
+  loss_bbox           :    0.101
+  loss_bbox_0         :    0.105
+  loss_bbox_1         :    0.100
+  loss_bbox_unscaled  :    0.020
+  loss_bbox_0_unscaled:    0.021
+  loss_bbox_1_unscaled:    0.020
+  loss_giou           :    0.371
+  loss_giou_0         :    0.374
+  loss_giou_1         :    0.370
+  loss_giou_unscaled  :    0.185
+  loss_giou_0_unscaled:    0.187
+  loss_giou_1_unscaled:    0.185
+
+  loss_ce_enc         :    0.534
+  loss_bbox_enc       :    0.122
+  loss_giou_enc       :    0.410
+
+  lr                  :    0.000
+  loss                :    4.042
+  class_error_unscaled:     0.02%
+  cardinality_error_unscaled:  3893.42%
+  loss_density_unscaled:    0.041
+  cardinality_error_0_unscaled:  3893.42%
+  cardinality_error_1_unscaled:  3893.42%
+  loss_bbox_enc_unscaled:    0.024
+  loss_giou_enc_unscaled:    0.205
+  cardinality_error_enc_unscaled:  3893.42%
+──────────────────────────────────────────────────
+[Epoch 4/60 Step 21/27]
+──────────────────────────────────────────────────
+[Epoch 4/60] [Step 21/27]
+ETA: 00:00:22 | Speed:  0.27 steps/s | Avg: 3.768s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.01%
+  loss_ce             :    0.510
+  loss_ce_0           :    0.542
+  loss_ce_1           :    0.516
+  loss_ce_enc         :    0.536
+  loss_ce_unscaled    :    0.510
+  loss_ce_0_unscaled  :    0.542
+  loss_ce_1_unscaled  :    0.516
+  loss_ce_enc_unscaled:    0.536
+
+  loss_bbox           :    0.108
+  loss_bbox_0         :    0.112
+  loss_bbox_1         :    0.106
+  loss_bbox_unscaled  :    0.022
+  loss_bbox_0_unscaled:    0.022
+  loss_bbox_1_unscaled:    0.021
+  loss_giou           :    0.377
+  loss_giou_0         :    0.379
+  loss_giou_1         :    0.374
+  loss_giou_unscaled  :    0.188
+  loss_giou_0_unscaled:    0.189
+  loss_giou_1_unscaled:    0.187
+
+  loss_ce_enc         :    0.536
+  loss_bbox_enc       :    0.127
+  loss_giou_enc       :    0.419
+
+  lr                  :    0.000
+  loss                :    4.105
+  class_error_unscaled:     0.01%
+  cardinality_error_unscaled:  3893.47%
+  loss_density_unscaled:    0.044
+  cardinality_error_0_unscaled:  3893.47%
+  cardinality_error_1_unscaled:  3893.47%
+  loss_bbox_enc_unscaled:    0.025
+  loss_giou_enc_unscaled:    0.209
+  cardinality_error_enc_unscaled:  3893.47%
+──────────────────────────────────────────────────
+Epoch: [3] Total time: 0:01:46 (3.9489 s / it)
+Averaged stats: cardinality_error_0_unscaled: 3892.5000 (3893.5309) | cardinality_error_1_unscaled: 3892.5000 (3893.5309) | cardinality_error_enc_unscaled: 3892.5000 (3893.5309) | cardinality_error_unscaled: 3892.5000 (3893.5309) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0095) | loss: 3.8713 (4.0083) | loss_bbox: 0.0944 (0.1019) | loss_bbox_0: 0.0947 (0.1068) | loss_bbox_0_unscaled: 0.0189 (0.0214) | loss_bbox_1: 0.0957 (0.1005) | loss_bbox_1_unscaled: 0.0191 (0.0201) | loss_bbox_enc: 0.1075 (0.1219) | loss_bbox_enc_unscaled: 0.0215 (0.0244) | loss_bbox_unscaled: 0.0189 (0.0204) | loss_ce: 0.4904 (0.5032) | loss_ce_0: 0.5441 (0.5377) | loss_ce_0_unscaled: 0.5441 (0.5377) | loss_ce_1: 0.4969 (0.5097) | loss_ce_1_unscaled: 0.4969 (0.5097) | loss_ce_enc: 0.5598 (0.5363) | loss_ce_enc_unscaled: 0.5598 (0.5363) | loss_ce_unscaled: 0.4904 (0.5032) | loss_density_unscaled: 0.0191 (0.0405) | loss_giou: 0.3238 (0.3612) | loss_giou_0: 0.3432 (0.3645) | loss_giou_0_unscaled: 0.1716 (0.1822) | loss_giou_1: 0.3339 (0.3589) | loss_giou_1_unscaled: 0.1670 (0.1795) | loss_giou_enc: 0.3661 (0.4057) | loss_giou_enc_unscaled: 0.1830 (0.2029) | loss_giou_unscaled: 0.1619 (0.1806) | lr: 0.000100
+Test: [ 0/23] eta: 0:00:23 | time: 1.0158 | data: 0.5086 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 3.9646 (3.9646) | loss_bbox: 0.0791 (0.0791) | loss_bbox_0: 0.0906 (0.0906) | loss_bbox_0_unscaled: 0.0181 (0.0181) | loss_bbox_1: 0.0799 (0.0799) | loss_bbox_1_unscaled: 0.0160 (0.0160) | loss_bbox_enc: 0.0916 (0.0916) | loss_bbox_enc_unscaled: 0.0183 (0.0183) | loss_bbox_unscaled: 0.0158 (0.0158) | loss_ce: 0.5312 (0.5312) | loss_ce_0: 0.5391 (0.5391) | loss_ce_0_unscaled: 0.5391 (0.5391) | loss_ce_1: 0.5312 (0.5312) | loss_ce_1_unscaled: 0.5312 (0.5312) | loss_ce_enc: 0.5664 (0.5664) | loss_ce_enc_unscaled: 0.5664 (0.5664) | loss_ce_unscaled: 0.5312 (0.5312) | loss_density_unscaled: 0.0211 (0.0211) | loss_giou: 0.3507 (0.3507) | loss_giou_0: 0.3604 (0.3604) | loss_giou_0_unscaled: 0.1802 (0.1802) | loss_giou_1: 0.3551 (0.3551) | loss_giou_1_unscaled: 0.1776 (0.1776) | loss_giou_enc: 0.3893 (0.3893) | loss_giou_enc_unscaled: 0.1947 (0.1947) | loss_giou_unscaled: 0.1754 (0.1754)
+Test: [22/23] eta: 0:00:00 | time: 0.4759 | data: 0.0577 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3106) | loss: 3.9902 (3.9604) | loss_bbox: 0.0826 (0.0956) | loss_bbox_0: 0.0887 (0.0988) | loss_bbox_0_unscaled: 0.0177 (0.0198) | loss_bbox_1: 0.0828 (0.0942) | loss_bbox_1_unscaled: 0.0166 (0.0188) | loss_bbox_enc: 0.1035 (0.1144) | loss_bbox_enc_unscaled: 0.0207 (0.0229) | loss_bbox_unscaled: 0.0165 (0.0191) | loss_ce: 0.5078 (0.5129) | loss_ce_0: 0.5273 (0.5333) | loss_ce_0_unscaled: 0.5273 (0.5333) | loss_ce_1: 0.5078 (0.5158) | loss_ce_1_unscaled: 0.5078 (0.5158) | loss_ce_enc: 0.5625 (0.5606) | loss_ce_enc_unscaled: 0.5625 (0.5606) | loss_ce_unscaled: 0.5078 (0.5129) | loss_density_unscaled: 0.0227 (0.0287) | loss_giou: 0.3449 (0.3389) | loss_giou_0: 0.3303 (0.3500) | loss_giou_0_unscaled: 0.1652 (0.1750) | loss_giou_1: 0.3433 (0.3392) | loss_giou_1_unscaled: 0.1716 (0.1696) | loss_giou_enc: 0.3863 (0.4065) | loss_giou_enc_unscaled: 0.1931 (0.2032) | loss_giou_unscaled: 0.1724 (0.1695)
+Test: Total time: 0:00:11 (0.5031 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3106) | loss: 3.9902 (3.9604) | loss_bbox: 0.0826 (0.0956) | loss_bbox_0: 0.0887 (0.0988) | loss_bbox_0_unscaled: 0.0177 (0.0198) | loss_bbox_1: 0.0828 (0.0942) | loss_bbox_1_unscaled: 0.0166 (0.0188) | loss_bbox_enc: 0.1035 (0.1144) | loss_bbox_enc_unscaled: 0.0207 (0.0229) | loss_bbox_unscaled: 0.0165 (0.0191) | loss_ce: 0.5078 (0.5129) | loss_ce_0: 0.5273 (0.5333) | loss_ce_0_unscaled: 0.5273 (0.5333) | loss_ce_1: 0.5078 (0.5158) | loss_ce_1_unscaled: 0.5078 (0.5158) | loss_ce_enc: 0.5625 (0.5606) | loss_ce_enc_unscaled: 0.5625 (0.5606) | loss_ce_unscaled: 0.5078 (0.5129) | loss_density_unscaled: 0.0227 (0.0287) | loss_giou: 0.3449 (0.3389) | loss_giou_0: 0.3303 (0.3500) | loss_giou_0_unscaled: 0.1652 (0.1750) | loss_giou_1: 0.3433 (0.3392) | loss_giou_1_unscaled: 0.1716 (0.1696) | loss_giou_enc: 0.3863 (0.4065) | loss_giou_enc_unscaled: 0.1931 (0.2032) | loss_giou_unscaled: 0.1724 (0.1695)
+Accumulating evaluation results...
+DONE (t=0.21s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.651
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.912
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.717
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.272
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.654
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.702
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.373
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.645
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.780
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.401
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.736
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.820
+Test: [ 0/23] eta: 0:00:25 | time: 1.1115 | data: 0.5177 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 293.0000 (293.0000) | cardinality_error_1_unscaled: 293.0000 (293.0000) | cardinality_error_enc_unscaled: 293.0000 (293.0000) | cardinality_error_unscaled: 293.0000 (293.0000) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.0000) | loss: 3.8616 (3.8616) | loss_bbox: 0.0772 (0.0772) | loss_bbox_0: 0.0872 (0.0872) | loss_bbox_0_unscaled: 0.0174 (0.0174) | loss_bbox_1: 0.0778 (0.0778) | loss_bbox_1_unscaled: 0.0156 (0.0156) | loss_bbox_enc: 0.0826 (0.0826) | loss_bbox_enc_unscaled: 0.0165 (0.0165) | loss_bbox_unscaled: 0.0154 (0.0154) | loss_ce: 0.5312 (0.5312) | loss_ce_0: 0.5430 (0.5430) | loss_ce_0_unscaled: 0.5430 (0.5430) | loss_ce_1: 0.5312 (0.5312) | loss_ce_1_unscaled: 0.5312 (0.5312) | loss_ce_enc: 0.5430 (0.5430) | loss_ce_enc_unscaled: 0.5430 (0.5430) | loss_ce_unscaled: 0.5312 (0.5312) | loss_density_unscaled: 0.0209 (0.0209) | loss_giou: 0.3404 (0.3404) | loss_giou_0: 0.3475 (0.3475) | loss_giou_0_unscaled: 0.1738 (0.1738) | loss_giou_1: 0.3422 (0.3422) | loss_giou_1_unscaled: 0.1711 (0.1711) | loss_giou_enc: 0.3583 (0.3583) | loss_giou_enc_unscaled: 0.1791 (0.1791) | loss_giou_unscaled: 0.1702 (0.1702)
+Test: [22/23] eta: 0:00:00 | time: 0.4820 | data: 0.0578 | max mem: 8829
+  metrics: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3106) | loss: 3.7651 (3.7748) | loss_bbox: 0.0767 (0.0921) | loss_bbox_0: 0.0792 (0.0916) | loss_bbox_0_unscaled: 0.0158 (0.0183) | loss_bbox_1: 0.0770 (0.0881) | loss_bbox_1_unscaled: 0.0154 (0.0176) | loss_bbox_enc: 0.0882 (0.0982) | loss_bbox_enc_unscaled: 0.0176 (0.0196) | loss_bbox_unscaled: 0.0153 (0.0184) | loss_ce: 0.4922 (0.5025) | loss_ce_0: 0.5078 (0.5262) | loss_ce_0_unscaled: 0.5078 (0.5262) | loss_ce_1: 0.4961 (0.5114) | loss_ce_1_unscaled: 0.4961 (0.5114) | loss_ce_enc: 0.5234 (0.5285) | loss_ce_enc_unscaled: 0.5234 (0.5285) | loss_ce_unscaled: 0.4922 (0.5025) | loss_density_unscaled: 0.0220 (0.0283) | loss_giou: 0.3388 (0.3280) | loss_giou_0: 0.3179 (0.3301) | loss_giou_0_unscaled: 0.1589 (0.1651) | loss_giou_1: 0.3095 (0.3246) | loss_giou_1_unscaled: 0.1548 (0.1623) | loss_giou_enc: 0.3554 (0.3535) | loss_giou_enc_unscaled: 0.1777 (0.1767) | loss_giou_unscaled: 0.1694 (0.1640)
+Test: Total time: 0:00:11 (0.5134 s / it)
+Averaged stats: cardinality_error_0_unscaled: 292.6667 (292.6522) | cardinality_error_1_unscaled: 292.6667 (292.6522) | cardinality_error_enc_unscaled: 292.6667 (292.6522) | cardinality_error_unscaled: 292.6667 (292.6522) | class_error: 0.00 | class_error_unscaled: 0.0000 (0.3106) | loss: 3.7651 (3.7748) | loss_bbox: 0.0767 (0.0921) | loss_bbox_0: 0.0792 (0.0916) | loss_bbox_0_unscaled: 0.0158 (0.0183) | loss_bbox_1: 0.0770 (0.0881) | loss_bbox_1_unscaled: 0.0154 (0.0176) | loss_bbox_enc: 0.0882 (0.0982) | loss_bbox_enc_unscaled: 0.0176 (0.0196) | loss_bbox_unscaled: 0.0153 (0.0184) | loss_ce: 0.4922 (0.5025) | loss_ce_0: 0.5078 (0.5262) | loss_ce_0_unscaled: 0.5078 (0.5262) | loss_ce_1: 0.4961 (0.5114) | loss_ce_1_unscaled: 0.4961 (0.5114) | loss_ce_enc: 0.5234 (0.5285) | loss_ce_enc_unscaled: 0.5234 (0.5285) | loss_ce_unscaled: 0.4922 (0.5025) | loss_density_unscaled: 0.0220 (0.0283) | loss_giou: 0.3388 (0.3280) | loss_giou_0: 0.3179 (0.3301) | loss_giou_0_unscaled: 0.1589 (0.1651) | loss_giou_1: 0.3095 (0.3246) | loss_giou_1_unscaled: 0.1548 (0.1623) | loss_giou_enc: 0.3554 (0.3535) | loss_giou_enc_unscaled: 0.1777 (0.1767) | loss_giou_unscaled: 0.1694 (0.1640)
+Accumulating evaluation results...
+DONE (t=0.20s).
+IoU metric: bbox
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.656
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.904
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.715
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.295
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.667
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.704
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.370
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.652
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.776
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.442
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.743
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.812
+Grad accum steps:  4
+Total batch size:  24
+LENGTH OF DATA LOADER: 27
+[Epoch 5/60 Step 1/27]
+──────────────────────────────────────────────────
+[Epoch 5/60] [Step 1/27]
+ETA: 00:01:09 | Speed:  0.37 steps/s | Avg: 2.687s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.00%
+  loss_ce             :    0.482
+  loss_ce_0           :    0.535
+  loss_ce_1           :    0.490
+  loss_ce_enc         :    0.562
+  loss_ce_unscaled    :    0.482
+  loss_ce_0_unscaled  :    0.535
+  loss_ce_1_unscaled  :    0.490
+  loss_ce_enc_unscaled:    0.562
+
+  loss_bbox           :    0.079
+  loss_bbox_0         :    0.088
+  loss_bbox_1         :    0.081
+  loss_bbox_unscaled  :    0.016
+  loss_bbox_0_unscaled:    0.018
+  loss_bbox_1_unscaled:    0.016
+  loss_giou           :    0.365
+  loss_giou_0         :    0.387
+  loss_giou_1         :    0.370
+  loss_giou_unscaled  :    0.183
+  loss_giou_0_unscaled:    0.194
+  loss_giou_1_unscaled:    0.185
+
+  loss_ce_enc         :    0.562
+  loss_bbox_enc       :    0.099
+  loss_giou_enc       :    0.444
+
+  lr                  :    0.000
+  loss                :    3.983
+  class_error_unscaled:     0.00%
+  cardinality_error_unscaled:  3891.67%
+  loss_density_unscaled:    0.018
+  cardinality_error_0_unscaled:  3891.67%
+  cardinality_error_1_unscaled:  3891.67%
+  loss_bbox_enc_unscaled:    0.020
+  loss_giou_enc_unscaled:    0.222
+  cardinality_error_enc_unscaled:  3891.67%
+──────────────────────────────────────────────────
+[Epoch 5/60 Step 11/27]
+──────────────────────────────────────────────────
+[Epoch 5/60] [Step 11/27]
+ETA: 00:00:55 | Speed:  0.29 steps/s | Avg: 3.454s | LR: 0.000100
+──────────────────────────────────────────────────
+  class_error         :     0.00%
+  loss_ce             :    0.485
+  loss_ce_0           :    0.512
+  loss_ce_1           :    0.489
+  loss_ce_enc         :    0.537
+  loss_ce_unscaled    :    0.485
+  loss_ce_0_unscaled  :    0.512
+  loss_ce_1_unscaled  :    0.489
+  loss_ce_enc_unscaled:    0.537
+
+  loss_bbox           :    0.086
+  loss_bbox_0         :    0.088
+  loss_bbox_1         :    0.086
+  loss_bbox_unscaled  :    0.017
+  loss_bbox_0_unscaled:    0.018
+  loss_bbox_1_unscaled:    0.017
+  loss_giou           :    0.338
+  loss_giou_0         :    0.344
+  loss_giou_1         :    0.341
+  loss_giou_unscaled  :    0.169
+  loss_giou_0_unscaled:    0.172
+  loss_giou_1_unscaled:    0.171
+
+  loss_ce_enc         :    0.537
+  loss_bbox_enc       :    0.106
+  loss_giou_enc       :    0.387
+
+  lr                  :    0.000
+  loss                :    3.800
+  class_error_unscaled:     0.00%
+  cardinality_error_unscaled:  3892.23%
+  loss_density_unscaled:    0.050
+  cardinality_error_0_unscaled:  3892.23%
+  cardinality_error_1_unscaled:  3892.23%
+  loss_bbox_enc_unscaled:    0.021
+  loss_giou_enc_unscaled:    0.194
+  cardinality_error_enc_unscaled:  3892.23%
+──────────────────────────────────────────────────
