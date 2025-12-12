@@ -8,14 +8,16 @@ model = RFDETRBase(
     enable_small_object_query_boost=False,
     soqb_boost_factor=2.0 
 )
-summary(model.model.model,input_size=(1,3,560,560),depth=7)
-# model.train(
-#     dataset_file='coco',
-#     dataset_dir='/home/fyb/datasets/RSOD_cocoFormat',
-#     coco_path='/home/fyb/datasets/RSOD_cocoFormat',
-#     epochs=12,
-#     batch_size=4,
-#     grad_accum_steps=4,
-#     lr=1e-4,
-#     output_dir='/home/fyb/mydir/rf-detr/experiements/results/ablation_density_init_debug',
-# )
+# summary(model.model.model,input_size=(1,3,560,560),depth=7)
+model.train(
+    dataset_file='coco',
+    dataset_dir='/home/fyb/datasets/RSOD_cocoFormat',
+    coco_path='/home/fyb/datasets/RSOD_cocoFormat',
+    epochs=60,
+    batch_size=6,
+    grad_accum_steps=4,
+    lr=1e-4,
+    output_dir='/home/fyb/mydir/rf-detr/experiements/results/ablation_density_init_6bs',
+    early_stop_patience=5,
+    early_stop_threshold=0.001,
+)

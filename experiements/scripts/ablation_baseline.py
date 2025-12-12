@@ -13,9 +13,11 @@ model.train(
     dataset_file='coco',
     dataset_dir='/home/fyb/datasets/RSOD_cocoFormat',
     coco_path='/home/fyb/datasets/RSOD_cocoFormat',
-    epochs=12,
+    epochs=60,
     batch_size=6,
     grad_accum_steps=4,
     lr=1e-4,
-    output_dir='/home/fyb/mydir/rf-detr/experiements/results/ablation_baseline',
+    output_dir='/home/fyb/mydir/rf-detr/experiements/results/ablation_baseline_6bs',
+    early_stop_patience=5,
+    early_stop_threshold=0.001,
 )
